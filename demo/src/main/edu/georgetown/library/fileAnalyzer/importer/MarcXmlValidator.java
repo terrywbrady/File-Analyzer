@@ -30,7 +30,7 @@ import gov.nara.nwts.ftapp.util.XMLUtil;
  * @author TBrady
  * 
  */
-public class MarcValidator extends DefaultImporter {
+public class MarcXmlValidator extends DefaultImporter {
 
 	public static NumberFormat nf = NumberFormat.getNumberInstance();
 	static {
@@ -100,12 +100,12 @@ public class MarcValidator extends DefaultImporter {
 	public static StatsItemConfig details = StatsItemConfig
 			.create(MarcStatsItems.class);
 
-	public MarcValidator(FTDriver dt) {
+	public MarcXmlValidator(FTDriver dt) {
 		super(dt);
 	}
 
 	public String toString() {
-		return "MARC Validator";
+		return "MARC XML Validator";
 	}
 
 	public String getDescription() {
@@ -147,9 +147,6 @@ public class MarcValidator extends DefaultImporter {
 	public ActionResult importFile(File selectedFile) throws IOException {
 		Timer timer = new Timer();
 		TreeMap<String, Stats> types = new TreeMap<String, Stats>();
-		MarcReader mread = new MarcReader();
-        MarcSource source = new MarcSource(reader, selectedFile);
-
 		
 		try {
 			Document d = XMLUtil.db_ns.parse(selectedFile);
