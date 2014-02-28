@@ -1,17 +1,15 @@
 package edu.georgetown.library.fileAnalyzer.importer;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.TreeMap;
 
-import javax.xml.transform.TransformerException;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
+import org.marc4j.MarcReader;
+import org.marc4j.MarcStreamReader;
+import org.marc4j.marc.Record;
 
 import gov.nara.nwts.ftapp.ActionResult;
 import gov.nara.nwts.ftapp.FTDriver;
@@ -22,7 +20,6 @@ import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
-import gov.nara.nwts.ftapp.util.XMLUtil;
 
 /**
  * Importer for tab delimited files
@@ -147,50 +144,13 @@ public class MarcValidator extends DefaultImporter {
 	public ActionResult importFile(File selectedFile) throws IOException {
 		Timer timer = new Timer();
 		TreeMap<String, Stats> types = new TreeMap<String, Stats>();
-		MarcReader mread = new MarcReader();
-        MarcSource source = new MarcSource(reader, selectedFile);
+	    InputStream in = new FileInputStream(selectedFile);
+        MarcReader reader = new MarcStreamReader(in);
+        while (reader.hasNext()) {
+             Record record = reader.next();
+             System.out.println(record.toString());
+        }    
 
-		
-		try {
-			Document d = XMLUtil.db_ns.parse(selectedFile);
-			Document dout = (Document)XMLUtil.doTransformToDom(d, "edu/georgetown/library/fileAnalyzer/importer/marc.xsl");
-			NodeList nl = dout.getElementsByTagName("result");
-			
-			for(int i=0; i < nl.getLength(); i++) {
-				String key = nf.format(i+1);
-				Stats stat = Generator.INSTANCE.create(key);
-				stat.setVal(MarcStatsItems.Stat, STAT.VALID);
-				types.put(key, stat);
-				Element el = (Element)nl.item(i);
-				stat.setVal(MarcStatsItems.Author, el.getAttribute("author"));
-				stat.setVal(MarcStatsItems.Title, el.getAttribute("title"));
-				stat.setVal(MarcStatsItems.f949i, el.getAttribute("f949i"));
-				stat.setVal(MarcStatsItems.f949l, el.getAttribute("f949l"));
-				stat.setVal(MarcStatsItems.f949s, el.getAttribute("f949s"));
-				stat.setVal(MarcStatsItems.f949t, el.getAttribute("f949t"));
-				stat.setVal(MarcStatsItems.f949z, el.getAttribute("f949z"));
-				stat.setVal(MarcStatsItems.f949a, el.getAttribute("f949a"));
-				stat.setVal(MarcStatsItems.f949b, el.getAttribute("f949b"));
-				setFieldCount(stat, el.getAttribute("f949"), MarcStatsItems.f949, true);						
-				setFieldError(stat, el.getAttribute("f949err"), MarcStatsItems.Stat949, MarcStatsItems.f949);						
-
-				setFieldCount(stat, el.getAttribute("f980"), MarcStatsItems.f980, true);						
-				setFieldError(stat, el.getAttribute("f980err"), MarcStatsItems.Stat980, MarcStatsItems.f980);						
-				
-				setFieldCount(stat, el.getAttribute("f981"), MarcStatsItems.f981, true);						
-				stat.setVal(MarcStatsItems.f981b, el.getAttribute("f981b"));
-				setFieldError(stat, el.getAttribute("f981err"), MarcStatsItems.Stat981, MarcStatsItems.f981);						
-				
-				setFieldCount(stat, el.getAttribute("f935"), MarcStatsItems.f935, false);						
-				stat.setVal(MarcStatsItems.f935a, el.getAttribute("f935a"));
-				setFieldError(stat, el.getAttribute("f350err"), MarcStatsItems.Stat935, MarcStatsItems.f935);						
-				
-			}
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (TransformerException e) {
-			e.printStackTrace();
-		}
 		return new ActionResult(selectedFile, selectedFile.getName(),
 				this.toString(), details, types, true, timer.getDuration());
 	}
