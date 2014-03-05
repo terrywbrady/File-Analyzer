@@ -8,7 +8,7 @@ package gov.nara.nwts.ftapp.filter;
 public class ImageFileTestFilter extends DefaultFileTestFilter {
 
 	public String getSuffix() {
-		return ".*\\.(tif|gif|jpg|png|bmp)$";
+		return ".*\\.(tiff?|gif|jpg|png|bmp)$";
 	}
 	public boolean isReSuffix() {
 		return true;

@@ -120,7 +120,8 @@ class MergePanel extends MyBorderPanel {
 						if (opt.getSelectedItem().equals(STR_YES)) {
 							v[col] = "YES";
 						} else {
-							v[col] = tm.getValueAt(r, opt.getSelectedIndex()-1);
+							Object obj = tm.getValueAt(r, opt.getSelectedIndex()-1);
+							v[col] = (obj == null) ? "" : obj.toString();
 						}
 					}
 				}

@@ -8,7 +8,10 @@ package gov.nara.nwts.ftapp.filter;
 public class TiffFileTestFilter extends DefaultFileTestFilter {
 
 	public String getSuffix() {
-		return ".tif";
+		return ".*\\.(tiff?)$";
+	}
+	public boolean isReSuffix() {
+		return true;
 	}
 	public String getPrefix() {
 		return "^[^\\.].*";
