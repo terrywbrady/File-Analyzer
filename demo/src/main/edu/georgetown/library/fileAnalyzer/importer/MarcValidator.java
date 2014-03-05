@@ -9,7 +9,14 @@ import java.util.TreeMap;
 
 import org.marc4j.MarcReader;
 import org.marc4j.MarcStreamReader;
+import org.marc4j.marc.ControlField;
+import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
+import org.marc4j.marc.Subfield;
+
+import edu.georgetown.library.fileAnalyzer.importer.MarcXmlValidator.Generator;
+import edu.georgetown.library.fileAnalyzer.importer.MarcXmlValidator.MarcStatsItems;
+import edu.georgetown.library.fileAnalyzer.importer.MarcXmlValidator.STAT;
 
 import gov.nara.nwts.ftapp.ActionResult;
 import gov.nara.nwts.ftapp.FTDriver;
@@ -140,15 +147,38 @@ public class MarcValidator extends DefaultImporter {
 		}
 	}
 	
+	public static void statSubfield(Stats stats, MarcStatsItems si, DataField df, char f) { 
+		stats.setVal(si, getSubfield(df, f));
+	}
 	
+	public static String getSubfield(DataField df, char f) {
+		Subfield sf = df.getSubfield(f);
+		if (sf == null) return "";
+		return sf.getData();
+	}
+
 	public ActionResult importFile(File selectedFile) throws IOException {
 		Timer timer = new Timer();
 		TreeMap<String, Stats> types = new TreeMap<String, Stats>();
 	    InputStream in = new FileInputStream(selectedFile);
         MarcReader reader = new MarcStreamReader(in);
+        int i=0;
         while (reader.hasNext()) {
-             Record record = reader.next();
-             System.out.println(record.toString());
+			String key = nf.format(i++);
+			Stats stat = Generator.INSTANCE.create(key);
+			stat.setVal(MarcStatsItems.Stat, STAT.VALID);
+			types.put(stat.key, stat);
+            Record record = reader.next();
+            
+            for(DataField df: record.getDataFields()) {
+            	String tag = df.getTag();
+            	if (tag.equals("245")) {
+            		statSubfield(stat, MarcStatsItems.Title, df, 'a');
+            	} else if (tag.equals("100")) {
+            		statSubfield(stat, MarcStatsItems.Author, df, 'a');
+            	}
+             }
+             
         }    
 
 		return new ActionResult(selectedFile, selectedFile.getName(),
