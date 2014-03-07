@@ -23,6 +23,7 @@ public class FileSelectChooser extends JPanel implements ActionListener, Documen
 	protected JFrame parent; 
 	public JTextField tf;
 	private JButton button;
+	private JButton buttonX;
 	protected String title;
 	private String key;
 	
@@ -42,6 +43,12 @@ public class FileSelectChooser extends JPanel implements ActionListener, Documen
 		button = new JButton("...");
 		add(button);
 		button.addActionListener(this);
+		buttonX = new JButton("X");
+		add(buttonX);
+		buttonX.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e) {
+				tf.setText("");
+			}});
 		tf.getDocument().addDocumentListener(this);
 	}
 	

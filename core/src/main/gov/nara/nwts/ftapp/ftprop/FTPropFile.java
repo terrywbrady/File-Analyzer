@@ -55,6 +55,8 @@ public class FTPropFile extends DefaultFTProp {
 	public File getFile() {
 		String s = (String)getValue();
 		if (s == null) return null;
+		if (s.isEmpty()) return null;
+
 		return new File(s);
 	}
 
