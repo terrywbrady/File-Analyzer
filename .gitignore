@@ -12,3 +12,4 @@ demo/target/*
 gulibrary/target/*
 image/target/*
 image/lib/*
+/bin
