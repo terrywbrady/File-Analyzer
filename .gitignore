@@ -1,6 +1,5 @@
 #ignore compiled source
 *.class
-.classpath
 .project
 .settings/*
 bin/*
@@ -12,3 +11,4 @@ demo/target/*
 gulibrary/target/*
 image/target/*
 image/lib/*
+/bin

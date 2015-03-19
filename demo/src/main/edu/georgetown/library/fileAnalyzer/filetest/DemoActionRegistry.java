@@ -20,6 +20,7 @@ public class DemoActionRegistry extends DSpaceActionRegistry {
 		add(new VerifyBag(dt)); 
 		removeFT(CounterValidation.class);
 		add(new CounterValidationXls(dt)); 
+        add(new DemoFileTest(dt)); 
 	}
 	
 }

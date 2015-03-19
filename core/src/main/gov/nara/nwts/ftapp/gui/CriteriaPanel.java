@@ -40,8 +40,8 @@ class CriteriaPanel extends MyPanel {
 	JTabbedPane propFilter;
 	JPanel propPanel;
 	JTabbedPane filterTabs;
-	JComboBox actions;
-	JComboBox limit;
+	JComboBox<FileTest> actions;
+	JComboBox<Integer> limit;
 	JCheckBox ignorePeriods;
 	JCheckBox fcb;
 	JTextArea description;
@@ -128,11 +128,11 @@ class CriteriaPanel extends MyPanel {
 		pp.add(fctf);
 		
 		p = addPanel("Action to perform on Files");
-		actions = new JComboBox(parent.actionRegistry);
+		actions = new JComboBox<FileTest>(parent.actionRegistry);
 		
 		String action = parent.preferences.get("action", "");
 		for(int i=0; i<actions.getItemCount(); i++){
-			FileTest ft = (FileTest)actions.getItemAt(i);
+			FileTest ft = actions.getItemAt(i);
 			if (ft.toString().equals(action)) {
 				actions.setSelectedIndex(i);
 				break;
@@ -149,7 +149,7 @@ class CriteriaPanel extends MyPanel {
 		);
 
 		
-		limit = new JComboBox();
+		limit = new JComboBox<Integer>();
 		for(int i=0; i<LIMITS.length; i++) {
 			limit.addItem(LIMITS[i]);
 		}

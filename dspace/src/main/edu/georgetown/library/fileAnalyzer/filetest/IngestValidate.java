@@ -4,6 +4,8 @@ import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
+import gov.nara.nwts.ftapp.ftprop.InvalidInputException;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
@@ -12,6 +14,7 @@ import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import gov.nara.nwts.ftapp.util.XMLUtil;
 
 import edu.georgetown.library.fileAnalyzer.filetest.IngestValidate.Generator.DSpaceStats;
+import edu.georgetown.library.fileAnalyzer.importer.MetadataRegPropFile;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -58,7 +61,8 @@ public class IngestValidate extends DefaultFileTest {
 	public enum DC_STAT {
 		MISSING,
 		VALID,
-		INVALID
+		INVALID,
+		UNKNOWN_FIELD
 	}
 
 	public enum OTHER_STAT {
@@ -88,6 +92,7 @@ public class IngestValidate extends DefaultFileTest {
 		License(StatsItem.makeStringStatsItem("License", 150)),
 		Text(StatsItem.makeStringStatsItem("TextBitstream", 150)),
 		Other(StatsItem.makeStringStatsItem("OtherBitstream", 150)),
+        Notes(StatsItem.makeStringStatsItem("Error Details", 150)),
 		;
 		
 		StatsItem si;
@@ -117,6 +122,7 @@ public class IngestValidate extends DefaultFileTest {
 				setVal(DSpaceStatsItems.License,info.license);
 				setVal(DSpaceStatsItems.Text,info.text);
 				setVal(DSpaceStatsItems.Other,info.other);
+                setVal(DSpaceStatsItems.Notes,info.notes);
 				
 				for(String tag: info.metadata.keySet()) {
 					ArrayList<String>vals = info.metadata.get(tag);
@@ -132,12 +138,14 @@ public class IngestValidate extends DefaultFileTest {
 		public DSpaceStats create(String key) {return new DSpaceStats(key);}
 	}
 	public static StatsItemConfig details = StatsItemConfig.create(DSpaceStatsItems.class);
-    public void init() {
+    @Override public InitializationStatus init() {
     	details = StatsItemConfig.create(DSpaceStatsItems.class);
     	for(FTProp prop: ftprops) {
     		if (prop.getValue().equals("NA")) continue;
+            if (prop.getName().equals(MetadataRegPropFile.P_METAREG)) continue;
     		details.addStatsItem(prop.getValue(), StatsItem.makeStringStatsItem(prop.getValue().toString()));
     	}
+    	return super.init();
     }
 	
 	public class DSpaceInfo {
@@ -159,6 +167,7 @@ public class IngestValidate extends DefaultFileTest {
 		public String license ="";
 		public String text ="";
 		public String other ="";
+		public String notes = "";
 		
 		public DSpaceInfo(File f) {
 			files = f.listFiles();
@@ -183,6 +192,9 @@ public class IngestValidate extends DefaultFileTest {
 						dc_stat = DC_STAT.INVALID;
 					} catch (IOException e) {
 						dc_stat = DC_STAT.INVALID;
+                    } catch (InvalidInputException e) {
+                        dc_stat = DC_STAT.UNKNOWN_FIELD;
+                        notes = e.getMessage();
 					}
 				} else {
 					Matcher m = pOther.matcher(file.getName());
@@ -201,6 +213,9 @@ public class IngestValidate extends DefaultFileTest {
 							other_stat = OTHER_STAT.INVALID;
 						} catch (IOException e) {
 							other_stat = OTHER_STAT.INVALID;
+	                    } catch (InvalidInputException e) {
+	                        dc_stat = DC_STAT.UNKNOWN_FIELD;
+	                        notes = e.getMessage();
 						}
 					}
 				}
@@ -246,12 +261,15 @@ public class IngestValidate extends DefaultFileTest {
 			return OVERALL_STAT.INVALID;
 		}
 		
-		public void loadMetadata(Document d) {
+		public void loadMetadata(Document d) throws InvalidInputException {
 			String schema = d.getDocumentElement().getAttribute("schema");
 			NodeList nl = d.getDocumentElement().getElementsByTagName("dcvalue");
 			for(int i=0; i<nl.getLength();i++) {
 				Element elem = (Element)nl.item(i);
 				String tag = getMetadataKey(schema, elem);
+				if (!metadataPropFile.isFieldInRegistry(tag)) {
+				    throw new InvalidInputException(tag + " is not in the Metadata Registry");
+				}
 				String text = elem.getTextContent();
 				if (text.isEmpty()) continue;
 				ArrayList<String> vals = metadata.get(tag);
@@ -345,19 +363,24 @@ public class IngestValidate extends DefaultFileTest {
 	public String[] getMETA() {return IngestInventory.META;}
 	public static final int COUNT = 8;
 
-	
+	MetadataRegPropFile metadataPropFile;
 	long counter = 1000000;
+	
+	public int getStdPropCount() {return 1;}
+	
 	public IngestValidate(FTDriver dt) {
 		super(dt);
-		for(int i=1; i<=1; i++) {
+        metadataPropFile = new MetadataRegPropFile(dt);
+        this.ftprops.add(metadataPropFile);
+		for(int i=1+getStdPropCount(); i<=1+getStdPropCount(); i++) {
 			this.ftprops.add(new FTPropEnum(dt, this.getClass().getName(),  "metadata "+i, "m"+i,
 					"field to display for each item found", getMETA(), "dc.title"));			
 		}
-		for(int i=2; i<=2; i++) {
+		for(int i=2+getStdPropCount(); i<=2+getStdPropCount(); i++) {
 			this.ftprops.add(new FTPropEnum(dt, this.getClass().getName(),  "metadata "+i, "m"+i,
 					"field to display for each item found", getMETA(), "dc.date.created"));			
 		}
-		for(int i=3; i<=COUNT; i++) {
+		for(int i=3+getStdPropCount(); i<=COUNT; i++) {
 			this.ftprops.add(new FTPropEnum(dt, this.getClass().getName(),  "metadata "+i, "m"+i,
 					"field to display for each item found", getMETA(), "NA"));			
 		}

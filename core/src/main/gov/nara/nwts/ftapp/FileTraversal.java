@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.FileTest;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 
 /**
@@ -25,6 +26,7 @@ public class FileTraversal {
 	protected int max;
 	protected int numProcessed = 0;
 	protected boolean cancelled = false;
+	public InitializationStatus iStat;
 	
 	public int getNumProcessed() {
 		return numProcessed;
@@ -138,7 +140,13 @@ public class FileTraversal {
 		fileFilter = driver.getFileFilter(fileTest); 
 		dirnameFilter = driver.getDirectoryFilter(fileTest);
 		traversalStart();
-    	fileTest.init();
+    	iStat = fileTest.init();
+    	if (iStat.hasFailTest()){
+            double duration = timer.getDuration();
+            String name = fileTest.getShortName()+(++driver.summaryCount);
+            traversalEnd(name, false, duration); 
+            return false;    	    
+    	}
 		countDirectories(driver.root);
 		completeDirectoryScan();
 		boolean completed = traverse(driver.root, fileTest, max);

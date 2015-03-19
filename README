@@ -23,6 +23,7 @@ PREREQUISITES
 INSTALLATION
 - Clone this code to your computer
 - Run mvn install
+- Detailed Installation Instructions: https://github.com/Georgetown-University-Libraries/File-Analyzer/wiki/Installation-instructions
 
 DEPLOYMENTS
 This code will build 3 flavors of the File Analyzer.

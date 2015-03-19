@@ -83,6 +83,8 @@ public class Stats {
 				long n = (Long)obj;
 				n += val;
 				vals.set(index, n);
+            } else if (obj instanceof Money) {
+                vals.set(index, ((Money)obj).moneySum(val));
 			}
 		}
 	}
@@ -115,7 +117,19 @@ public class Stats {
 		}
 	}
 	 
-	public void appendVal(StatsItemEnum eitem, String val) {
+    public void sumVal(StatsItemEnum eitem, Money m) {
+        int index = eitem.si().getIndex();
+        if ((index >= 0) && (vals.size() > index)) {
+            Object obj = vals.get(index);
+            if (obj == null) {
+                vals.set(index,m);                
+            } else if (obj instanceof Money) {
+                vals.set(index, ((Money)obj).moneySum(m));
+            }
+        }
+    }
+
+    public void appendVal(StatsItemEnum eitem, String val) {
 		appendVal(eitem, val, "");
 	}
 	
@@ -161,6 +175,10 @@ public class Stats {
 	public Long getLongVal(StatsItemEnum eitem) {
 		return (Long)getVal(eitem, null);
 	}
+
+    public Money getMoneyVal(StatsItemEnum eitem) {
+        return (Money)getVal(eitem, new Money());
+    }
 
 	public Integer getIntVal(StatsItemEnum eitem) {
 		return (Integer)getVal(eitem, null);

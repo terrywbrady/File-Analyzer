@@ -4,6 +4,7 @@ import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.filter.DefaultFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
@@ -93,8 +94,7 @@ class DigitalDerivatives extends DefaultFileTest {
 	Vector<String>extensions;
 	Vector<String>extensionsReq;
 	
-	public void init() {
-		
+	@Override public InitializationStatus init() {
 		match = getProperty(REGX_MATCH, DEF_MATCH).toString();
 		try {
 			pMatch = Pattern.compile(match);
@@ -121,6 +121,7 @@ class DigitalDerivatives extends DefaultFileTest {
 			extensions.add(s);
 			details.addStatsItem(s, StatsItem.makeEnumStatsItem(FOUND.class, s));
 		}
+        return super.init();
 	}
 	
 	public String getExt(String test) {

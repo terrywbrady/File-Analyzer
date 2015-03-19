@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="core/src/main"/>
+	<classpathentry kind="src" path="demo/src/main"/>
+	<classpathentry kind="src" path="dspace/src/main"/>
+	<classpathentry kind="var" path="TIKA-JAR"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="BAGIT-JAR"/>
+	<classpathentry kind="output" path="dspace/target/classes"/>
+</classpath>

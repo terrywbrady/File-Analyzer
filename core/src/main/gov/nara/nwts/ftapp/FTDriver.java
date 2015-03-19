@@ -115,6 +115,7 @@ public class FTDriver {
 	static {
 		nf = NumberFormat.getIntegerInstance();
 		ndurf = NumberFormat.getNumberInstance();
+		ndurf.setMinimumFractionDigits(2);
 		//nf.setGroupingUsed(true);
 		df = SimpleDateFormat.getDateInstance();
 	}

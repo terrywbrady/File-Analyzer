@@ -14,6 +14,7 @@ import gov.nara.nwts.ftapp.filter.ImageFileTestFilter;
 import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.CountStats;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
@@ -129,7 +130,12 @@ public abstract class DefaultFileTest implements FileTest {
     public Pattern getDirectoryPattern() {
     	return null;
     }
-    public void init() {
+    public InitializationStatus init() { 
+        InitializationStatus iStat = new InitializationStatus();
+        for(FTProp prop: ftprops) {
+            iStat.addMessage(prop.initValidation(getRoot()));
+        }
+        return iStat;
     }
     public void refineResults() {
     }

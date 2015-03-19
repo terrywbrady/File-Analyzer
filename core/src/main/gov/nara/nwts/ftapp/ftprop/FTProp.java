@@ -1,5 +1,7 @@
 package gov.nara.nwts.ftapp.ftprop;
 
+import java.io.File;
+
 import javax.swing.JComponent;
 
 /**
@@ -20,4 +22,6 @@ public interface FTProp {
     public String getShortNameFormatted();
     public String getShortNameNormalized();
     public String describeFormatted();
+    
+    public InitializationStatus initValidation(File refFile);
 }

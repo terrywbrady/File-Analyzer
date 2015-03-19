@@ -9,7 +9,7 @@ public class StatsItem {
 	public Object initVal;
 	private int index;
 	private boolean makeFilter;
-	
+		
 	public StatsItem(Class<?> myclass, String header, int width, Object[] values, boolean export, Object initVal) {
 		this.myclass = myclass;
 		this.header = header;
@@ -45,6 +45,10 @@ public class StatsItem {
 	public static StatsItem makeFloatStatsItem(String header) {
 		return new StatsItem(Float.class, header, 100, null, true, (float)0);
 	}
+
+    public static StatsItem makeMoneyStatsItem(String header) {
+        return new StatsItem(Money.class, header, 100, null, true, new Money());
+    }
 
 	public StatsItem setWidth(int width) {
 		this.width = width;

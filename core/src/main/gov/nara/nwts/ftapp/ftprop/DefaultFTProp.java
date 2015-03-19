@@ -1,5 +1,7 @@
 package gov.nara.nwts.ftapp.ftprop;
 
+import java.io.File;
+
 import gov.nara.nwts.ftapp.FTDriver;
 
 /**
@@ -14,7 +16,7 @@ public abstract class DefaultFTProp implements FTProp {
 	String description;
 	Object def;
 	FTDriver ft;
-	String prefix = "";
+	String prefix = ""; 
 	
 	public enum RUNMODE {
 		TEST,
@@ -79,5 +81,10 @@ public abstract class DefaultFTProp implements FTProp {
 		buf.append("                     ");
 		return buf.substring(0,20);
 	}
+
+    public InitializationStatus initValidation(File refFile){
+        InitializationStatus iStat = new InitializationStatus();
+        return iStat;
+    }
 
 }
