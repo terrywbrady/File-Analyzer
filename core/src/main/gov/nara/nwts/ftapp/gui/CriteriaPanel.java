@@ -40,9 +40,10 @@ class CriteriaPanel extends MyPanel {
 	JTabbedPane propFilter;
 	JPanel propPanel;
 	JTabbedPane filterTabs;
-	JComboBox actions;
-	JComboBox limit;
+	JComboBox<FileTest> actions;
+	JComboBox<Integer> limit;
 	JCheckBox ignorePeriods;
+	JCheckBox followLinks;
 	JCheckBox fcb;
 	JTextArea description;
 	JPanel propFilterPanel;
@@ -104,6 +105,10 @@ class CriteriaPanel extends MyPanel {
 		ignorePeriods.setSelected(true);
 		ignorePeriods.setText("Assume directory names do not contain periods (faster)");
 		adv1.add(ignorePeriods);
+		followLinks = new JCheckBox();
+		followLinks.setSelected(false);
+		followLinks.setText("Follow Links");
+		adv1.add(followLinks);
 
 		JPanel adv2 = new JPanel();
 		adv2.setBorder(BorderFactory.createTitledBorder("Auto-save Output directory"));
@@ -128,11 +133,11 @@ class CriteriaPanel extends MyPanel {
 		pp.add(fctf);
 		
 		p = addPanel("Action to perform on Files");
-		actions = new JComboBox(parent.actionRegistry);
+		actions = new JComboBox<FileTest>(parent.actionRegistry);
 		
 		String action = parent.preferences.get("action", "");
 		for(int i=0; i<actions.getItemCount(); i++){
-			FileTest ft = (FileTest)actions.getItemAt(i);
+			FileTest ft = actions.getItemAt(i);
 			if (ft.toString().equals(action)) {
 				actions.setSelectedIndex(i);
 				break;
@@ -149,7 +154,7 @@ class CriteriaPanel extends MyPanel {
 		);
 
 		
-		limit = new JComboBox();
+		limit = new JComboBox<Integer>();
 		for(int i=0; i<LIMITS.length; i++) {
 			limit.addItem(LIMITS[i]);
 		}

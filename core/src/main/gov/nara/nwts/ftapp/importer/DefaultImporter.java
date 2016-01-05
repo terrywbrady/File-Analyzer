@@ -3,6 +3,7 @@ package gov.nara.nwts.ftapp.importer;
 import gov.nara.nwts.ftapp.ActionResult;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,4 +60,11 @@ public abstract class DefaultImporter implements Importer {
 			}
 		}
 	}
+    public InitializationStatus initValidate(File refFile) { 
+        InitializationStatus iStat = new InitializationStatus();
+        for(FTProp prop: ftprops) {
+            iStat.addMessage(prop.initValidation(refFile));
+        }
+        return iStat;
+    }
 }

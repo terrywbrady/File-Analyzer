@@ -82,8 +82,8 @@ class SummaryPanel extends MyBorderPanel {
 		tp.add(new JScrollPane(st.jt), BorderLayout.CENTER);
 		filterPanel.removeAll();
 		spFilter.setVisible(!st.filters.isEmpty());
-		for(Iterator<JComboBox>i=st.filters.iterator();i.hasNext();) {
-			JComboBox cb = i.next();
+		for(Iterator<JComboBox<Object>>i=st.filters.iterator();i.hasNext();) {
+			JComboBox<Object> cb = i.next();
 			if (cb!=null) filterPanel.add(cb);
 		}
 	}

@@ -23,4 +23,12 @@ public class FTPropInt extends FTPropString {
 	public NumberFormat getNumberFormat() {
 		return nf;
 	}
+	
+	public Integer getIntValue(int def) {
+	    try {
+            return Integer.parseInt(getValue());
+        } catch (NumberFormatException e) {
+            return def;
+        }
+	}
 }

@@ -241,9 +241,6 @@ public class ProquestQC extends DefaultFileTest {
 	}
 	
 	
-	public void init() {
-	}
-
 	public String getDescription() {
 		return "QC Files created by the Proquest Ingest Process";
 	}

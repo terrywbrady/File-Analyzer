@@ -68,5 +68,4 @@ public class FTPropFile extends DefaultFTProp {
 		return getValue();
 	}
 
-
 }

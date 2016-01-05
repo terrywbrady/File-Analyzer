@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="core/src/main"/>
+	<classpathentry kind="src" path="demo/src/main"/>
+	<classpathentry kind="src" path="dspace/src/main"/>
+    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="var" path="M2_REPO/org/apache/tika/tika-app/1.4/tika-app-1.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/gov/loc/bagit/4.9.0/bagit-4.9.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/commons-io/commons-io/2.0.1/commons-io-2.0.1.jar"/>
+    <classpathentry kind="var" path="M2_REPO/info/freelibrary/freelib-marc4j/2.6.6/freelib-marc4j-2.6.6.jar"/>
+	<classpathentry kind="output" path="dspace/target/classes"/>
+</classpath>
