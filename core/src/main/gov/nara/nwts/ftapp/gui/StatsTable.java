@@ -1,5 +1,6 @@
 package gov.nara.nwts.ftapp.gui;
 
+import gov.nara.nwts.ftapp.stats.Money;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
@@ -35,7 +36,7 @@ class StatsTable {
 	MyStatsTableModel tm;
 	StatsItemConfig details;
 	Pattern patt;
-	Vector<JComboBox> filters;
+	Vector<JComboBox<Object>> filters;
 	TableRowSorter<TableModel> sorter;
 	ArrayList<String>noExport;
 	DirectoryTable dt;
@@ -60,7 +61,7 @@ class StatsTable {
 		this.details = details;
 		this.dt = dt;
 		noExport = new ArrayList<String>();
-		filters = new Vector<JComboBox>();
+		filters = new Vector<JComboBox<Object>>();
 		for (Iterator<String> i = mystats.keySet().iterator(); i.hasNext();) {
 			String s = i.next();
 			Vector<Object> v = new Vector<Object>();
@@ -87,7 +88,7 @@ class StatsTable {
 				for(Object obj: o.values) {
 					list.add(obj);
 				}
-				JComboBox cb = new JComboBox(list.toArray());
+				JComboBox<Object> cb = new JComboBox<Object>(list.toArray());
 				cb.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
 						RowFilter<TableModel, Integer> rf = new RowFilter<TableModel, Integer>() {
@@ -97,7 +98,7 @@ class StatsTable {
 									Object o = arg0.getValue(i);
 									if (o == null)
 										continue;
-									JComboBox cb = filters.get(i);
+									JComboBox<Object> cb = filters.get(i);
 									if (cb == null)
 										continue;
 									if (cb.getSelectedIndex() == 0)
@@ -154,6 +155,18 @@ class StatsTable {
 							int v = (Integer) value;
 							setText(DirectoryTable.nf.format(v));
 							setHorizontalAlignment(JLabel.RIGHT);
+                        } else if (value instanceof Float) {
+                            float v = (Float) value;
+                            setText(DirectoryTable.ndurf.format(v));
+                            setHorizontalAlignment(JLabel.RIGHT);
+                        } else if (value instanceof Money) {
+                            Money v = (Money) value;
+                            setText(v.toString());
+                            setHorizontalAlignment(JLabel.RIGHT);
+                        } else if (value instanceof Double) {
+                            double v = (Double) value;
+                            setText(DirectoryTable.ndurf.format(v));
+                            setHorizontalAlignment(JLabel.RIGHT);
 						} else {
 							String s = value.toString();
 							if (s.contains("\n")) {

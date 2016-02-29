@@ -2,11 +2,15 @@ package gov.nara.nwts.ftapp;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.FileTest;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 
 /**
@@ -21,10 +25,13 @@ public class FileTraversal {
 	protected FilenameFilter fileFilter;
 	protected FilenameFilter dirnameFilter;
 	
+	protected HashSet<String> alreadyVisited = new HashSet<String>();
+	
 	public FileTest fileTest;
 	protected int max;
 	protected int numProcessed = 0;
 	protected boolean cancelled = false;
+	public InitializationStatus iStat;
 	
 	public int getNumProcessed() {
 		return numProcessed;
@@ -44,6 +51,7 @@ public class FileTraversal {
 	public void setTraversal(FileTest fileTest, int max) {
 		this.fileTest = fileTest;
 		this.max = max;
+		alreadyVisited = new HashSet<String>();
 	}
 	
 	public void reportCancel() {
@@ -53,25 +61,41 @@ public class FileTraversal {
 		if (f==null) return false;
 		File[] files = f.listFiles(fileFilter);
 		if (files == null) return true;
-		if (fileTest.processRoot() && fileTest.isTestDirectory()) {
+		if (fileTest.processRoot() && fileTest.isTestDirectory(f)) {
 			boolean test = true;
 			Pattern p = fileTest.getDirectoryPattern();
 			if (p != null){
 			    test = p.matcher(f.getAbsolutePath()).matches();
 			}
 			if (test) {
-				checkDirFile(f, fileTest);
+				if (!Files.isSymbolicLink(f.toPath()) || driver.followLinks()) {
+					checkDirFile(f, fileTest);
+				}
 			}
 			
 		}
 		for(int i=0; i<files.length; i++) {
+			if (driver.followLinks()) {
+				String path;
+				try {
+					path = files[i].getCanonicalPath().intern();
+					if (alreadyVisited.contains(path)) {
+						continue;
+					}
+					alreadyVisited.add(path);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else if (Files.isSymbolicLink(files[i].toPath())) {
+				continue;
+			}
 			if (files[i].isDirectory()) {
 				if (isCancelled()) return false; 
 				if (getNumProcessed() >= max) {
 					return false; 
 				}
 				traverse(files[i], fileTest, max);
-				if (fileTest.isTestDirectory()) {
+				if (fileTest.isTestDirectory(files[i])) {
 					boolean test = true;
 					Pattern p = fileTest.getDirectoryPattern();
 					if (p != null){
@@ -85,7 +109,9 @@ public class FileTraversal {
 			} else {
 				if (isCancelled()) return false; 
 				File thefile = files[i];
+				
 				checkFile(thefile, fileTest);
+
 				fileTest.progress(getNumProcessed());
 				numProcessed++;
 				if (getNumProcessed() >= max) {
@@ -138,7 +164,13 @@ public class FileTraversal {
 		fileFilter = driver.getFileFilter(fileTest); 
 		dirnameFilter = driver.getDirectoryFilter(fileTest);
 		traversalStart();
-    	fileTest.init();
+    	iStat = fileTest.init();
+    	if (iStat.hasFailTest()){
+            double duration = timer.getDuration();
+            String name = fileTest.getShortName()+(++driver.summaryCount);
+            traversalEnd(name, false, duration); 
+            return false;    	    
+    	}
 		countDirectories(driver.root);
 		completeDirectoryScan();
 		boolean completed = traverse(driver.root, fileTest, max);

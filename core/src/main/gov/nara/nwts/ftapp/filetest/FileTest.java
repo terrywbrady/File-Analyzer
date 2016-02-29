@@ -9,6 +9,7 @@ import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.filter.FileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 
 /**
  * Contract defining the behavior of a File Analyzer custom rule.
@@ -42,11 +43,12 @@ public interface FileTest {
     
     public boolean isTestFiles();
     public boolean isTestDirectory();
+    public boolean isTestDirectory(File f);
     public boolean processRoot();
     public Pattern getDirectoryPattern();
     
     public void refineResults();
-    public void init();
+    public InitializationStatus init();
 
     public void progress(int count);
 	public FileTest resetOption();

@@ -1,14 +1,16 @@
 #ignore compiled source
 *.class
-.classpath
 .project
 .settings/*
 bin/*
 export/*
 gulibrary/*
 core/target/*
+core-utils/target/*
+bag-utils/target/*
 dspace/target/*
 demo/target/*
 gulibrary/target/*
 image/target/*
 image/lib/*
+/bin

@@ -18,6 +18,7 @@ public class DSpaceImporterRegistry extends ImporterRegistry {
 		add(new IngestFolderCreate(dt));
 		add(new CSVBatcher(dt));
 		add(new DSpaceMetadata2Marc(dt));
+        add(new ReadMetadataRegistry(dt));
 	}
 	
 

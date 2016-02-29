@@ -30,8 +30,10 @@
 	</build>
 
 	<modules>
+        <module>core-utils</module>
 		<module>core</module>
 		<module>dspace</module>
+        <module>bag-utils</module>
 		<module>demo</module>
 	</modules>
 </project>
