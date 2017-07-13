@@ -272,6 +272,7 @@ public class APTrustHelper extends TarBagHelper {
             if (id == null) throw new InvalidMetadataException("The hierarchy handle must exist");
             if (id.isEmpty()) throw new InvalidMetadataException("The hierarchy handle cannot be empty");
                     
+            id = id.replaceAll("/", "_");
             setInstitutionalSenderId(id);
             setItemIdentifer(id);
             setTitle("DSpace hierarchy for repository "+id);            
