@@ -15,6 +15,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import gov.loc.repository.bagit.Bag;
@@ -255,6 +256,27 @@ public class APTrustHelper extends TarBagHelper {
         } catch (SAXException e) {
            throw new InvalidMetadataException(e.getMessage());
         } catch (XPathExpressionException e) {
+            throw new InvalidMetadataException(e.getMessage());
+        }
+    }
+
+    public void parseHierarchyFile(File zeout) throws IOException, InvalidMetadataException {
+        try {
+            //namespace is opaque when coming out of AS
+            Document doc = XMLUtil.db.parse(zeout);
+            NodeList nl = doc.getDocumentElement().getElementsByTagName("handle");
+            if (nl.getLength() == 0) {
+                    throw new InvalidMetadataException("The hierarchy file must have a root handle");
+            }
+            String id = nl.item(0).getTextContent();
+            if (id == null) throw new InvalidMetadataException("The hierarchy handle must exist");
+            if (id.isEmpty()) throw new InvalidMetadataException("The hierarchy handle cannot be empty");
+                    
+            setInstitutionalSenderId(id);
+            setItemIdentifer(id);
+            setTitle("DSpace hierarchy for repository "+id);            
+            setInstitutionalSenderDesc("This is a generated export of the DSpace hierarchy");
+        } catch (SAXException e) {
             throw new InvalidMetadataException(e.getMessage());
         }
     }

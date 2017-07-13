@@ -34,6 +34,8 @@ public class AIPDirToAPTHelper extends AIPToAPTHelper {
                 aptHelper.parseMetsFile(f);
             } else if (f.getName().startsWith("ead.")) {
                 aptHelper.parseEadFile(f);
+            } else if (f.getName().startsWith("hierarchy.")) {
+                aptHelper.parseHierarchyFile(f);
             }
 
         }
