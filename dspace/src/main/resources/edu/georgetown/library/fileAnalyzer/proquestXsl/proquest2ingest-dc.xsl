@@ -5,6 +5,7 @@
   <xsl:output method="xml"/>
   <xsl:param name="university-name">University Name</xsl:param>
   <xsl:param name="university-loc">University Location</xsl:param>
+  <xsl:param name="type">thesis</xsl:param>
 
   <xsl:template match="/*">
     <xsl:variable name="pCreatorOrcid" select="//DISS_author/DISS_orcid"/>
@@ -96,6 +97,11 @@
         <xsl:with-param name="qualifier">submitted</xsl:with-param>
       </xsl:apply-templates>
  
+      <xsl:call-template name="val">
+        <xsl:with-param name="text" select="$type"/>
+        <xsl:with-param name="element">type</xsl:with-param>
+      </xsl:call-template>
+
       <xsl:call-template name="val">
         <xsl:with-param name="text" select="$university-name"/>
         <xsl:with-param name="element">publisher</xsl:with-param>
