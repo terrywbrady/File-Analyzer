@@ -30,12 +30,17 @@ public class DelimitedFileReader {
 		this.sep = sep;
 	}
 
+	public String prepareRow(String s) {
+	        return s;
+	}
+	
 	public Vector<String> getRow() throws IOException {
 		pline = br.readLine();
 		if (pline == null) {
 			br.close();
 			return null;
 		}
+		pline = prepareRow(pline);
 		if (!sep.trim().equals("")) pline = pline.trim();
 		Vector<String> cols = new Vector<String>();
 		while(pline!=null){
