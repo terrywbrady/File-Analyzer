@@ -15,11 +15,14 @@ public class IIIFManifest {
         private String iiifRootPath;
         private JSONObject seq;
         
+        private HashMap<File,JSONObject> ranges = new HashMap<>();
+        
         public static final String METADATA = "metadata";
         public static final String STRUCTURES = "structures";
         public static final String SEQUENCES = "sequences";
         public static final String CANVASES = "canvases";
         public static final String IMAGES = "images";
+        public static final String RANGES = "ranges";
         
         public IIIFManifest(File root, String iiifRootPath) {
                 file = new File(root, "manifest.json");
@@ -31,9 +34,9 @@ public class IIIFManifest {
                 jsonObject.put("logo", "https://repository.library.georgetown.edu/themes/Mirage2/images/digitalgeorgetown-logo-small-inverted.png");
                 jsonObject.put("label","label");
                 jsonObject.put("description","desc");
-                addMetadata(jsonObject, METADATA, "aa","bb");
-                //JSONArray structures = addArray(jsonObject, STRUCTURES).put(makeRange("rangelabel","idlabel", true));
-                //structures.toString().getClass();//TBD
+                JSONObject top = makeRangeObject("Finding Aid","id").put("viewingHint", "top");
+                JSONObject fs = makeRange(root, "File System","file-system", true);
+                addArray(top, RANGES).put(fs.getString("@id"));
                 seq = addSequence(jsonObject, SEQUENCES);
                 jsonObject.put("attribution", "attrib");
                 jsonObject.put("@id","https://repository-dev.library.georgetown.edu/xxx");
@@ -57,18 +60,56 @@ public class IIIFManifest {
                 arr.put(m);
         }
         
-        public JSONObject makeRange(String label, String id, boolean isTop) {
-                JSONObject obj = new JSONObject();
-                obj.put("label", label);
-                obj.put("@id", id);
-                if (isTop) {
-                        obj.put("viewingHint", "top");                        
+        public void addDirLink(File f, String arrlabel, String id) {
+                File pfile = f.getParentFile();
+                if (pfile == null) {
+                        return;
                 }
+                JSONObject parent = ranges.get(pfile);
+                if (parent != null) {
+                        addArray(parent, arrlabel).put(id);
+                } else {
+                        System.err.println(pfile.getAbsolutePath()+" not found");
+                }
+        }
+
+        public String translateLabel(String label) {
+                return label
+                        .replaceAll("box_","Box ")
+                        .replaceAll("^b", "Box ")
+                        .replaceAll("_f", " Folder ")
+                        ;
+        }
+        
+        public JSONObject makeRange(File dir, String label, String id, boolean isTop) {
+                if (ranges.containsKey(dir)) {
+                        return ranges.get(dir);
+                }
+                if (!isTop) {
+                        File pfile = dir.getParentFile();
+                        if (!ranges.containsKey(pfile)) {
+                                //root path will always be found
+                                makeRange(pfile, pfile.getName(), pfile.getName(), false);
+                        }                        
+                }
+                
+                JSONObject obj = makeRangeObject(label, id);
+                addDirLink(dir, RANGES, id);
+                ranges.put(dir, obj);
+                return obj;
+        }       
+
+        public JSONObject makeRangeObject(String label, String id) {
+                JSONObject obj = new JSONObject();
+                label = translateLabel(label);
+                obj.put("label", label);
+                addMetadata(obj, METADATA, "Container", label);
+                obj.put("@id", id);
                 obj.put("@type", "sc:Range");
                 addArray(obj, "ranges");
+                addArray(jsonObject, STRUCTURES).put(obj);
                 return obj;
-            }       
-
+        }       
         
         public void write() throws IOException {
                 FileWriter fw = new FileWriter(file);
@@ -78,13 +119,6 @@ public class IIIFManifest {
 
         public String serialize() {
                 return jsonObject.toString(2);
-        }
-        
-        public static final void main(String[] args) {
-                IIIFManifest manifest = new IIIFManifest(new File("."),"http://");
-                manifest.addFile(new File("foo.bar"));
-                System.out.println(manifest.serialize());
-                
         }
         
         public JSONObject addSequence(JSONObject parent, String arrlabel) {
@@ -102,28 +136,37 @@ public class IIIFManifest {
         public String addFile(String key, File f) {
                 return addCanvas(key, f);
         }
+        public String translateItemLabel(String label) {
+                return label
+                        .replaceAll(".*_item_", "");
+        }
         public String addCanvas(String key, File f) {
                 String iiifpath = String.format("%s/%s", iiifRootPath, key.replaceAll("\\\\",  "/").replaceFirst("^/*", ""));
+                String canvasid = "https://repository-dev.library.georgetown.edu/loris/Canvas/"+f.getName();
+                String imageid = "https://repository-dev.library.georgetown.edu/loris/Image/"+f.getName();
+                String resid = iiifpath + "/full/full/0/default.jpg";
                 
                 JSONArray arr = addArray(seq, CANVASES);
                 JSONObject canvas = new JSONObject();
                 arr.put(canvas);
-                canvas.put("@id", "https://repository-dev.library.georgetown.edu/loris/"+f.getName());
+                canvas.put("@id", canvasid);
                 canvas.put("@type", "sc:Canvas"); 
                 canvas.put("height", 1536);
                 canvas.put("width", 2048);
-                canvas.put("label", f.getName());
+                String label = translateItemLabel(f.getName());
+                canvas.put("label", label);
+                addMetadata(canvas, METADATA, "name", f.getName());
                 JSONArray imarr = addArray(canvas, IMAGES);
                 JSONObject image = new JSONObject();
                 imarr.put(image);
                 image.put("@context", "http://iiif.io/api/presentation/2/context.json");
-                image.put("@id", "https://repository-dev.library.georgetown.edu/loris"); 
+                image.put("@id", imageid); 
                 image.put("@type", "oa:Annotation");
                 image.put("motivation", "sc:painting"); 
                 image.put("on", "https://repository-dev.library.georgetown.edu/ead");
                 JSONObject resource = new JSONObject();
                 image.put("resource", resource);
-                resource.put("@id", iiifpath + "/full/full/0/default.jpg"); 
+                resource.put("@id", resid); 
                 resource.put("@type", "dctypes:Image");
                 resource.put("format", "image/jpeg");
                 resource.put("height", 1536);
@@ -132,8 +175,10 @@ public class IIIFManifest {
                 resource.put("service", service);
                 service.put("@context", "http://iiif.io/api/image/2/context.json"); 
                 service.put("@id", iiifpath); 
-                service.put("profile", "http://iiif.io/api/image/2/level2.json");                
-                return iiifpath;
+                service.put("profile", "http://iiif.io/api/image/2/level2.json");    
+                
+                addDirLink(f, CANVASES, canvasid);
+                return canvasid;
             }
         
 }

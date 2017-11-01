@@ -23,8 +23,10 @@ import org.json.JSONException;
  *
  */
 class CreateIIIFManifest extends DefaultFileTest {
+        private static enum Type {Folder, Image;}
         private static enum IIIFStatsItems implements StatsItemEnum {
-                Key(StatsItem.makeStringStatsItem("Path", 400)), 
+                Key(StatsItem.makeStringStatsItem("Path", 400)),
+                Type(StatsItem.makeEnumStatsItem(Type.class, "Type")),
                 Name(StatsItem.makeStringStatsItem("Name", 400)), 
                 InfoPath(StatsItem.makeStringStatsItem("InfoPath", 400));
 
@@ -89,8 +91,12 @@ class CreateIIIFManifest extends DefaultFileTest {
 
         public Object fileTest(File f) {
                 Stats s = getStats(f);
+                File parent = f.getParentFile();
+                manifest.makeRange(parent, parent.getName(), parent.getName(), false);
+                
                 s.setVal(IIIFStatsItems.Name, f.getName());
-                s.setVal(IIIFStatsItems.InfoPath, manifest.addFile(s.key, f));
+                s.setVal(IIIFStatsItems.Type, Type.Image);
+                s.setVal(IIIFStatsItems.InfoPath, manifest.addFile(s.key, f));                        
                 return s;
         }
 
