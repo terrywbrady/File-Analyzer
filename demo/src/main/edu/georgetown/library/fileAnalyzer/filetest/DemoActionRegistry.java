@@ -31,7 +31,8 @@ public class DemoActionRegistry extends DSpaceActionRegistry {
                 add(new CounterValidationXls(dt));
                 add(new DemoFileTest(dt));
                 add(new MarcItemInventory(dt));
-                add(new CreateIIIFManifest(dt));
+                add(new CreateIIIFManifestEAD(dt));
+                add(new CreateIIIFManifestFolder(dt));
         }
 
 }

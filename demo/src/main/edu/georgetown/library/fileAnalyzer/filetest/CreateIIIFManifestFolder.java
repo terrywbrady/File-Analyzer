@@ -7,7 +7,6 @@ import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffJpegFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
 import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
-import gov.nara.nwts.ftapp.ftprop.InvalidInputException;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
@@ -17,19 +16,13 @@ import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import java.io.File;
 import java.io.IOException;
 
-import javax.xml.parsers.ParserConfigurationException;
-
 import org.json.JSONException;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
-import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 
 /**
  * @author TBrady
  *
  */
-class CreateIIIFManifest extends DefaultFileTest {
+class CreateIIIFManifestFolder extends DefaultFileTest {
         private static enum Type {Folder, Image;}
         private static enum IIIFStatsItems implements StatsItemEnum {
                 Key(StatsItem.makeStringStatsItem("Path", 400)),
@@ -60,41 +53,10 @@ class CreateIIIFManifest extends DefaultFileTest {
 
         long counter = 1000000;
         public static final String IIIFROOT = "iiifroot";
-        public static final String EAD = "ead";
         public static final String MANIFEST = "manifest";
 
-        class EADFile extends FTPropString {
-                Document d;
-                EADFile(FTDriver dt) {
-                    super(dt,CreateIIIFManifest.this.getClass().getName(), EAD, EAD,
-                            "EAD File containing key informaiton", "AIDS_papers_ead_updated.xml");
-                }
-                @Override public InitializationStatus initValidation(File refFile) {
-                    InitializationStatus iStat = new InitializationStatus();
-                    try {
-                        readEADFile(new File(dt.root, this.getValue().toString()));
-                    } catch (IOException e) {
-                        iStat.addFailMessage(e.getMessage());
-                    } catch (InvalidInputException e) {
-                        iStat.addFailMessage(e.getMessage());
-                    } catch (SAXException e) {
-                        iStat.addFailMessage(e.getMessage());
-                    } catch (ParserConfigurationException e) {
-                        iStat.addFailMessage(e.getMessage());
-                    }
-                    return iStat;
-                }
-                public void readEADFile(File selectedFile) throws IOException, InvalidInputException, SAXException, ParserConfigurationException {
-                        d = XMLUtil.db_ns.parse(selectedFile);
-                        manifest.setEAD(d);
-                }
-                Document getDocument() {
-                        return d;
-                }
-        }
-        private EADFile eadFile;
         
-        public CreateIIIFManifest(FTDriver dt) {
+        public CreateIIIFManifestFolder(FTDriver dt) {
                 super(dt);
                 ftprops.add(
                         new FTPropString(dt, this.getClass().getSimpleName(), IIIFROOT, IIIFROOT, "IIIF Root Path", "")
@@ -102,8 +64,6 @@ class CreateIIIFManifest extends DefaultFileTest {
                 ftprops.add(
                         new FTPropString(dt, this.getClass().getSimpleName(), MANIFEST, MANIFEST, "Output Path for Manifest File", "")
                 );
-                eadFile = new EADFile(dt);
-                ftprops.add(eadFile);
         }
 
         private IIIFManifest manifest;
@@ -130,7 +90,7 @@ class CreateIIIFManifest extends DefaultFileTest {
         }
         
         public String toString() {
-                return "Create IIIF Manifest";
+                return "Create IIIF Manifest From Folder";
         }
 
         public String getKey(File f) {
@@ -138,7 +98,7 @@ class CreateIIIFManifest extends DefaultFileTest {
         }
 
         public String getShortName() {
-                return "IIIF";
+                return "IIIF Folder";
         }
 
         public Object fileTest(File f) {
