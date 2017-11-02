@@ -5,9 +5,22 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
+import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 
 public class IIIFManifest {
         private File file;
@@ -24,23 +37,130 @@ public class IIIFManifest {
         public static final String IMAGES = "images";
         public static final String RANGES = "ranges";
         
-        public IIIFManifest(File root, String iiifRootPath) {
-                file = new File(root, "manifest.json");
+        private XPath xp;
+        JSONObject top;
+        private File root;
+        
+        HashMap<FolderIndex,JSONObject> folderRanges = new HashMap<>();
+        class FolderIndex {
+                String box = "";
+                String folderStart = "";
+                String folderEnd = "";
+                Pattern p = Pattern.compile("^(.*)-(.*)$");
+                Pattern pdir = Pattern.compile("^b(.*)_f(.*)$");
+                FolderIndex(String box, String folder) {
+                        this.box = normalize(box);
+                        Matcher m = p.matcher(folder);
+                        if (m.matches()) {
+                                folderStart = normalize(m.group(1));
+                                folderEnd = normalize(m.group(2));
+                        } else {
+                                folderStart = normalize(folder);
+                                folderEnd = normalize(folder);                                
+                        }
+                }
+                
+                public String normalize(String s) {
+                        try {
+                                int i = Integer.parseInt(s);
+                                return String.format("%06d", i);
+                        } catch(NumberFormatException e) {
+                                return s;
+                        }
+                }
+                public boolean inRange(String dirName) {
+                        Matcher m = pdir.matcher(dirName);
+                        if (m.matches()) {
+                                if (normalize(m.group(1)).equals(box)) {
+                                        String f = normalize(m.group(2));
+                                        if (f.compareTo(folderStart) >= 0 && f.compareTo(folderEnd) <= 0) {
+                                                return true;
+                                        }
+                                }
+                        }
+                        return false;
+                }
+        }
+        
+        public IIIFManifest(File root, String iiifRootPath, File manifestFile) {
+                file = manifestFile;
                 jsonObject = new JSONObject();
                 this.iiifRootPath = iiifRootPath;
+                this.root = root;
                 
+                xp = XMLUtil.xf.newXPath();
+                SimpleNamespaceContext nsContext = new XMLUtil().new SimpleNamespaceContext();
+                nsContext.add("ead", "urn:isbn:1-931666-22-9");
+                nsContext.add("ns2", "http://www.w3.org/1999/xlink");
+                xp.setNamespaceContext(nsContext);
+
                 jsonObject.put("@context", "http://iiif.io/api/presentation/2/context.json");
                 jsonObject.put("@type","sc:Manifest");
                 jsonObject.put("logo", "https://repository.library.georgetown.edu/themes/Mirage2/images/digitalgeorgetown-logo-small-inverted.png");
-                jsonObject.put("label","label");
+
                 jsonObject.put("description","desc");
-                JSONObject top = makeRangeObject("Finding Aid","id").put("viewingHint", "top");
-                JSONObject fs = makeRange(root, "File System","file-system", true);
-                addArray(top, RANGES).put(fs.getString("@id"));
+                top = makeRangeObject("Finding Aid","id","Document Type").put("viewingHint", "top");
                 seq = addSequence(jsonObject, SEQUENCES);
-                jsonObject.put("attribution", "attrib");
+                jsonObject.put("attribution", "Georgetown Law Library");
                 jsonObject.put("@id","https://repository-dev.library.georgetown.edu/xxx");
         }       
+        
+        public void setEAD(Document d) {
+                if (d == null) {
+                        return;
+                }
+                setXPathValue(jsonObject, "label", d, "concat(/ead:ead/ead:archdesc/ead:did/ead:unitid,': ',/ead:ead/ead:archdesc/ead:did/ead:unittitle)");
+                makeEADRanges(top, d, "//ead:c01");
+                JSONObject fs = makeRange(root, "All Boxes and Folders","file-system", true);
+                addArray(top, RANGES).put(fs.getString("@id"));
+        }
+        
+        public void makeEADRanges(JSONObject parent, Node n, String xq) {
+                try {
+                        NodeList nl = (NodeList)xp.evaluate(xq, n, XPathConstants.NODESET);
+                        for(int i=0; i<nl.getLength(); i++) {
+                                Element c0 = (Element)nl.item(i);
+                                JSONObject range = makeRangeObject(getXPathValue(c0, "ead:did/ead:unittitle","label"), c0.getAttribute("id"), "Container Title");
+                                addArray(parent, RANGES).put(range.getString("@id"));
+                                addMetadata(range, METADATA, "level", c0.getAttribute("level"));
+                                makeEADRanges(range, c0, "ead:c02");
+                                String box = getXPathValue(c0, "ead:did/ead:container[@type='Box']","");
+                                String folder = getXPathValue(c0, "ead:did/ead:container[@type='Folder']","");
+                                String boxlab = "";
+                                if (!box.isEmpty()) {
+                                        boxlab = String.format("Box %s; ", box);
+                                        if (!folder.isEmpty()) {
+                                                boxlab += String.format("Folder %s", folder);
+                                        }
+                                }
+                                if (!boxlab.isEmpty()) {
+                                        addMetadata(range, METADATA, "Container", String.format("Box %s; Folder %s", box, folder));
+                                        FolderIndex folderIndex = new FolderIndex(box, folder);
+                                        folderRanges.put(folderIndex, range);
+                                }
+                        }
+                } catch (XPathExpressionException e) {
+                        e.printStackTrace();
+                }
+                
+        }
+        
+        public void setXPathValue(JSONObject obj, String label, Node d, String xq) {
+                try { 
+                    obj.put(label, xp.evaluate(xq, d));
+                } catch (XPathExpressionException e) {
+                    e.printStackTrace();
+                }
+        }
+
+        public String getXPathValue(Node d, String xq, String def) {
+                try { 
+                    return xp.evaluate(xq, d);
+                } catch (XPathExpressionException e) {
+                    e.printStackTrace();
+                }
+                return def;
+        }
         
         public JSONArray addArray(JSONObject obj, String arrlabel) {
                 JSONArray arr = null;
@@ -93,17 +213,23 @@ public class IIIFManifest {
                         }                        
                 }
                 
-                JSONObject obj = makeRangeObject(label, id);
+                JSONObject obj = makeRangeObject(label, id, "Directory");
                 addDirLink(dir, RANGES, id);
+                for(FolderIndex folderIndex: folderRanges.keySet()) {
+                        if (folderIndex.inRange(label)) {
+                                JSONObject range = folderRanges.get(folderIndex);
+                                addArray(range, RANGES).put(id);
+                        }
+                }
                 ranges.put(dir, obj);
                 return obj;
         }       
 
-        public JSONObject makeRangeObject(String label, String id) {
+        public JSONObject makeRangeObject(String label, String id, String labelLabel) {
                 JSONObject obj = new JSONObject();
                 label = translateLabel(label);
                 obj.put("label", label);
-                addMetadata(obj, METADATA, "Container", label);
+                addMetadata(obj, METADATA, labelLabel, label);
                 obj.put("@id", id);
                 obj.put("@type", "sc:Range");
                 addArray(obj, "ranges");
