@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
@@ -19,8 +18,6 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 
 public class IIIFManifestEAD extends IIIFManifest {
-        private XPath xp;
-        
         HashMap<FolderIndex,JSONObject> folderRanges = new HashMap<>();
         class FolderIndex {
                 String box = "";
@@ -64,11 +61,11 @@ public class IIIFManifestEAD extends IIIFManifest {
         
         public IIIFManifestEAD(File root, String iiifRootPath, File manifestFile) {
                 super(root, iiifRootPath, manifestFile);
-                xp = XMLUtil.xf.newXPath();
                 SimpleNamespaceContext nsContext = new XMLUtil().new SimpleNamespaceContext();
                 nsContext.add("ead", "urn:isbn:1-931666-22-9");
                 nsContext.add("ns2", "http://www.w3.org/1999/xlink");
                 xp.setNamespaceContext(nsContext);
+                jsonObject.put("attribution", "Georgetown Law Library");
         }       
         
         public void setEAD(Document d) {
@@ -111,23 +108,6 @@ public class IIIFManifestEAD extends IIIFManifest {
                 
         }
         
-        public void setXPathValue(JSONObject obj, String label, Node d, String xq) {
-                try { 
-                    obj.put(label, xp.evaluate(xq, d));
-                } catch (XPathExpressionException e) {
-                    e.printStackTrace();
-                }
-        }
-
-        public String getXPathValue(Node d, String xq, String def) {
-                try { 
-                    return xp.evaluate(xq, d);
-                } catch (XPathExpressionException e) {
-                    e.printStackTrace();
-                }
-                return def;
-        }
-        
 
         public String translateLabel(String label) {
                 return label
@@ -165,4 +145,9 @@ public class IIIFManifestEAD extends IIIFManifest {
                 return label
                         .replaceAll(".*_item_", "");
         }
-}
+
+        @Override public void linkCanvas(File f, String canvasid) {
+                addDirLink(f, CANVASES, canvasid);
+        }
+
+ }
