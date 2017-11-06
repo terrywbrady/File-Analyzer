@@ -142,6 +142,12 @@ public class IIIFManifest {
                 return String.format("%s/%s", iiifRootPath, key.replaceAll("\\\\",  "/").replaceFirst("^/*", ""));
         }
        
+        public void addCanvasMetadata(JSONObject canvas, File f) {
+                String label = translateItemLabel(f.getName());
+                canvas.put("label", label);
+                addMetadata(canvas, METADATA, "name", f.getName());
+        }
+        
         public String addCanvas(String key, File f) {
                 String iiifpath = getIIIFPath(key, f);
                 String canvasid = "https://repository-dev.library.georgetown.edu/loris/Canvas/"+f.getName();
@@ -155,9 +161,7 @@ public class IIIFManifest {
                 canvas.put("@type", "sc:Canvas"); 
                 canvas.put("height", 1536);
                 canvas.put("width", 2048);
-                String label = translateItemLabel(f.getName());
-                canvas.put("label", label);
-                addMetadata(canvas, METADATA, "name", f.getName());
+                addCanvasMetadata(canvas, f);
                 JSONArray imarr = addArray(canvas, IMAGES);
                 JSONObject image = new JSONObject();
                 imarr.put(image);

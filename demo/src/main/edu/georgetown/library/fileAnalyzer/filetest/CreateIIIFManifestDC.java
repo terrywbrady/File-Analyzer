@@ -15,10 +15,10 @@ import gov.nara.nwts.ftapp.stats.StatsItemConfig;
  * @author TBrady
  *
  */
-class CreateIIIFManifestFolder extends CreateIIIFManifest {
+class CreateIIIFManifestDC extends CreateIIIFManifest {
         public static StatsItemConfig details = StatsItemConfig.create(IIIFStatsItems.class);
 
-        public CreateIIIFManifestFolder(FTDriver dt) {
+        public CreateIIIFManifestDC(FTDriver dt) {
                 super(dt);
         }
 
