@@ -3,6 +3,8 @@ package edu.georgetown.library.fileAnalyzer.filetest;
 import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -20,8 +22,10 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 public class IIIFManifestAIP extends IIIFManifest {
 
         protected TreeMap<String,JSONObject> subjranges = new TreeMap<>();
+        protected TreeMap<String,JSONObject> datecanvases = new TreeMap<>();
+        protected TreeMap<String,JSONObject> dateranges = new TreeMap<>();
         JSONObject allsubjects;
-        JSONObject allphotos;
+        JSONObject alldates;
         public IIIFManifestAIP(File root, String iiifRootPath, File manifestFile) {
                 super(root, iiifRootPath, manifestFile);
                 jsonObject.put("label", "Photograph Selections from University Archives");
@@ -31,10 +35,30 @@ public class IIIFManifestAIP extends IIIFManifest {
                 SimpleNamespaceContext nsContext = new XMLUtil().new SimpleNamespaceContext();
                 nsContext.add("dim", "http://www.dspace.org/xmlns/dspace/dim");
                 xp.setNamespaceContext(nsContext);
+                alldates = makeRange(root, "Date Ranges","Date Listing", true);
+                addArray(top, RANGES).put(alldates.getString("@id"));
                 allsubjects = makeRange(root, "All Subjects","Photo Listing", true);
                 addArray(top, RANGES).put(allsubjects.getString("@id"));
-                allphotos = this.makeRangeObject("All Photos", "all-photos", "all label");
         }       
+        
+        public JSONObject getDateRange(String dateCreated) {
+                Pattern p = Pattern.compile("^(\\d\\d\\d)\\d.*");
+                Matcher m = p.matcher(dateCreated);
+                String name = null;
+                if (m.matches()) {
+                        int year = Integer.parseInt(m.group(1));
+                        name = String.format("%d0 - %d0", year, year+1);
+                } else {
+                        name = "Unspecified";
+                }
+                JSONObject range = dateranges.get(name);
+                if (range == null) {
+                        String rangeid = "date-" + name.replaceAll(" ", "");
+                        range = makeRangeObject(name, rangeid, "Date Range");
+                        dateranges.put(name, range);
+                }
+                return range;
+        }
         
         @Override public void addCanvasMetadata(JSONObject canvas, File f) {
                 File mets = new File(f.getParentFile(), "mets.xml");
@@ -48,8 +72,14 @@ public class IIIFManifestAIP extends IIIFManifest {
                                         "'>Item Page</a>");
                         addMetadata(canvas, METADATA, "Description", 
                                 getXPathValue(d, "//dim:field[@element='description'][not(@qualifier)]",""));
-                        addMetadata(canvas, METADATA, "Date Created", 
-                                        getXPathValue(d, "//dim:field[@element='date'][@qualifier='created']",""));
+                        String dateCreated = getXPathValue(d, "//dim:field[@element='date'][@qualifier='created']","");
+                        addMetadata(canvas, METADATA, "Date Created", dateCreated);
+                        String dateKey = dateCreated + " " + canvas.getString("@id");
+                        datecanvases.put(dateKey, canvas);
+                        JSONObject dateRange = getDateRange(dateCreated);
+                        if (dateRange != null) {
+                                addArray(dateRange, CANVASES).put(canvas.get("@id"));
+                        }
                         try {
                                 NodeList nl = (NodeList)xp.evaluate("//dim:field[@element='subject'][@qualifier='other']", d, XPathConstants.NODESET);
                                 for(int i=0; i<nl.getLength(); i++) {
@@ -110,9 +140,21 @@ public class IIIFManifestAIP extends IIIFManifest {
         }
 
         @Override public void refine() {
+                for(JSONObject canvas: datecanvases.values()) {
+                        addArray(seq, CANVASES).put(canvas);
+                }
+                for(JSONObject range: dateranges.values()) {
+                        String name = String.format("%s (%d)", range.getString("label"), range.getJSONArray("canvases").length());
+                        range.put("label", name);
+                        addArray(alldates, RANGES).put(range);
+                }
                 for(JSONObject subrange: subjranges.values()) {
                         addArray(allsubjects, RANGES).put(subrange.get("@id"));
                 }
+        }
+
+        @Override public void addCanvasToManifest(JSONObject canvas) {
+                //no op - will add based on dates
         }
 
 }

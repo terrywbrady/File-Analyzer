@@ -20,7 +20,7 @@ public class IIIFManifest {
         private File file;
         protected JSONObject jsonObject;
         protected String iiifRootPath;
-        private JSONObject seq;
+        protected JSONObject seq;
         protected XPath xp;
         
         protected HashMap<File,JSONObject> ranges = new HashMap<>();
@@ -152,20 +152,24 @@ public class IIIFManifest {
                 addMetadata(canvas, METADATA, "name", f.getName());
         }
         
+        public void addCanvasToManifest(JSONObject canvas) {
+                JSONArray arr = addArray(seq, CANVASES);
+                arr.put(canvas);
+        }
+        
         public String addCanvas(String key, File f) {
                 String iiifpath = getIIIFPath(key, f);
                 String canvasid = "https://repository-dev.library.georgetown.edu/loris/Canvas/"+f.getName();
                 String imageid = "https://repository-dev.library.georgetown.edu/loris/Image/"+f.getName();
                 String resid = iiifpath + "/full/full/0/default.jpg";
                 
-                JSONArray arr = addArray(seq, CANVASES);
                 JSONObject canvas = new JSONObject();
-                arr.put(canvas);
                 canvas.put("@id", canvasid);
                 canvas.put("@type", "sc:Canvas"); 
                 canvas.put("height", 1536);
                 canvas.put("width", 2048);
                 addCanvasMetadata(canvas, f);
+                addCanvasToManifest(canvas);
                 JSONArray imarr = addArray(canvas, IMAGES);
                 JSONObject image = new JSONObject();
                 imarr.put(image);
