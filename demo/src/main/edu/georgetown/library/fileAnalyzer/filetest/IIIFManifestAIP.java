@@ -2,7 +2,7 @@ package edu.georgetown.library.fileAnalyzer.filetest;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -19,7 +19,7 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 
 public class IIIFManifestAIP extends IIIFManifest {
 
-        protected HashMap<String,JSONObject> subjranges = new HashMap<>();
+        protected TreeMap<String,JSONObject> subjranges = new TreeMap<>();
         JSONObject allsubjects;
         JSONObject allphotos;
         public IIIFManifestAIP(File root, String iiifRootPath, File manifestFile) {
@@ -61,7 +61,6 @@ public class IIIFManifestAIP extends IIIFManifest {
                                                 String subjid = subj.replaceAll(" ", "");
                                                 subrange = makeRangeObject(subj, subjid, "Subject");
                                                 subjranges.put(subj, subrange);
-                                                addArray(allsubjects, RANGES).put(subjid);
                                         }
                                         JSONObject ir = ranges.get(f.getParentFile());
                                         if (ir != null) {
@@ -108,6 +107,12 @@ public class IIIFManifestAIP extends IIIFManifest {
 
         @Override public void linkCanvas(File f, String canvasid) {
                 addDirLink(f, CANVASES, canvasid);
+        }
+
+        @Override public void refine() {
+                for(JSONObject subrange: subjranges.values()) {
+                        addArray(allsubjects, RANGES).put(subrange.get("@id"));
+                }
         }
 
 }

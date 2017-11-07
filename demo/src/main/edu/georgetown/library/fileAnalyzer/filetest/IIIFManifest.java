@@ -109,7 +109,11 @@ public class IIIFManifest {
                 return obj;
         }       
         
+        public void refine()  {
+                //No op - meant to be overridden
+        }
         public void write() throws IOException {
+                refine();
                 FileWriter fw = new FileWriter(file);
                 jsonObject.write(fw);
                 fw.close();
