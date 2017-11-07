@@ -85,7 +85,7 @@ public class IIIFManifest {
                 if (parent != null) {
                         addArray(parent, arrlabel).put(id);
                 } else {
-                        System.err.println(pfile.getAbsolutePath()+" not found");
+                        //System.err.println(pfile.getAbsolutePath()+" not found");
                 }
         }
 
