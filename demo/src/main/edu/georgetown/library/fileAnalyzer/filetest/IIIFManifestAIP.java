@@ -2,6 +2,7 @@ package edu.georgetown.library.fileAnalyzer.filetest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
@@ -18,7 +19,9 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 
 public class IIIFManifestAIP extends IIIFManifest {
 
-        JSONObject allphoto;
+        protected HashMap<String,JSONObject> subjranges = new HashMap<>();
+        JSONObject allsubjects;
+        JSONObject allphotos;
         public IIIFManifestAIP(File root, String iiifRootPath, File manifestFile) {
                 super(root, iiifRootPath, manifestFile);
                 jsonObject.put("label", "Photograph Selections from University Archives");
@@ -28,8 +31,9 @@ public class IIIFManifestAIP extends IIIFManifest {
                 SimpleNamespaceContext nsContext = new XMLUtil().new SimpleNamespaceContext();
                 nsContext.add("dim", "http://www.dspace.org/xmlns/dspace/dim");
                 xp.setNamespaceContext(nsContext);
-                allphoto = makeRange(root, "All Photos","Photo Listing", true);
-                addArray(top, RANGES).put(allphoto.getString("@id"));
+                allsubjects = makeRange(root, "All Subjects","Photo Listing", true);
+                addArray(top, RANGES).put(allsubjects.getString("@id"));
+                allphotos = this.makeRangeObject("All Photos", "all-photos", "all label");
         }       
         
         @Override public void addCanvasMetadata(JSONObject canvas, File f) {
@@ -49,8 +53,20 @@ public class IIIFManifestAIP extends IIIFManifest {
                         try {
                                 NodeList nl = (NodeList)xp.evaluate("//dim:field[@element='subject'][@qualifier='other']", d, XPathConstants.NODESET);
                                 for(int i=0; i<nl.getLength(); i++) {
-                                        Element s = (Element)nl.item(i);
-                                        this.addMetadata(canvas, METADATA, "subject", s.getTextContent());
+                                        Element selem = (Element)nl.item(i);
+                                        String subj = selem.getTextContent();
+                                        this.addMetadata(canvas, METADATA, "subject", subj);
+                                        JSONObject subrange = subjranges.get(subj);
+                                        if (subrange == null) {
+                                                String subjid = subj.replaceAll(" ", "");
+                                                subrange = makeRangeObject(subj, subjid, "Subject");
+                                                subjranges.put(subj, subrange);
+                                                addArray(allsubjects, RANGES).put(subjid);
+                                        }
+                                        JSONObject ir = ranges.get(f.getParentFile());
+                                        if (ir != null) {
+                                                addArray(subrange, RANGES).put(ir.get("@id"));
+                                        }
                                 }
                         } catch (XPathExpressionException e) {
                         }
@@ -77,7 +93,7 @@ public class IIIFManifestAIP extends IIIFManifest {
                         JSONObject obj = makeRangeObject(title, id, "Title");
                         addDirLink(dir, RANGES, id);
                         ranges.put(dir, obj);
-                        addArray(allphoto, RANGES).put(id);
+                        //addArray(allphoto, RANGES).put(id);
                         return obj;
                 } catch (JSONException e) {
                        e.printStackTrace();
