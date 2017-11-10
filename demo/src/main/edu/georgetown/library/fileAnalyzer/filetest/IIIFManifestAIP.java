@@ -89,6 +89,8 @@ public class IIIFManifestAIP extends IIIFManifest {
                                         if (sbSubjects.length() > 0) {
                                                 sbSubjects.append("; ");
                                         }
+                                        //String ref = "https://repository-dev.library.georgetown.edu/handle/10822/549423#?cv=12";
+                                        //sbSubjects.append("<a href='"+ref+"'>"+subj+"</a>");
                                         sbSubjects.append(subj);
                                         JSONObject subrange = subjranges.get(subj);
                                         if (subrange == null) {
