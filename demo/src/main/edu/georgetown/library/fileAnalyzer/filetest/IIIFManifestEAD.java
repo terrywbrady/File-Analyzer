@@ -68,6 +68,9 @@ public class IIIFManifestEAD extends IIIFManifest {
                 jsonObject.put("attribution", "Georgetown Law Library");
         }       
         
+        @Override public ManifestDimensions getDimensions() {
+                return ManifestDimensions.PORTRAIT;
+        }
         public void setEAD(Document d) {
                 if (d == null) {
                         return;

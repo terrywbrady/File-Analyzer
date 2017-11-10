@@ -34,10 +34,25 @@ public class IIIFManifest {
         
         JSONObject top;
         protected File root;
+        ManifestDimensions dimensions;
         
+        public enum ManifestDimensions {
+                PORTRAIT(1000,700), LANDSCAPE(750,1000);
+                int height;
+                int width;
+                private ManifestDimensions(int height, int width) {
+                        this.height = height;
+                        this.width = width;
+                }                
+        }
+
+        public ManifestDimensions getDimensions() {
+                return ManifestDimensions.LANDSCAPE;
+        }
         
         public IIIFManifest(File root, String iiifRootPath, File manifestFile) {
                 file = manifestFile;
+                dimensions = getDimensions();
                 jsonObject = new JSONObject();
                 this.iiifRootPath = iiifRootPath;
                 this.root = root;
@@ -166,8 +181,8 @@ public class IIIFManifest {
                 JSONObject canvas = new JSONObject();
                 canvas.put("@id", canvasid);
                 canvas.put("@type", "sc:Canvas"); 
-                canvas.put("height", 1536);
-                canvas.put("width", 2048);
+                canvas.put("height", dimensions.height);
+                canvas.put("width", dimensions.width);
                 addCanvasMetadata(canvas, f);
                 addCanvasToManifest(canvas);
                 JSONArray imarr = addArray(canvas, IMAGES);
@@ -183,8 +198,8 @@ public class IIIFManifest {
                 resource.put("@id", resid); 
                 resource.put("@type", "dctypes:Image");
                 resource.put("format", "image/jpeg");
-                resource.put("height", 1536);
-                resource.put("width", 2048);                      
+                resource.put("height", dimensions.height);
+                resource.put("width", dimensions.width);                      
                 JSONObject service = new JSONObject();
                 resource.put("service", service);
                 service.put("@context", "http://iiif.io/api/image/2/context.json"); 

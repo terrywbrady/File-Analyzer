@@ -16,8 +16,12 @@ public class IIIFManifestDC extends IIIFManifest {
         public IIIFManifestDC(File root, String iiifRootPath, File manifestFile) {
                 super(root, iiifRootPath, manifestFile);
                 set2Page();
-       }       
+        }       
         
+        @Override public ManifestDimensions getDimensions() {
+                return ManifestDimensions.PORTRAIT;
+        }
+
         public void setDC(Document d) {
                 if (d == null) {
                         return;
