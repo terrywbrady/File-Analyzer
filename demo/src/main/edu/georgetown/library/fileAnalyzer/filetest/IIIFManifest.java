@@ -62,7 +62,6 @@ public class IIIFManifest {
                 jsonObject.put("@type","sc:Manifest");
                 jsonObject.put("logo", "https://repository.library.georgetown.edu/themes/Mirage2/images/digitalgeorgetown-logo-small-inverted.png");
 
-                jsonObject.put("description","desc");
                 top = makeRangeObject("Finding Aid","id","Document Type").put("viewingHint", "top");
                 seq = addSequence(jsonObject, SEQUENCES);
                 jsonObject.put("@id","https://repository-dev.library.georgetown.edu/xxx");
@@ -116,7 +115,7 @@ public class IIIFManifest {
                 JSONObject obj = new JSONObject();
                 label = translateLabel(label);
                 obj.put("label", label);
-                addMetadata(obj, METADATA, labelLabel, label);
+                //addMetadata(obj, METADATA, labelLabel, label);
                 obj.put("@id", id);
                 obj.put("@type", "sc:Range");
                 addArray(obj, "ranges");

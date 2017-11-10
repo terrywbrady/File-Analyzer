@@ -31,7 +31,7 @@ public class IIIFManifestAIP extends IIIFManifest {
                 jsonObject.put("label", "Photograph Selections from University Archives");
                 jsonObject.put("attribution", "Permission to copy or publish photographs from this collection must be obtained from the Georgetown University Archives.");
                 this.addMetadata(jsonObject, METADATA, "Collection", 
-                        "<a href='https://repository.library.georgetown.edu/handle/10822/549423'>DigitalGeorgetown Collection</a>");
+                        "Photograph Selections from University Archives");
                 SimpleNamespaceContext nsContext = new XMLUtil().new SimpleNamespaceContext();
                 nsContext.add("dim", "http://www.dspace.org/xmlns/dspace/dim");
                 xp.setNamespaceContext(nsContext);
@@ -65,13 +65,7 @@ public class IIIFManifestAIP extends IIIFManifest {
                 try {
                         Document d = XMLUtil.db_ns.parse(mets);
                         setXPathValue(canvas, "label", d, "//dim:field[@element='title']");
-                        addMetadata(canvas, METADATA, "name", f.getName());
-                        addMetadata(canvas, METADATA, "Digital Georgetown",
-                                        "<a href='" +
-                                        getXPathValue(d, "//dim:field[@element='identifier'][@qualifier='uri']","") +
-                                        "'>Item Page</a>");
-                        addMetadata(canvas, METADATA, "Description", 
-                                getXPathValue(d, "//dim:field[@element='description'][not(@qualifier)]",""));
+                        addMetadata(canvas, METADATA, "Title", getXPathValue(d, "//dim:field[@element='title']", ""));
                         String dateCreated = getXPathValue(d, "//dim:field[@element='date'][@qualifier='created']","");
                         addMetadata(canvas, METADATA, "Date Created", dateCreated);
                         String dateKey = dateCreated + " " + canvas.getString("@id");
@@ -80,12 +74,22 @@ public class IIIFManifestAIP extends IIIFManifest {
                         if (dateRange != null) {
                                 addArray(dateRange, CANVASES).put(canvas.get("@id"));
                         }
+
+                        addMetadata(canvas, METADATA, "Creator", 
+                                        getXPathValue(d, "//dim:field[@element='creator']",""));
+                        addMetadata(canvas, METADATA, "Description", 
+                                        getXPathValue(d, "//dim:field[@element='description'][not(@qualifier)]",""));
+                        
+                        StringBuilder sbSubjects = new StringBuilder();
                         try {
                                 NodeList nl = (NodeList)xp.evaluate("//dim:field[@element='subject'][@qualifier='other']", d, XPathConstants.NODESET);
                                 for(int i=0; i<nl.getLength(); i++) {
                                         Element selem = (Element)nl.item(i);
                                         String subj = selem.getTextContent();
-                                        this.addMetadata(canvas, METADATA, "subject", subj);
+                                        if (sbSubjects.length() > 0) {
+                                                sbSubjects.append("; ");
+                                        }
+                                        sbSubjects.append(subj);
                                         JSONObject subrange = subjranges.get(subj);
                                         if (subrange == null) {
                                                 String subjid = subj.replaceAll(" ", "");
@@ -99,6 +103,12 @@ public class IIIFManifestAIP extends IIIFManifest {
                                 }
                         } catch (XPathExpressionException e) {
                         }
+                        addMetadata(canvas, METADATA, "Subject(s)", sbSubjects.toString());
+                        addMetadata(canvas, METADATA, "Rights", 
+                                        getXPathValue(d, "//dim:field[@element='rights']",""));
+                        String permalink = getXPathValue(d, "//dim:field[@element='identifier'][@qualifier='uri']",""); 
+                        addMetadata(canvas, METADATA, "Permanent URL",
+                                        "<a href='" + permalink + "'>" + permalink + "</a>");
                 } catch (JSONException e) {
                        e.printStackTrace();
                 } catch (SAXException e) {
