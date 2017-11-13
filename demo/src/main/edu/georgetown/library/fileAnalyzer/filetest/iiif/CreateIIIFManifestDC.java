@@ -1,4 +1,4 @@
-package edu.georgetown.library.fileAnalyzer.filetest;
+package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +15,7 @@ import gov.nara.nwts.ftapp.stats.StatsItemConfig;
  * @author TBrady
  *
  */
-class CreateIIIFManifestDC extends CreateIIIFManifest {
+public class CreateIIIFManifestDC extends CreateIIIFManifest {
         public static StatsItemConfig details = StatsItemConfig.create(IIIFStatsItems.class);
 
         public CreateIIIFManifestDC(FTDriver dt) {

@@ -1,4 +1,4 @@
-package edu.georgetown.library.fileAnalyzer.filetest;
+package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
 import java.io.IOException;

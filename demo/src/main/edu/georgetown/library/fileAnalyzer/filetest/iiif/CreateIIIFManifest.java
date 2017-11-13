@@ -1,4 +1,4 @@
-package edu.georgetown.library.fileAnalyzer.filetest;
+package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
@@ -23,7 +23,7 @@ import org.json.JSONException;
  * @author TBrady
  *
  */
-class CreateIIIFManifest extends DefaultFileTest {
+public class CreateIIIFManifest extends DefaultFileTest {
         protected static enum Type {Folder, Image;}
         static enum IIIFStatsItems implements StatsItemEnum {
                 Key(StatsItem.makeStringStatsItem("Path", 400)),

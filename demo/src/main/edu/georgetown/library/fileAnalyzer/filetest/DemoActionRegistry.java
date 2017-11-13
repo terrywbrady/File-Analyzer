@@ -1,5 +1,8 @@
 package edu.georgetown.library.fileAnalyzer.filetest;
 
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifestAIP;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifestDC;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifestEAD;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.CounterValidation;
 

@@ -1,4 +1,4 @@
-package edu.georgetown.library.fileAnalyzer.filetest;
+package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
@@ -20,7 +20,7 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
  * @author TBrady
  *
  */
-class CreateIIIFManifestEAD extends CreateIIIFManifest {
+public class CreateIIIFManifestEAD extends CreateIIIFManifest {
         public static StatsItemConfig details = StatsItemConfig.create(IIIFStatsItems.class);
         public static final String EAD = "ead";
 
