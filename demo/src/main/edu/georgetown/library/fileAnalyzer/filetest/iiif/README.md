@@ -1,4 +1,6 @@
 ## Input Parameters
+- IIIF Server root path
+- Manifest filename
 - Initial Metadata File (optional)
   - Property File
   - Collection mets.xml file (from DSpace)
@@ -12,12 +14,14 @@
   - Assume top level directories would become separate manifests (is this sufficient?)
 - Get Item Identifier
   - From directory name
+  - From CSV
   - From metadata - mets.xml
   - From metadata - handle
   - From metadata - dublin_core.xml
 - Get Metadata
   - None (or use EAD)
   - Rest API
+  - From CSV
   - From metadata - mets.xml
   - From metadata - handle
   - From metadata - dublin_core.xml
