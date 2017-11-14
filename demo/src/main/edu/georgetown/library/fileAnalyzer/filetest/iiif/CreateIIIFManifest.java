@@ -60,7 +60,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public CreateIIIFManifest(FTDriver dt) {
                 super(dt);
                 ftprops.add(
-                        new FTPropString(dt, this.getClass().getSimpleName(), IIIFROOT, IIIFROOT, "IIIF Root Path", "")
+                        new FTPropString(dt, this.getClass().getSimpleName(), IIIFROOT, IIIFROOT, "IIIF Server Root Path", "")
                 );
                 ftprops.add(
                         new FTPropString(dt, this.getClass().getSimpleName(), MANIFEST, MANIFEST, "Output Path for Manifest File", "")
