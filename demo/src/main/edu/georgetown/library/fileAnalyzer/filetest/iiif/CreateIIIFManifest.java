@@ -1,10 +1,13 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import gov.nara.nwts.ftapp.FTDriver;
+import gov.nara.nwts.ftapp.YN;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffJpegFileTestFilter;
+import gov.nara.nwts.ftapp.ftprop.FTProp;
+import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
 import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
@@ -16,8 +19,15 @@ import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.json.JSONException;
+
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileException;
+import edu.georgetown.library.fileAnalyzer.util.InvalidFilenameException;
 
 /**
  * @author TBrady
@@ -52,46 +62,63 @@ public class CreateIIIFManifest extends DefaultFileTest {
 
         public static StatsItemConfig details = StatsItemConfig.create(IIIFStatsItems.class);
 
-        long counter = 1000000;
-        public static final String IIIFROOT = "iiifroot";
-        public static final String MANIFEST = "manifest";
+        public static final String IIIFROOT      = "iiifroot";
+        public static final String MANIFEST      = "manifest";
+        public static final String INITMETADATA  = "initMetadata";
+        public static final String MAKECOLL      = "makecoll";
+        public static final String METHOD_ID     = "method-id";
+        public static final String METHOD_META   = "method-meta";
+        public static final String TRANSLATE     = "translate";
+        IIIFManifest manifest;
+        ManifestProjectTranslate manifestProjectTranslate;
+        MetadataInputFile inputMetadata;
 
+        public FTProp addProp(String name, String label) {
+                FTProp prop = new FTPropString(dt, this.getClass().getSimpleName(), name, name, label, ""); 
+                ftprops.add(prop);
+                return prop;
+        }
+        public FTProp addPropEnum(String name, String label, Object[] vals, Object def) {
+                FTProp prop = new FTPropEnum(dt, this.getClass().getSimpleName(), name, name, label, vals, def); 
+                ftprops.add(prop);
+                return prop;
+        }
+        
+        public void addProjectTranslator() {
+                addPropEnum(TRANSLATE, "Project Value Translator", DefaultManifestProjectTranslate.values(), DefaultManifestProjectTranslate.Default);                
+        }
         
         public CreateIIIFManifest(FTDriver dt) {
                 super(dt);
-                ftprops.add(
-                        new FTPropString(dt, this.getClass().getSimpleName(), IIIFROOT, IIIFROOT, "IIIF Server Root Path", "")
-                );
-                ftprops.add(
-                        new FTPropString(dt, this.getClass().getSimpleName(), MANIFEST, MANIFEST, "Output Path for Manifest File", "")
-                );
+                addProp(IIIFROOT, "IIIF Server Root Path");
+                addProp(MANIFEST, "Output Path for Manifest File");
+                addProp(INITMETADATA, "Input File used to populate manifest metadata");
+                addPropEnum(MAKECOLL, "Make collection manifest of manifests", YN.values(), YN.N);
+                addPropEnum(METHOD_ID, "Method to determine item identifiers", MethodIdentifer.values(), MethodIdentifer.FolderName);
+                addPropEnum(METHOD_META, "Method to determine item metadata", MethodMetadata.values(), MethodMetadata.None);
         }
-
-        IIIFManifest manifest;
 
         public InitializationStatus init() {
-                File manFile = new File(this.getProperty(MANIFEST).toString());
-                if (!manFile.exists()) {
-                        try(FileWriter fw = new FileWriter(manFile)){
-                                fw.write("");
-                        } catch (IOException e) {
-                                InitializationStatus is = new InitializationStatus();
-                                is.addMessage(e);
-                                return is;
-                        }
-                }
-                if (!manFile.canWrite()) {
-                        InitializationStatus is = new InitializationStatus();
-                        is.addFailMessage(String.format("Cannot write to manifest file [%s]\nPlease update the property", this.getProperty(MANIFEST).toString()));
+                //InitializationStatus is = new InitializationStatus();
+                InitializationStatus is = super.init();
+                manifestProjectTranslate = (ManifestProjectTranslate)getProperty(TRANSLATE);
+                String sInit = this.getProperty(INITMETADATA).toString(); 
+                try {
+                        inputMetadata = new MetadataInputFileBuilder().identifyFile(sInit);
+                } catch (InputFileException e) {
+                        is.addMessage(e.getMessage());
                         return is;
-                } else {
-                        manifest = createIIIFManifest(manFile);                        
                 }
-                return super.init();
-        }
-        
-        protected IIIFManifest createIIIFManifest(File manFile) {
-                return new IIIFManifest(dt.getRoot(), this.getProperty(IIIFROOT).toString(), manFile); 
+                
+                File manFile = new File(this.getProperty(MANIFEST).toString());
+                try {
+                        manifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), manFile);
+                } catch (IOException e) {
+                        is.addMessage(e);
+                        return is;
+                }
+                
+                return is;
         }
         
         public void refineResults() {
@@ -116,9 +143,34 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return "IIIF";
         }
 
+        public IIIFManifest getCurrentManifest(File f) {
+                if (this.getProperty(MAKECOLL) != YN.Y) {
+                        return manifest;
+                }
+                
+                File curfile = manifest.getComponentManifestFile(f, getIdentifier(f));
+                return manifest;
+        }
+        
+        public String getIdentifier(File f) {
+                MethodIdentifer methId = (MethodIdentifer)getProperty(METHOD_ID);
+                String ret = f.getName();
+                if (methId == MethodIdentifer.MetadataFile) {
+                        inputMetadata.setCurrentKey(f.getName());
+                        ret = inputMetadata.getValue("identifier", "NA");
+                }
+                return manifestProjectTranslate.translate(ManifestProjectTranslate.IDENTIFIER, ret);
+        }
+        
         public Object fileTest(File f) {
                 Stats s = getStats(f);
                 File parent = f.getParentFile();
+                
+                IIIFManifest curmanifest = manifest;
+                if (this.getProperty(MAKECOLL) == YN.Y) {
+                        
+                }
+                
                 manifest.makeRange(parent, parent.getName(), parent.getName(), false);
                 
                 s.setVal(IIIFStatsItems.Name, f.getName());

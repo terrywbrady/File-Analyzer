@@ -33,7 +33,7 @@ public class IIIFManifest {
         public static final String RANGES = "ranges";
         
         JSONObject top;
-        protected File root;
+        protected MetadataInputFile inputMetadata;
         ManifestDimensions dimensions;
         
         public enum ManifestDimensions {
@@ -50,12 +50,13 @@ public class IIIFManifest {
                 return ManifestDimensions.LANDSCAPE;
         }
         
-        public IIIFManifest(File root, String iiifRootPath, File manifestFile) {
+        public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile) throws IOException {
+                checkManifestFile(manifestFile);
                 file = manifestFile;
                 dimensions = getDimensions();
                 jsonObject = new JSONObject();
                 this.iiifRootPath = iiifRootPath;
-                this.root = root;
+                this.inputMetadata = inputMetadata;
                 xp = XMLUtil.xf.newXPath();
                 
                 jsonObject.put("@context", "http://iiif.io/api/presentation/2/context.json");
@@ -66,6 +67,26 @@ public class IIIFManifest {
                 seq = addSequence(jsonObject, SEQUENCES);
                 jsonObject.put("@id","https://repository-dev.library.georgetown.edu/xxx");
         }       
+        
+        public File getManifestFile() {
+                return file;
+        }
+
+        public File getComponentManifestFile(File f, String identifier) {
+                return new File(file.getParentFile(), identifier);
+        }
+
+        public void checkManifestFile(File manFile) throws IOException {
+                try(FileWriter fw = new FileWriter(manFile)){
+                        fw.write("");
+                } catch (IOException e) {
+                        throw e;
+                }
+                if (!manFile.canWrite()) {
+                        throw new IOException(String.format("Cannot write to manifest file [%s]", manFile.getName()));
+                }
+        }
+        
         
         public void set2Page() {
                 seq.put("viewingHint", "paged");
