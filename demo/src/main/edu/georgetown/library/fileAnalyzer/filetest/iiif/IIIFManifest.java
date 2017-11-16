@@ -50,7 +50,7 @@ public class IIIFManifest {
                 return ManifestDimensions.LANDSCAPE;
         }
         
-        public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile) throws IOException {
+        public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile, boolean isCollectionManifest) throws IOException {
                 checkManifestFile(manifestFile);
                 file = manifestFile;
                 dimensions = getDimensions();
@@ -67,6 +67,10 @@ public class IIIFManifest {
                 seq = addSequence(jsonObject, SEQUENCES);
                 jsonObject.put("@id","https://repository-dev.library.georgetown.edu/xxx");
         }       
+        
+        public void addManifestToCollection(IIIFManifest itemManifest) {
+                //TODO
+        }
         
         public File getManifestFile() {
                 return file;
@@ -128,6 +132,10 @@ public class IIIFManifest {
                 return label;
         }
         
+        public JSONObject makeRange(File dir) {
+                return top;
+        }
+        
         public JSONObject makeRange(File dir, String label, String id, boolean isTop) {
                 return top;
         }       
@@ -167,10 +175,10 @@ public class IIIFManifest {
                 addArray(obj, CANVASES);
                 return obj;
         }
-        public String addFile(File f) {
+        public JSONObject addFile(File f) {
                 return addCanvas(f.getName(), f);
         }
-        public String addFile(String key, File f) {
+        public JSONObject addFile(String key, File f) {
                 return addCanvas(key, f);
         }
         public String translateItemLabel(String label) {
@@ -192,7 +200,7 @@ public class IIIFManifest {
                 arr.put(canvas);
         }
         
-        public String addCanvas(String key, File f) {
+        public JSONObject addCanvas(String key, File f) {
                 String iiifpath = getIIIFPath(key, f);
                 String canvasid = "https://repository-dev.library.georgetown.edu/loris/Canvas/"+f.getName();
                 String imageid = "https://repository-dev.library.georgetown.edu/loris/Image/"+f.getName();
@@ -227,7 +235,7 @@ public class IIIFManifest {
                 service.put("profile", "http://iiif.io/api/image/2/level2.json");    
                 
                 linkCanvas(f, canvasid);
-                return canvasid;
+                return canvas;
         }
         
         public void linkCanvas(File f, String canvasid) {

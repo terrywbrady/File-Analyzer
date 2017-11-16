@@ -17,29 +17,29 @@ import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileException;
-import edu.georgetown.library.fileAnalyzer.util.InvalidFilenameException;
 
-/**
- * @author TBrady
- *
- */
 public class CreateIIIFManifest extends DefaultFileTest {
         protected static enum Type {Folder, Image;}
+        protected static enum Status {NA, Complete, NoMetadata, NoImage, Error;}
         static enum IIIFStatsItems implements StatsItemEnum {
-                Key(StatsItem.makeStringStatsItem("Path", 400)),
-                Type(StatsItem.makeEnumStatsItem(Type.class, "Type")),
-                Name(StatsItem.makeStringStatsItem("Name", 400)), 
-                InfoPath(StatsItem.makeStringStatsItem("InfoPath", 400));
+                Key(StatsItem.makeStringStatsItem("Key", 300)),
+                Path(StatsItem.makeStringStatsItem("Path", 300)),
+                Status(StatsItem.makeEnumStatsItem(Status.class, "Status")),
+                Width(StatsItem.makeIntStatsItem("Width").setWidth(60)),
+                Height(StatsItem.makeIntStatsItem("Height").setWidth(60)),
+                Identifier(StatsItem.makeStringStatsItem("Identifier")),
+                Sequence(StatsItem.makeStringStatsItem("Sequence")),
+                ParentRange(StatsItem.makeStringStatsItem("Parent Range")),
+                Note(StatsItem.makeStringStatsItem("Note", 200))
+                ;
 
                 StatsItem si;
 
@@ -112,7 +112,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 
                 File manFile = new File(this.getProperty(MANIFEST).toString());
                 try {
-                        manifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), manFile);
+                        manifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), manFile, hasCollectionManifest());
                 } catch (IOException e) {
                         is.addMessage(e);
                         return is;
@@ -142,14 +142,21 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public String getShortName() {
                 return "IIIF";
         }
+        
+        public boolean hasCollectionManifest() {
+                return (this.getProperty(MAKECOLL) == YN.Y);
+        }
 
-        public IIIFManifest getCurrentManifest(File f) {
-                if (this.getProperty(MAKECOLL) != YN.Y) {
+        public IIIFManifest getCurrentManifest(File f) throws IOException {
+                if (!hasCollectionManifest()) {
                         return manifest;
                 }
                 
                 File curfile = manifest.getComponentManifestFile(f, getIdentifier(f));
-                return manifest;
+                inputMetadata.setCurrentKey(getKey(f));
+                IIIFManifest itemManifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), curfile, false);
+                manifest.addManifestToCollection(itemManifest);
+                return itemManifest;
         }
         
         public String getIdentifier(File f) {
@@ -162,20 +169,30 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return manifestProjectTranslate.translate(ManifestProjectTranslate.IDENTIFIER, ret);
         }
         
+        public String getSequence(String key, JSONObject canvas) {
+                return key;
+        }
+        
         public Object fileTest(File f) {
                 Stats s = getStats(f);
                 File parent = f.getParentFile();
                 
-                IIIFManifest curmanifest = manifest;
-                if (this.getProperty(MAKECOLL) == YN.Y) {
+                try {
+                        IIIFManifest curmanifest = getCurrentManifest(parent);
+                        s.setVal(IIIFStatsItems.Path, s.key);
+                        s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
+                        JSONObject range = curmanifest.makeRange(parent);
+                        s.setVal(IIIFStatsItems.Height, range.get("label")); 
                         
+                        JSONObject canvas = curmanifest.addFile(s.key, f);
+                        s.setVal(IIIFStatsItems.Height, canvas.getInt("height")); 
+                        s.setVal(IIIFStatsItems.Width, canvas.getInt("width")); 
+                        s.setVal(IIIFStatsItems.Identifier, canvas.get("@id")); 
+                        s.setVal(IIIFStatsItems.Sequence, getSequence(s.key, canvas)); 
+                } catch (IOException e) {
+                        s.setVal(IIIFStatsItems.Status, Status.Error); 
+                        s.setVal(IIIFStatsItems.Note, e.getMessage());                         
                 }
-                
-                manifest.makeRange(parent, parent.getName(), parent.getName(), false);
-                
-                s.setVal(IIIFStatsItems.Name, f.getName());
-                s.setVal(IIIFStatsItems.Type, Type.Image);
-                s.setVal(IIIFStatsItems.InfoPath, manifest.addFile(s.key, f));                        
                 return s;
         }
 
