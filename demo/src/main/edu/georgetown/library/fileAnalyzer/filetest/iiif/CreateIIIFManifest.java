@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileException;
 
 public class CreateIIIFManifest extends DefaultFileTest {
@@ -182,12 +183,12 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         s.setVal(IIIFStatsItems.Path, s.key);
                         s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
                         JSONObject range = curmanifest.makeRange(parent);
-                        s.setVal(IIIFStatsItems.Height, range.get("label")); 
+                        s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
                         
                         JSONObject canvas = curmanifest.addFile(s.key, f);
-                        s.setVal(IIIFStatsItems.Height, canvas.getInt("height")); 
-                        s.setVal(IIIFStatsItems.Width, canvas.getInt("width")); 
-                        s.setVal(IIIFStatsItems.Identifier, canvas.get("@id")); 
+                        s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
+                        s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
+                        s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
                         s.setVal(IIIFStatsItems.Sequence, getSequence(s.key, canvas)); 
                 } catch (IOException e) {
                         s.setVal(IIIFStatsItems.Status, Status.Error); 

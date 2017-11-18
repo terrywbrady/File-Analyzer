@@ -25,12 +25,84 @@ public class IIIFManifest {
         
         protected HashMap<File,JSONObject> ranges = new HashMap<>();
         
-        public static final String METADATA = "metadata";
-        public static final String STRUCTURES = "structures";
-        public static final String SEQUENCES = "sequences";
-        public static final String CANVASES = "canvases";
-        public static final String IMAGES = "images";
-        public static final String RANGES = "ranges";
+        public static enum IIIFType {
+                typeManifest("sc:Manifest"),
+                typeRange("sc:Range"),
+                typeSequence("sc:Sequence"),
+                typeCanvas("sc:Canvas"),
+                typeImage("dctypes:Image"),
+                typeAnnotation("oa:Annotation");                
+
+                String val;
+                IIIFType(String val) {
+                        this.val = val;
+                }
+                String getValue() {
+                        return val;
+                }
+        }
+        
+        public static enum IIIFArray {
+                metadata,
+                structures,
+                sequences,
+                canvases,
+                images,
+                ranges;                
+                String getLabel() {
+                        return name();
+                }
+        }
+        
+        public static enum IIIFProp {
+                label,
+                value,
+                format,
+                id{
+                        String getLabel() {
+                                return "@id";
+                        }
+
+                },
+                height,
+                width,
+                type {
+                        String getLabel() {
+                                return "@type";
+                        }
+                },
+                context{
+                        String getLabel() {
+                                return "@context";
+                        }
+                        String getDefault() {
+                                return "http://iiif.io/api/presentation/2/context.json";
+                        }
+                },
+                logo,
+                profile {
+                        String getDefault() {
+                                return "http://iiif.io/api/image/2/level2.json";
+                        }
+                };
+
+                String val;
+                IIIFProp() {
+                        this.val = name();
+                }
+                IIIFProp(String val) {
+                        this.val = val;
+                }
+                String getLabel() {
+                        return name();
+                }
+                String getDefault() {
+                        return "";
+                }
+
+        }
+        
+        
         
         JSONObject top;
         protected MetadataInputFile inputMetadata;
@@ -44,12 +116,48 @@ public class IIIFManifest {
                         this.height = height;
                         this.width = width;
                 }                
+                String height() {
+                        return Integer.toString(height);
+                }
+                String width() {
+                        return Integer.toString(width);
+                }
         }
 
         public ManifestDimensions getDimensions() {
                 return ManifestDimensions.LANDSCAPE;
         }
         
+        public void setProperty(JSONObject json, IIIFProp prop) {
+                json.put(prop.getLabel(), prop.getDefault());
+        }
+        public void setProperty(JSONObject json, IIIFProp prop, String value) {
+                json.put(prop.getLabel(), value);
+        }
+        public void setProperty(JSONObject json, IIIFType type) {
+                json.put(IIIFProp.type.getLabel(), type.getValue());
+        }
+
+        public JSONArray addArray(JSONObject obj, IIIFArray iiifarr) {
+                String arrlabel = iiifarr.getLabel();
+                JSONArray arr = null;
+                if (obj.has(arrlabel)) {
+                        arr = obj.getJSONArray(arrlabel);
+                } else {
+                        arr = new JSONArray();
+                        obj.put(arrlabel, arr);
+                }
+                return arr;
+        }
+
+        public void addMetadata(JSONObject json, String label, String value) {
+                JSONArray metadata = addArray(json, IIIFArray.metadata);
+                Map<String,String> m = new HashMap<>();
+                m.put(IIIFProp.label.name(), label);
+                m.put(IIIFProp.value.name(), value);
+                metadata.put(m);
+        }
+       
         public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile, boolean isCollectionManifest) throws IOException {
                 checkManifestFile(manifestFile);
                 file = manifestFile;
@@ -59,13 +167,14 @@ public class IIIFManifest {
                 this.inputMetadata = inputMetadata;
                 xp = XMLUtil.xf.newXPath();
                 
-                jsonObject.put("@context", "http://iiif.io/api/presentation/2/context.json");
-                jsonObject.put("@type","sc:Manifest");
-                jsonObject.put("logo", "https://repository.library.georgetown.edu/themes/Mirage2/images/digitalgeorgetown-logo-small-inverted.png");
+                setProperty(jsonObject, IIIFProp.context);
+                setProperty(jsonObject, IIIFType.typeManifest);
+                //TODO - make param
+                setProperty(jsonObject, IIIFProp.logo, "https://repository.library.georgetown.edu/themes/Mirage2/images/digitalgeorgetown-logo-small-inverted.png");
 
                 top = makeRangeObject("Finding Aid","id","Document Type").put("viewingHint", "top");
-                seq = addSequence(jsonObject, SEQUENCES);
-                jsonObject.put("@id","https://repository-dev.library.georgetown.edu/xxx");
+                seq = addSequence(jsonObject);
+                setProperty(jsonObject, IIIFProp.id,"https://repository-dev.library.georgetown.edu/xxx");
         }       
         
         public void addManifestToCollection(IIIFManifest itemManifest) {
@@ -97,32 +206,14 @@ public class IIIFManifest {
         }
         
         
-        public JSONArray addArray(JSONObject obj, String arrlabel) {
-                JSONArray arr = null;
-                if (obj.has(arrlabel)) {
-                        arr = obj.getJSONArray(arrlabel);
-                } else {
-                        arr = new JSONArray();
-                        obj.put(arrlabel, arr);
-                }
-                return arr;
-        }
-        public void addMetadata(JSONObject obj, String arrlabel, String label, String value) {
-                JSONArray arr = addArray(obj, arrlabel);
-                Map<String,String> m = new HashMap<>();
-                m.put("label", label);
-                m.put("value", value);
-                arr.put(m);
-        }
-        
-        public void addDirLink(File f, String arrlabel, String id) {
+        public void addDirLink(File f, IIIFArray iiifarr, String id) {
                 File pfile = f.getParentFile();
                 if (pfile == null) {
                         return;
                 }
                 JSONObject parent = ranges.get(pfile);
                 if (parent != null) {
-                        addArray(parent, arrlabel).put(id);
+                        addArray(parent, iiifarr).put(id);
                 } else {
                         //System.err.println(pfile.getAbsolutePath()+" not found");
                 }
@@ -143,12 +234,11 @@ public class IIIFManifest {
         public JSONObject makeRangeObject(String label, String id, String labelLabel) {
                 JSONObject obj = new JSONObject();
                 label = translateLabel(label);
-                obj.put("label", label);
-                //addMetadata(obj, METADATA, labelLabel, label);
-                obj.put("@id", id);
-                obj.put("@type", "sc:Range");
-                addArray(obj, "ranges");
-                addArray(jsonObject, STRUCTURES).put(obj);
+                setProperty(obj, IIIFProp.label, label);
+                setProperty(obj, IIIFProp.id, id);
+                setProperty(obj, IIIFType.typeRange);
+                this.addArray(obj, IIIFArray.ranges);
+                addArray(jsonObject, IIIFArray.structures).put(obj);
                 return obj;
         }       
         
@@ -166,13 +256,13 @@ public class IIIFManifest {
                 return jsonObject.toString(2);
         }
         
-        public JSONObject addSequence(JSONObject parent, String arrlabel) {
-                JSONArray arr = addArray(parent, SEQUENCES);
+        public JSONObject addSequence(JSONObject parent) {
+                JSONArray arr = addArray(parent, IIIFArray.sequences);
                 JSONObject obj = new JSONObject();
                 arr.put(obj);
-                obj.put("@id", "https://repository-dev.library.georgetown.edu/seq"); 
-                obj.put("@type", "sc:Sequence");
-                addArray(obj, CANVASES);
+                setProperty(obj, IIIFProp.id, "https://repository-dev.library.georgetown.edu/seq");
+                setProperty(obj, IIIFType.typeSequence);
+                addArray(obj, IIIFArray.canvases);
                 return obj;
         }
         public JSONObject addFile(File f) {
@@ -191,12 +281,12 @@ public class IIIFManifest {
        
         public void addCanvasMetadata(JSONObject canvas, File f) {
                 String label = translateItemLabel(f.getName());
-                canvas.put("label", label);
-                addMetadata(canvas, METADATA, "name", f.getName());
+                setProperty(canvas, IIIFProp.label, label);
+                addMetadata(canvas, "name", f.getName());
         }
         
         public void addCanvasToManifest(JSONObject canvas) {
-                JSONArray arr = addArray(seq, CANVASES);
+                JSONArray arr = addArray(seq, IIIFArray.canvases);
                 arr.put(canvas);
         }
         
@@ -207,32 +297,32 @@ public class IIIFManifest {
                 String resid = iiifpath + "/full/full/0/default.jpg";
                 
                 JSONObject canvas = new JSONObject();
-                canvas.put("@id", canvasid);
-                canvas.put("@type", "sc:Canvas"); 
-                canvas.put("height", dimensions.height);
-                canvas.put("width", dimensions.width);
+                setProperty(canvas, IIIFProp.id, canvasid);
+                setProperty(canvas, IIIFType.typeCanvas); 
+                setProperty(canvas, IIIFProp.height, dimensions.height());
+                setProperty(canvas, IIIFProp.width, dimensions.width());
                 addCanvasMetadata(canvas, f);
                 addCanvasToManifest(canvas);
-                JSONArray imarr = addArray(canvas, IMAGES);
+                JSONArray imarr = addArray(canvas, IIIFArray.images);
                 JSONObject image = new JSONObject();
                 imarr.put(image);
-                image.put("@context", "http://iiif.io/api/presentation/2/context.json");
-                image.put("@id", imageid); 
-                image.put("@type", "oa:Annotation");
+                setProperty(image, IIIFProp.context);
+                setProperty(image, IIIFProp.id, imageid); 
+                setProperty(image, IIIFType.typeAnnotation);
                 image.put("motivation", "sc:painting"); 
                 image.put("on", "https://repository-dev.library.georgetown.edu/ead");
                 JSONObject resource = new JSONObject();
                 image.put("resource", resource);
-                resource.put("@id", resid); 
-                resource.put("@type", "dctypes:Image");
-                resource.put("format", "image/jpeg");
-                resource.put("height", dimensions.height);
-                resource.put("width", dimensions.width);                      
+                setProperty(resource, IIIFProp.id, resid); 
+                setProperty(resource, IIIFType.typeImage);
+                setProperty(resource, IIIFProp.format, "image/jpeg");
+                setProperty(resource, IIIFProp.height, dimensions.height());
+                setProperty(resource, IIIFProp.width, dimensions.width());                      
                 JSONObject service = new JSONObject();
                 resource.put("service", service);
-                service.put("@context", "http://iiif.io/api/image/2/context.json"); 
-                service.put("@id", iiifpath); 
-                service.put("profile", "http://iiif.io/api/image/2/level2.json");    
+                setProperty(service, IIIFProp.context); 
+                setProperty(service, IIIFProp.id, iiifpath); 
+                setProperty(service, IIIFProp.profile);    
                 
                 linkCanvas(f, canvasid);
                 return canvas;
