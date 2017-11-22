@@ -22,7 +22,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.ManifestDimensions;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 
@@ -115,6 +115,26 @@ public class IIIFManifest {
 
         }
         
+        public static enum IIIFLookup {
+                Title("title", "//dim:field[@element='title']",""),
+                Identifier("identifier",null, null);
+                String property;
+                String metsXpath; 
+                String eadXPath;
+                IIIFLookup(String property, String metsXpath, String eadXPath) {
+                        this.property = property;
+                        this.metsXpath = metsXpath;
+                        this.eadXPath = eadXPath;
+                }
+                String getFileTypeKey(InputFileType fileType) {
+                        if (fileType == InputFileType.METS) {
+                                return this.metsXpath;
+                        } else if (fileType == InputFileType.EAD) {
+                                return this.eadXPath;
+                        }
+                        return property;
+                }
+        }
         
         
         JSONObject top;
@@ -185,7 +205,7 @@ public class IIIFManifest {
                 setProperty(jsonObject, IIIFProp.context);
                 setProperty(jsonObject, IIIFType.typeManifest);
                 //TODO - make param
-                setProperty(jsonObject, IIIFProp.label, inputMetadata.getValue("title", EMPTY));
+                setProperty(jsonObject, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY));
 
                 top = makeRangeObject("Finding Aid","id","Document Type").put("viewingHint", "top");
                 seq = addSequence(jsonObject);
@@ -353,6 +373,7 @@ public class IIIFManifest {
                 //no action if canvases only appear in the sequences
         }
 
+        /*
         public void setXPathValue(JSONObject obj, String label, Node d, String xq) {
                 try { 
                     obj.put(label, xp.evaluate(xq, d));
@@ -369,7 +390,7 @@ public class IIIFManifest {
                 }
                 return def;
         }
-
+        */
 }
 
 /*

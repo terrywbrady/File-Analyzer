@@ -24,6 +24,7 @@ import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileException;
 
@@ -172,7 +173,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 String ret = f.getName();
                 if (methId == MethodIdentifer.MetadataFile) {
                         inputMetadata.setCurrentKey(f.getName());
-                        ret = inputMetadata.getValue("identifier", "NA");
+                        ret = inputMetadata.getValue(IIIFLookup.Identifier, "NA");
                 }
                 return manifestProjectTranslate.translate(ManifestProjectTranslate.IDENTIFIER, ret);
         }

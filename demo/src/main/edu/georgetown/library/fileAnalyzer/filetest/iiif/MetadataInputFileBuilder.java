@@ -11,10 +11,13 @@ import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
@@ -84,7 +87,7 @@ public class MetadataInputFileBuilder {
                 public File getFile() {
                         return file;
                 }
-                public abstract String getValue(String key, String def);
+                public abstract String getValue(IIIFLookup key, String def);
                 public InputFileType getInputFileType() {
                         return fileType;
                 }
@@ -98,7 +101,7 @@ public class MetadataInputFileBuilder {
         
         class UnidentifiedInputFile implements MetadataInputFile {
                 @Override
-                public String getValue(String key, String def) {
+                public String getValue(IIIFLookup key, String def) {
                         return def;
                 }
 
@@ -120,7 +123,7 @@ public class MetadataInputFileBuilder {
         //TODO
         class RESTResponseInputFile implements MetadataInputFile {
                 @Override
-                public String getValue(String key, String def) {
+                public String getValue(IIIFLookup key, String def) {
                         return def;
                 }
 
@@ -175,8 +178,20 @@ public class MetadataInputFileBuilder {
                 }
                 
                 @Override
-                public String getValue(String key, String def) {
-                        return "TBD";
+                public String getValue(IIIFLookup key, String def) {
+                        String xq = key.getFileTypeKey(fileType);
+                        if (xq == null) {
+                                return getXPathValue(d, xq, def);
+                        }
+                        return def;
+                }
+                public String getXPathValue(Node d, String xq, String def) {
+                        try { 
+                            return xp.evaluate(xq, d);
+                        } catch (XPathExpressionException e) {
+                            e.printStackTrace();
+                        }
+                        return def;
                 }
         }
         
@@ -215,8 +230,13 @@ public class MetadataInputFileBuilder {
                         currentRow = values.containsKey(key) ? values.get(key) : null;
                 }
                 
-                public String getValue(String col, String def) {
+                @Override
+                public String getValue(IIIFLookup key, String def) {
                         if (currentRow == null) {
+                                return def;
+                        }
+                        String col = key.getFileTypeKey(fileType);
+                        if (col == null) {
                                 return def;
                         }
                         if (cols.containsKey(col)) {
@@ -239,8 +259,10 @@ public class MetadataInputFileBuilder {
                         }
                 }
                 
-                public String getValue(String key, String def) {
-                        return prop.getProperty(key, def);
+                @Override
+                public String getValue(IIIFLookup key, String def) {
+                        String propkey = key.getFileTypeKey(fileType);
+                        return prop.getProperty(propkey, def);
                 }
 
         }
