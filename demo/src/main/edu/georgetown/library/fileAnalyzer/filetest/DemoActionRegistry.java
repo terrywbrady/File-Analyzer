@@ -1,16 +1,11 @@
 package edu.georgetown.library.fileAnalyzer.filetest;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifestAIP;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifestDC;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifestEAD;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.CreateIIIFManifest;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.CounterValidation;
 
 /**
- * Initialize the File Analzyer with generic image processing rules (but not
- * NARA specific business rules)
- * 
- * @author TBrady
+ * Initialize the File Analzyer with code relying on external libraries
  *
  */
 public class DemoActionRegistry extends DSpaceActionRegistry {
@@ -34,9 +29,7 @@ public class DemoActionRegistry extends DSpaceActionRegistry {
                 add(new CounterValidationXls(dt));
                 add(new DemoFileTest(dt));
                 add(new MarcItemInventory(dt));
-                add(new CreateIIIFManifestEAD(dt));
-                add(new CreateIIIFManifestDC(dt));
-                add(new CreateIIIFManifestAIP(dt));
+                add(new CreateIIIFManifest(dt));
         }
 
 }

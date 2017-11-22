@@ -70,6 +70,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public static final String METHOD_ID     = "method-id";
         public static final String METHOD_META   = "method-meta";
         public static final String TRANSLATE     = "translate";
+        public static final String LOGOURL       = "logo-url";
         IIIFManifest manifest;
         ManifestProjectTranslate manifestProjectTranslate;
         MetadataInputFile inputMetadata;
@@ -85,6 +86,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return prop;
         }
         
+        MetadataInputFileBuilder metaBuilder = new MetadataInputFileBuilder();
         public void addProjectTranslator() {
                 addPropEnum(TRANSLATE, "Project Value Translator", DefaultManifestProjectTranslate.values(), DefaultManifestProjectTranslate.Default);                
         }
@@ -97,6 +99,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 addPropEnum(MAKECOLL, "Make collection manifest of manifests", YN.values(), YN.N);
                 addPropEnum(METHOD_ID, "Method to determine item identifiers", MethodIdentifer.values(), MethodIdentifer.FolderName);
                 addPropEnum(METHOD_META, "Method to determine item metadata", MethodMetadata.values(), MethodMetadata.None);
+                addProp(LOGOURL, "URL to logo to embed in the manifest file");
         }
 
         public InitializationStatus init() {
@@ -105,7 +108,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 manifestProjectTranslate = (ManifestProjectTranslate)getProperty(TRANSLATE);
                 String sInit = this.getProperty(INITMETADATA).toString(); 
                 try {
-                        inputMetadata = new MetadataInputFileBuilder().identifyFile(sInit);
+                        inputMetadata = metaBuilder.identifyFile(this.getRoot(), sInit);
                 } catch (InputFileException e) {
                         is.addMessage(e.getMessage());
                         return is;
@@ -114,10 +117,14 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 File manFile = new File(this.getProperty(MANIFEST).toString());
                 try {
                         manifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), manFile, hasCollectionManifest());
+                        manifest.setLogoUrl(getProperty(LOGOURL, IIIFManifest.EMPTY).toString());
                 } catch (IOException e) {
                         is.addMessage(e);
                         return is;
                 }
+                lastParent = null;
+                curmanifest = null;
+                currentMetadataFile = null;
                 
                 return is;
         }
@@ -174,23 +181,33 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return key;
         }
         
+        File lastParent;
+        IIIFManifest curmanifest;
+        MetadataInputFile currentMetadataFile;
+        
         public Object fileTest(File f) {
                 Stats s = getStats(f);
                 File parent = f.getParentFile();
                 
                 try {
-                        IIIFManifest curmanifest = getCurrentManifest(parent);
+                        if (!parent.equals(lastParent)) {
+                                lastParent = parent;
+                                curmanifest = getCurrentManifest(parent);
+                                //TODO: evaluate parameter to set this
+                                currentMetadataFile = metaBuilder.findMetadataFile(parent);
+                        }
                         s.setVal(IIIFStatsItems.Path, s.key);
                         s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
                         JSONObject range = curmanifest.makeRange(parent);
                         s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
                         
-                        JSONObject canvas = curmanifest.addFile(s.key, f);
+                        JSONObject canvas = curmanifest.addFile(s.key, f, currentMetadataFile);
+                        //TODO - get height and width
                         s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
                         s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
                         s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
                         s.setVal(IIIFStatsItems.Sequence, getSequence(s.key, canvas)); 
-                } catch (IOException e) {
+                } catch (IOException | InputFileException e) {
                         s.setVal(IIIFStatsItems.Status, Status.Error); 
                         s.setVal(IIIFStatsItems.Note, e.getMessage());                         
                 }

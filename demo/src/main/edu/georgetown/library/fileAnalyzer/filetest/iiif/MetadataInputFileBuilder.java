@@ -1,9 +1,12 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -25,21 +28,52 @@ public class MetadataInputFileBuilder {
                 }
         }
 
+        public static final String NA = "NA.txt";
         public enum InputFileType {
-                NA, Property, CSV, DC, METS, EAD;
+                NA, Property, CSV, DC, METS, EAD, REST;
         }
-        public MetadataInputFile identifyFile(String s) throws InputFileException {
+        
+        private ArrayList<FilenameFilter> filters = new ArrayList<>();
+        
+        public MetadataInputFileBuilder() {
+                filters.add(new FilenameFilter(){
+                        public boolean accept(File dir, String name) {
+                                return name.toLowerCase().equals("mets.xml");
+                        }
+                });
+                filters.add(new FilenameFilter(){
+                        public boolean accept(File dir, String name) {
+                                return name.toLowerCase().equals("dublin_core.xml");
+                        }
+                });
+        }
+        
+        public MetadataInputFile identifyFile(File parent, String s) throws InputFileException {
                 if (s.isEmpty()) throw new InputFileException("No Metadata Input File Specified");
-                return identifyFile(new File(s));
+                return identifyFile(new File(parent, s));
         }
+
+        public MetadataInputFile findMetadataFile(File parent) throws InputFileException {
+                for(FilenameFilter ff: filters) {
+                        String[] matches = parent.list(ff);
+                        if (matches.length > 0) {
+                                return identifyFile(parent, matches[0]);
+                        }
+                }
+                return identifyFile(parent, NA);
+        }
+
+        
         public MetadataInputFile identifyFile(File f) throws InputFileException {
                 if (f == null) throw new InputFileException("Null Input File"); 
                 if (f.getName().toLowerCase().endsWith(".xml")) {
                         return new XMLInputFile(f);
+                } else if (f.getName().toLowerCase().endsWith(".prop")) {
+                        return new PropertyFile(f);
                 } else if (f.getName().toLowerCase().endsWith(".csv")) {
                         
                 }
-                return new UnidentifiedInputFile(f);
+                return new UnidentifiedInputFile();
         }
         
         
@@ -62,17 +96,49 @@ public class MetadataInputFileBuilder {
                 }
         }
         
-        class UnidentifiedInputFile extends DefaultInputFile {
-                UnidentifiedInputFile(File file) {
-                        super(file);
-                        fileType = InputFileType.NA;
-                }
-
+        class UnidentifiedInputFile implements MetadataInputFile {
                 @Override
                 public String getValue(String key, String def) {
                         return def;
                 }
+
+                @Override
+                public File getFile() {
+                        return null;
+                }
+
+                @Override
+                public InputFileType getInputFileType() {
+                        return InputFileType.NA;
+                }
+
+                @Override
+                public void setCurrentKey(String key) {
+                }
         }
+
+        //TODO
+        class RESTResponseInputFile implements MetadataInputFile {
+                @Override
+                public String getValue(String key, String def) {
+                        return def;
+                }
+
+                @Override
+                public File getFile() {
+                        return null;
+                }
+
+                @Override
+                public InputFileType getInputFileType() {
+                        return InputFileType.REST;
+                }
+
+                @Override
+                public void setCurrentKey(String key) {
+                }
+        }
+
         
         class XMLInputFile extends DefaultInputFile {
                 Document d;
@@ -157,6 +223,24 @@ public class MetadataInputFileBuilder {
                                 return currentRow.get(cols.get(col));
                         }
                         return def;
+                }
+
+        }
+
+        public class PropertyFile extends DefaultInputFile {
+                Properties prop = new Properties();
+                PropertyFile(File file) throws InputFileException {
+                        super(file);
+                        fileType = InputFileType.Property;
+                        try {
+                                prop.load(new FileReader(file));
+                        } catch (Exception e) {
+                                throw new InputFileException("Property Parsing Error "+e.getMessage());
+                        }
+                }
+                
+                public String getValue(String key, String def) {
+                        return prop.getProperty(key, def);
                 }
 
         }
