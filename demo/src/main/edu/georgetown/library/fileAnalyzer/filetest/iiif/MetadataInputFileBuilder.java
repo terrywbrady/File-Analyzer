@@ -17,7 +17,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFLookup;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
@@ -150,11 +150,14 @@ public class MetadataInputFileBuilder {
                         super(file);
                         try {
                                 d = XMLUtil.dbf_ns.newDocumentBuilder().parse(file);
+                                if (d == null) {
+                                        throw new InputFileException(String.format("File [%s] cannot be parsed", file.getName()));
+                                }
                                 SimpleNamespaceContext nsContext = new XMLUtil().new SimpleNamespaceContext();
                                 
                                 //For mets.xml
                                 nsContext.add("dim", "http://www.dspace.org/xmlns/dspace/dim");
-                                nsContext.add("dim", "http://www.loc.gov/METS/");
+                                nsContext.add("mets", "http://www.loc.gov/METS/");
                                 
                                 //For EAD files
                                 nsContext.add("ead", "urn:isbn:1-931666-22-9");
@@ -163,14 +166,18 @@ public class MetadataInputFileBuilder {
                                 xp.setNamespaceContext(nsContext);
                                 
                                 String ns = d.getNamespaceURI();
-                                if (ns.equals("urn:isbn:1-931666-22-9")) {
-                                        fileType = InputFileType.EAD;
-                                } else if (ns.equals("http://www.loc.gov/METS/")) {
-                                        fileType = InputFileType.METS;
-                                } else if (d.getDocumentElement().getTagName().equals("dublin_core")) {
+                                String tag = d.getDocumentElement().getTagName();
+                                if (ns == null) {
+                                        ns = "";
+                                }
+                                if (tag.equals("dublin_core")) {
                                         fileType = InputFileType.DC;
+                                } else if (ns.equals("urn:isbn:1-931666-22-9")) {
+                                        fileType = InputFileType.EAD;
+                                } else if (ns.equals("http://www.loc.gov/METS/") || tag.equals("mets")) {
+                                        fileType = InputFileType.METS;
                                 } else {                                        
-                                        throw new InputFileException("Cannot identify XML file");
+                                        throw new InputFileException(String.format("Cannot identify XML file [%s]", file.getName()));
                                 }
                         } catch (SAXException | IOException | ParserConfigurationException e) {
                                 throw new InputFileException(e.getMessage());
@@ -180,7 +187,7 @@ public class MetadataInputFileBuilder {
                 @Override
                 public String getValue(IIIFLookup key, String def) {
                         String xq = key.getFileTypeKey(fileType);
-                        if (xq == null) {
+                        if (xq != null) {
                                 return getXPathValue(d, xq, def);
                         }
                         return def;

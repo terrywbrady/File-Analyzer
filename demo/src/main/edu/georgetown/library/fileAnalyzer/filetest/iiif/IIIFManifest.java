@@ -5,27 +5,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
 
+import org.apache.tika.exception.TikaException;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.DefaultDimensions;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
-import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
-
 
 public class IIIFManifest {
         private File file;
@@ -38,134 +31,21 @@ public class IIIFManifest {
         
         public static final String EMPTY = "";
         
-        public static enum IIIFType {
-                typeManifest("sc:Manifest"),
-                typeRange("sc:Range"),
-                typeSequence("sc:Sequence"),
-                typeCanvas("sc:Canvas"),
-                typeImage("dctypes:Image"),
-                typeAnnotation("oa:Annotation");                
-
-                String val;
-                IIIFType(String val) {
-                        this.val = val;
-                }
-                String getValue() {
-                        return val;
-                }
-        }
-        
-        public static enum IIIFArray {
-                metadata,
-                structures,
-                sequences,
-                canvases,
-                images,
-                ranges;                
-                String getLabel() {
-                        return name();
-                }
-        }
-        
-        public static enum IIIFProp {
-                label,
-                value,
-                format,
-                id{
-                        String getLabel() {
-                                return "@id";
-                        }
-
-                },
-                height,
-                width,
-                type {
-                        String getLabel() {
-                                return "@type";
-                        }
-                },
-                context{
-                        String getLabel() {
-                                return "@context";
-                        }
-                        String getDefault() {
-                                return "http://iiif.io/api/presentation/2/context.json";
-                        }
-                },
-                logo,
-                profile {
-                        String getDefault() {
-                                return "http://iiif.io/api/image/2/level2.json";
-                        }
-                };
-
-                String val;
-                IIIFProp() {
-                        this.val = name();
-                }
-                IIIFProp(String val) {
-                        this.val = val;
-                }
-                String getLabel() {
-                        return name();
-                }
-                String getDefault() {
-                        return "";
-                }
-
-        }
-        
-        public static enum IIIFLookup {
-                Title("title", "//dim:field[@element='title']",""),
-                Identifier("identifier",null, null);
-                String property;
-                String metsXpath; 
-                String eadXPath;
-                IIIFLookup(String property, String metsXpath, String eadXPath) {
-                        this.property = property;
-                        this.metsXpath = metsXpath;
-                        this.eadXPath = eadXPath;
-                }
-                String getFileTypeKey(InputFileType fileType) {
-                        if (fileType == InputFileType.METS) {
-                                return this.metsXpath;
-                        } else if (fileType == InputFileType.EAD) {
-                                return this.eadXPath;
-                        }
-                        return property;
-                }
-        }
         
         
         JSONObject top;
         protected MetadataInputFile inputMetadata;
-        ManifestDimensions dimensions;
-        
-        public enum ManifestDimensions {
-                PORTRAIT(1000,700), LANDSCAPE(750,1000);
-                int height;
-                int width;
-                private ManifestDimensions(int height, int width) {
-                        this.height = height;
-                        this.width = width;
-                }                
-                String height() {
-                        return Integer.toString(height);
-                }
-                String width() {
-                        return Integer.toString(width);
-                }
-        }
 
-        public ManifestDimensions getDimensions() {
-                return ManifestDimensions.LANDSCAPE;
-        }
-        
         public void setProperty(JSONObject json, IIIFProp prop) {
                 json.put(prop.getLabel(), prop.getDefault());
         }
         public void setProperty(JSONObject json, IIIFProp prop, String value) {
-                if (!value.equals(EMPTY)) {
+                if (value.equals(EMPTY)) {
+                        return;
+                }
+                if (prop.isMetadata) {
+                        addMetadata(json, prop.getLabel(), value);
+                } else {
                         json.put(prop.getLabel(), value);
                 }
         }
@@ -196,7 +76,6 @@ public class IIIFManifest {
         public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile, boolean isCollectionManifest) throws IOException {
                 checkManifestFile(manifestFile);
                 file = manifestFile;
-                dimensions = getDimensions();
                 jsonObject = new JSONObject();
                 this.iiifRootPath = iiifRootPath;
                 this.inputMetadata = inputMetadata;
@@ -205,7 +84,8 @@ public class IIIFManifest {
                 setProperty(jsonObject, IIIFProp.context);
                 setProperty(jsonObject, IIIFType.typeManifest);
                 //TODO - make param
-                setProperty(jsonObject, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY));
+                setProperty(jsonObject, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY)); 
+                setProperty(jsonObject, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Attribution, EMPTY));
 
                 top = makeRangeObject("Finding Aid","id","Document Type").put("viewingHint", "top");
                 seq = addSequence(jsonObject);
@@ -320,10 +200,14 @@ public class IIIFManifest {
                 return String.format("%s/%s", iiifRootPath, key.replaceAll("\\\\",  "/").replaceFirst("^/*", ""));
         }
        
-        public void addCanvasMetadata(JSONObject canvas, File f) {
-                String label = translateItemLabel(f.getName());
-                setProperty(canvas, IIIFProp.label, label);
-                addMetadata(canvas, "name", f.getName());
+        public void addCanvasMetadata(JSONObject canvas, File f, MetadataInputFile itemMeta) {
+                setProperty(canvas, IIIFProp.label, itemMeta.getValue(IIIFLookup.Title, EMPTY));
+                setProperty(canvas, IIIFProp.dateCreated, itemMeta.getValue(IIIFLookup.DateCreated, EMPTY));
+                setProperty(canvas, IIIFProp.creator, itemMeta.getValue(IIIFLookup.Creator, EMPTY));
+                setProperty(canvas, IIIFProp.description, itemMeta.getValue(IIIFLookup.Description, EMPTY));
+                setProperty(canvas, IIIFProp.subject, itemMeta.getValue(IIIFLookup.Subject, EMPTY));
+                setProperty(canvas, IIIFProp.rights, itemMeta.getValue(IIIFLookup.Rights, EMPTY));
+                setProperty(canvas, IIIFProp.permalink, itemMeta.getValue(IIIFLookup.Permalink, EMPTY));
         }
         
         public void addCanvasToManifest(JSONObject canvas) {
@@ -340,9 +224,15 @@ public class IIIFManifest {
                 JSONObject canvas = new JSONObject();
                 setProperty(canvas, IIIFProp.id, canvasid);
                 setProperty(canvas, IIIFType.typeCanvas); 
-                setProperty(canvas, IIIFProp.height, dimensions.height());
-                setProperty(canvas, IIIFProp.width, dimensions.width());
-                addCanvasMetadata(canvas, f);
+                ManifestDimensions dim = DefaultDimensions.PORTRAIT.dimensions;
+                try {
+                        dim = new ManifestDimensions(f);
+                } catch (IOException | SAXException | TikaException e) {
+                        e.printStackTrace();
+                } 
+                setProperty(canvas, IIIFProp.height, dim.height());
+                setProperty(canvas, IIIFProp.width, dim.width());
+                addCanvasMetadata(canvas, f, itemMeta);
                 addCanvasToManifest(canvas);
                 JSONArray imarr = addArray(canvas, IIIFArray.images);
                 JSONObject image = new JSONObject();
@@ -357,8 +247,8 @@ public class IIIFManifest {
                 setProperty(resource, IIIFProp.id, resid); 
                 setProperty(resource, IIIFType.typeImage);
                 setProperty(resource, IIIFProp.format, "image/jpeg");
-                setProperty(resource, IIIFProp.height, dimensions.height());
-                setProperty(resource, IIIFProp.width, dimensions.width());                      
+                setProperty(resource, IIIFProp.height, dim.height());
+                setProperty(resource, IIIFProp.width, dim.width());                      
                 JSONObject service = new JSONObject();
                 resource.put("service", service);
                 setProperty(service, IIIFProp.context); 

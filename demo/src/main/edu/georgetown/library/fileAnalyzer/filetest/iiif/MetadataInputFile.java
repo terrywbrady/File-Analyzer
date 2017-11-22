@@ -2,7 +2,7 @@ package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFLookup;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 
 public interface MetadataInputFile {

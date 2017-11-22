@@ -22,10 +22,10 @@ import java.io.IOException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFManifest.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileException;
 
 public class CreateIIIFManifest extends DefaultFileTest {
@@ -203,7 +203,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
                         
                         JSONObject canvas = curmanifest.addFile(s.key, f, currentMetadataFile);
-                        //TODO - get height and width
+                        
                         s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
                         s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
                         s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
