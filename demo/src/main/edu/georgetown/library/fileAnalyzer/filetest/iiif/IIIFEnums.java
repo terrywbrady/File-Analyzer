@@ -1,7 +1,5 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 
 public final class IIIFEnums {
@@ -17,8 +15,10 @@ public final class IIIFEnums {
                 typeRange("sc:Range"),
                 typeSequence("sc:Sequence"),
                 typeCanvas("sc:Canvas"),
-                typeImage("dctypes:Image"),
-                typeAnnotation("oa:Annotation");                
+                typeImage("na"),
+                typeImageResource("dctypes:Image"),
+                typeImageResourceService("na"),
+                typeImageAnnotation("oa:Annotation");                
 
                 String val;
                 IIIFType(String val) {
@@ -47,6 +47,7 @@ public final class IIIFEnums {
                 value,
                 format,
                 id("@id"),
+                identifier,
                 height,
                 width,
                 type("@type"),
@@ -91,15 +92,15 @@ public final class IIIFEnums {
         }
         
         public static enum IIIFLookup {
-                Title("title", "//mods:title",""),
+                Title("title", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='title'][not(@qualifier)]",""),
                 Attribution("attribution", null, null),
                 Identifier("identifier",null, null),
-                DateCreated("Date Created", "mods:dateCreated"), 
+                DateCreated("Date Created", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='date'][@qualifier='created']"), 
                 Creator("Creator", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='creator']"), 
-                Description("Description", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='description']"),
-                Subject("Subject(s)", "//mods:subject/mods:topic"),
-                Rights("Rights", "//mods:accessCondition"), 
-                Permalink("Permanent URL", "//mods:identifier[@type='uri']");
+                Description("Description", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='description'][not(@qualifier)]"),
+                Subject("Subject(s)", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='subject']"),
+                Rights("Rights", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='rights']"), 
+                Permalink("Permanent URL", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='identifier'][@qualifier='uri']");
                 String property = null;
                 String metsXpath = null; 
                 String eadXPath = null;
