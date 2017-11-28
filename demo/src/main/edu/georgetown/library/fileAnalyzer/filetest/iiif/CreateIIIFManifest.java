@@ -30,7 +30,7 @@ import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilde
 
 public class CreateIIIFManifest extends DefaultFileTest {
         protected static enum Type {Folder, Image;}
-        protected static enum Status {NA, Complete, NoMetadata, NoImage, Error;}
+        protected static enum Status {NA, Skip, Complete, NoMetadata, NoImage, Error;}
         static enum IIIFStatsItems implements StatsItemEnum {
                 Key(StatsItem.makeStringStatsItem("Key", 300)),
                 Path(StatsItem.makeStringStatsItem("Path", 300)),
@@ -199,18 +199,22 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 currentMetadataFile = metaBuilder.findMetadataFile(parent, inputMetadata);
                         }
                         s.setVal(IIIFStatsItems.Path, s.key);
-                        s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
-                        JSONObject range = curmanifest.makeRange(parent);
-                        s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
-                        
-                        String canvasKey = curmanifest.addFile(s.key, f, currentMetadataFile);
-                        JSONObject canvas = curmanifest.getCanvas(canvasKey);
-                        
-                        s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
-                        s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
-                        s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
-                        s.setVal(IIIFStatsItems.Title, canvas.get(IIIFProp.label.getLabel())); 
-                        s.setVal(IIIFStatsItems.Sequence, canvasKey); 
+                        if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
+                                s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
+                                JSONObject range = curmanifest.makeRange(parent);
+                                s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
+                                
+                                String canvasKey = curmanifest.addFile(s.key, f, currentMetadataFile);
+                                JSONObject canvas = curmanifest.getCanvas(canvasKey);
+                                
+                                s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
+                                s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
+                                s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
+                                s.setVal(IIIFStatsItems.Title, canvas.get(IIIFProp.label.getLabel())); 
+                                s.setVal(IIIFStatsItems.Sequence, canvasKey); 
+                        } else {
+                                s.setVal(IIIFStatsItems.Status, Status.Skip); 
+                        }
                 } catch (IOException | InputFileException e) {
                         s.setVal(IIIFStatsItems.Status, Status.Error); 
                         s.setVal(IIIFStatsItems.Note, e.getMessage());                         

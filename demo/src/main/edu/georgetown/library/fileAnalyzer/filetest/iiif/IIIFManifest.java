@@ -281,7 +281,7 @@ public class IIIFManifest {
                 setProperty(service, IIIFProp.profile);    
                 
                 linkCanvas(f, canvasid);
-                String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), canvas);
+                String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), itemMeta);
                 orderedCanvases.put(canvasKey, canvas);
                 return canvasKey;
         }

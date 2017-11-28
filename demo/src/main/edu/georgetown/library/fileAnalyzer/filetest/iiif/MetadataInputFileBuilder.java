@@ -11,10 +11,12 @@ import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
@@ -162,6 +164,7 @@ public class MetadataInputFileBuilder {
                                 //For mets.xml
                                 nsContext.add("dim", "http://www.dspace.org/xmlns/dspace/dim");
                                 nsContext.add("mets", "http://www.loc.gov/METS/");
+                                nsContext.add("mods", "http://www.loc.gov/mods/v3");
                                 
                                 //For EAD files
                                 nsContext.add("ead", "urn:isbn:1-931666-22-9");
@@ -197,8 +200,19 @@ public class MetadataInputFileBuilder {
                         return def;
                 }
                 public String getXPathValue(Node d, String xq, String def) {
-                        try { 
-                            return xp.evaluate(xq, d);
+                        StringBuilder sb = new StringBuilder();
+                        try {
+                            NodeList nl = (NodeList)xp.evaluate(xq, d, XPathConstants.NODESET);
+                            for(int i=0; i<nl.getLength(); i++) {
+                                    if (sb.length() > 0) {
+                                            sb.append("; ");
+                                    }
+                                    sb.append(nl.item(i).getTextContent());
+                            }
+                            if (sb.length() == 0) {
+                                    return def;
+                            }
+                            return sb.toString();
                         } catch (XPathExpressionException e) {
                             e.printStackTrace();
                         }

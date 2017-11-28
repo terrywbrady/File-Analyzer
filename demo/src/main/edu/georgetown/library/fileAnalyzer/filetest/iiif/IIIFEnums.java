@@ -91,15 +91,15 @@ public final class IIIFEnums {
         }
         
         public static enum IIIFLookup {
-                Title("title", "//dim:field[@element='title']",""),
+                Title("title", "//mods:title",""),
                 Attribution("attribution", null, null),
                 Identifier("identifier",null, null),
-                DateCreated("Date Created", "//dim:field[@element='date'][@qualifier='created']"), 
-                Creator("Creator", "//dim:field[@element='creator']"), 
-                Description("Description", "//dim:field[@element='description'][not(@qualifier)]"),
-                Subject("Subject(s)", "//dim:field[@element='subject']"),
-                Rights("Rights", "//dim:field[@element='rights']"), 
-                Permalink("Permanent URL", "//dim:field[@element='identifier'][@qualifier='uri']");
+                DateCreated("Date Created", "mods:dateCreated"), 
+                Creator("Creator", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='creator']"), 
+                Description("Description", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='description']"),
+                Subject("Subject(s)", "//mods:subject/mods:topic"),
+                Rights("Rights", "//mods:accessCondition"), 
+                Permalink("Permanent URL", "//mods:identifier[@type='uri']");
                 String property = null;
                 String metsXpath = null; 
                 String eadXPath = null;
