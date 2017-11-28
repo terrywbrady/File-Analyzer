@@ -61,6 +61,7 @@ public final class IIIFEnums {
                                 return "http://iiif.io/api/image/2/level2.json";
                         }
                 },
+                title("Title", true), 
                 dateCreated("Date Created", true), 
                 creator("Creator", true), 
                 description("Description", true),

@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.xml.xpath.XPath;
 
@@ -31,7 +32,8 @@ public class IIIFManifest {
         
         public static final String EMPTY = "";
         
-        
+        ManifestProjectTranslate manifestProjectTranslate;
+        TreeMap<String,JSONObject> orderedCanvases = new TreeMap<>();
         
         JSONObject top;
         protected MetadataInputFile inputMetadata;
@@ -53,6 +55,25 @@ public class IIIFManifest {
                 json.put(IIIFProp.type.getLabel(), type.getValue());
         }
 
+        public static String getProperty(JSONObject json, IIIFProp prop, String defValue) {
+                String ret = null;
+                if (prop.isMetadata) {
+                        JSONArray jarr = json.getJSONArray(IIIFArray.metadata.getLabel());
+                        if (jarr == null) {
+                                return defValue;
+                        }
+                        for(int i = 0; i < jarr.length(); i++) {
+                                JSONObject obj = jarr.getJSONObject(i);
+                                if (prop.getLabel().equals(obj.getString(IIIFProp.label.getLabel()))) {
+                                        ret = obj.getString(IIIFProp.value.getLabel());
+                                }
+                        }
+                } else {
+                        ret = json.getString(prop.getLabel());
+                }
+                return ret == null ? defValue : ret;
+        }
+        
         public JSONArray addArray(JSONObject obj, IIIFArray iiifarr) {
                 String arrlabel = iiifarr.getLabel();
                 JSONArray arr = null;
@@ -79,6 +100,7 @@ public class IIIFManifest {
                 jsonObject = new JSONObject();
                 this.iiifRootPath = iiifRootPath;
                 this.inputMetadata = inputMetadata;
+                this.manifestProjectTranslate = DefaultManifestProjectTranslate.Default;
                 xp = XMLUtil.xf.newXPath();
                 
                 setProperty(jsonObject, IIIFProp.context);
@@ -164,7 +186,9 @@ public class IIIFManifest {
         }       
         
         public void refine()  {
-                //No op - meant to be overridden
+                for(String canvasKey: orderedCanvases.keySet()) {
+                        addCanvasToManifest(orderedCanvases.get(canvasKey));
+                }
         }
         public void write() throws IOException {
                 refine();
@@ -189,7 +213,7 @@ public class IIIFManifest {
         //public JSONObject addFile(File f) {
         //        return addCanvas(f.getName(), f);
         //}
-        public JSONObject addFile(String key, File f, MetadataInputFile itemMeta) {
+        public String addFile(String key, File f, MetadataInputFile itemMeta) {
                 return addCanvas(key, f, itemMeta);
         }
         public String translateItemLabel(String label) {
@@ -202,6 +226,7 @@ public class IIIFManifest {
        
         public void addCanvasMetadata(JSONObject canvas, File f, MetadataInputFile itemMeta) {
                 setProperty(canvas, IIIFProp.label, itemMeta.getValue(IIIFLookup.Title, EMPTY));
+                setProperty(canvas, IIIFProp.title, itemMeta.getValue(IIIFLookup.Title, EMPTY));
                 setProperty(canvas, IIIFProp.dateCreated, itemMeta.getValue(IIIFLookup.DateCreated, EMPTY));
                 setProperty(canvas, IIIFProp.creator, itemMeta.getValue(IIIFLookup.Creator, EMPTY));
                 setProperty(canvas, IIIFProp.description, itemMeta.getValue(IIIFLookup.Description, EMPTY));
@@ -215,7 +240,7 @@ public class IIIFManifest {
                 arr.put(canvas);
         }
         
-        public JSONObject addCanvas(String key, File f, MetadataInputFile itemMeta) {
+        public String addCanvas(String key, File f, MetadataInputFile itemMeta) {
                 String iiifpath = getIIIFPath(key, f);
                 String canvasid = "https://repository-dev.library.georgetown.edu/loris/Canvas/"+f.getName();
                 String imageid = "https://repository-dev.library.georgetown.edu/loris/Image/"+f.getName();
@@ -233,7 +258,7 @@ public class IIIFManifest {
                 setProperty(canvas, IIIFProp.height, dim.height());
                 setProperty(canvas, IIIFProp.width, dim.width());
                 addCanvasMetadata(canvas, f, itemMeta);
-                addCanvasToManifest(canvas);
+                
                 JSONArray imarr = addArray(canvas, IIIFArray.images);
                 JSONObject image = new JSONObject();
                 imarr.put(image);
@@ -256,11 +281,19 @@ public class IIIFManifest {
                 setProperty(service, IIIFProp.profile);    
                 
                 linkCanvas(f, canvasid);
-                return canvas;
+                String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), canvas);
+                orderedCanvases.put(canvasKey, canvas);
+                return canvasKey;
         }
         
         public void linkCanvas(File f, String canvasid) {
                 //no action if canvases only appear in the sequences
+        }
+        public void setProjectTranslate(ManifestProjectTranslate manifestProjectTranslate) {
+                this.manifestProjectTranslate = manifestProjectTranslate;
+        }
+        public JSONObject getCanvas(String canvasKey) {
+                return orderedCanvases.get(canvasKey);
         }
 
         /*

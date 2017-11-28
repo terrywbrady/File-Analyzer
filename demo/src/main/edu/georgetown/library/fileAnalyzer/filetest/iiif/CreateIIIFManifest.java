@@ -38,6 +38,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 Width(StatsItem.makeIntStatsItem("Width").setWidth(60)),
                 Height(StatsItem.makeIntStatsItem("Height").setWidth(60)),
                 Identifier(StatsItem.makeStringStatsItem("Identifier")),
+                Title(StatsItem.makeStringStatsItem("Title", 200)),
                 Sequence(StatsItem.makeStringStatsItem("Sequence")),
                 ParentRange(StatsItem.makeStringStatsItem("Parent Range")),
                 Note(StatsItem.makeStringStatsItem("Note", 200))
@@ -101,6 +102,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 addPropEnum(METHOD_ID, "Method to determine item identifiers", MethodIdentifer.values(), MethodIdentifer.FolderName);
                 addPropEnum(METHOD_META, "Method to determine item metadata", MethodMetadata.values(), MethodMetadata.None);
                 addProp(LOGOURL, "URL to logo to embed in the manifest file");
+                addProjectTranslator();
         }
 
         public InitializationStatus init() {
@@ -118,6 +120,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 File manFile = new File(this.getProperty(MANIFEST).toString());
                 try {
                         manifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), manFile, hasCollectionManifest());
+                        manifest.setProjectTranslate(manifestProjectTranslate);
                         manifest.setLogoUrl(getProperty(LOGOURL, IIIFManifest.EMPTY).toString());
                 } catch (IOException e) {
                         is.addMessage(e);
@@ -164,6 +167,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 File curfile = manifest.getComponentManifestFile(f, getIdentifier(f));
                 inputMetadata.setCurrentKey(getKey(f));
                 IIIFManifest itemManifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), curfile, false);
+                manifest.setProjectTranslate(manifestProjectTranslate);
                 manifest.addManifestToCollection(itemManifest);
                 return itemManifest;
         }
@@ -178,9 +182,6 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return manifestProjectTranslate.translate(ManifestProjectTranslate.IDENTIFIER, ret);
         }
         
-        public String getSequence(String key, JSONObject canvas) {
-                return key;
-        }
         
         File lastParent;
         IIIFManifest curmanifest;
@@ -195,19 +196,21 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 lastParent = parent;
                                 curmanifest = getCurrentManifest(parent);
                                 //TODO: evaluate parameter to set this
-                                currentMetadataFile = metaBuilder.findMetadataFile(parent);
+                                currentMetadataFile = metaBuilder.findMetadataFile(parent, inputMetadata);
                         }
                         s.setVal(IIIFStatsItems.Path, s.key);
                         s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
                         JSONObject range = curmanifest.makeRange(parent);
                         s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
                         
-                        JSONObject canvas = curmanifest.addFile(s.key, f, currentMetadataFile);
+                        String canvasKey = curmanifest.addFile(s.key, f, currentMetadataFile);
+                        JSONObject canvas = curmanifest.getCanvas(canvasKey);
                         
                         s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
                         s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
                         s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
-                        s.setVal(IIIFStatsItems.Sequence, getSequence(s.key, canvas)); 
+                        s.setVal(IIIFStatsItems.Title, canvas.get(IIIFProp.label.getLabel())); 
+                        s.setVal(IIIFStatsItems.Sequence, canvasKey); 
                 } catch (IOException | InputFileException e) {
                         s.setVal(IIIFStatsItems.Status, Status.Error); 
                         s.setVal(IIIFStatsItems.Note, e.getMessage());                         

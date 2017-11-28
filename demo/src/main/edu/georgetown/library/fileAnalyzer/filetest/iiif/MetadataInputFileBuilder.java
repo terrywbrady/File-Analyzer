@@ -56,16 +56,20 @@ public class MetadataInputFileBuilder {
                 return identifyFile(new File(parent, s));
         }
 
-        public MetadataInputFile findMetadataFile(File parent) throws InputFileException {
+        public MetadataInputFile findMetadataFile(File parent, MetadataInputFile manifestMeta) throws InputFileException {
+                MetadataInputFile returnFile = identifyFile(parent, NA);
                 for(FilenameFilter ff: filters) {
                         String[] matches = parent.list(ff);
                         if (matches.length > 0) {
-                                return identifyFile(parent, matches[0]);
+                                returnFile = identifyFile(parent, matches[0]);
+                                if (returnFile.getInputFileType() == InputFileType.NA) {
+                                        return manifestMeta;
+                                }
+                                return returnFile;
                         }
                 }
-                return identifyFile(parent, NA);
+                return manifestMeta;
         }
-
         
         public MetadataInputFile identifyFile(File f) throws InputFileException {
                 if (f == null) throw new InputFileException("Null Input File"); 
