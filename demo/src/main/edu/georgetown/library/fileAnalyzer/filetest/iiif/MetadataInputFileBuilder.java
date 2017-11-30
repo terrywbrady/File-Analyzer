@@ -172,7 +172,7 @@ public class MetadataInputFileBuilder {
 
                                 xp.setNamespaceContext(nsContext);
                                 
-                                String ns = d.getNamespaceURI();
+                                String ns = d.getDocumentElement().getNamespaceURI();
                                 String tag = d.getDocumentElement().getTagName();
                                 if (ns == null) {
                                         ns = "";
@@ -200,6 +200,9 @@ public class MetadataInputFileBuilder {
                         return def;
                 }
                 public String getXPathValue(Node d, String xq, String def) {
+                        if (xq.isEmpty()) {
+                                return def;
+                        }
                         StringBuilder sb = new StringBuilder();
                         try {
                             NodeList nl = (NodeList)xp.evaluate(xq, d, XPathConstants.NODESET);

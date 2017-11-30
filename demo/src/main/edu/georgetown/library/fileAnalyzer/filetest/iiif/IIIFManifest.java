@@ -56,7 +56,7 @@ public class IIIFManifest {
                         json.put(prop.getLabel(), value);
                 }
         }
-        public void setProperty(JSONObject json, IIIFType type) {
+        public static void setProperty(JSONObject json, IIIFType type) {
                 json.put(IIIFProp.type.getLabel(), type.getValue());
         }
 
@@ -74,12 +74,22 @@ public class IIIFManifest {
                                 }
                         }
                 } else {
-                        ret = json.getString(prop.getLabel());
+                        if (json.has(prop.getLabel())) {
+                                ret = json.getString(prop.getLabel());
+                        }
                 }
                 return ret == null ? defValue : ret;
         }
+
+        public static int getIntProperty(JSONObject json, IIIFProp prop, int defValue) {
+                if (json.has(prop.getLabel())) {
+                        return json.getInt(prop.getLabel());
+                }
+                return defValue;
+        }
+
         
-        public JSONArray getArray(JSONObject obj, IIIFArray iiifarr) {
+        public static JSONArray getArray(JSONObject obj, IIIFArray iiifarr) {
                 String arrlabel = iiifarr.getLabel();
                 JSONArray arr = null;
                 if (obj.has(arrlabel)) {
@@ -91,7 +101,7 @@ public class IIIFManifest {
                 return arr;
         }
 
-        public void addMetadata(JSONObject json, String label, String value) {
+        public static void addMetadata(JSONObject json, String label, String value) {
                 JSONArray metadata = getArray(json, IIIFArray.metadata);
                 Map<String,String> m = new HashMap<>();
                 m.put(IIIFProp.label.name(), label);
@@ -187,7 +197,7 @@ public class IIIFManifest {
                 setProperty(obj, IIIFType.typeRange, IIIFProp.label, label);
                 setProperty(obj, IIIFType.typeRange, IIIFProp.id, id);
                 setProperty(obj, IIIFType.typeRange);
-                this.getArray(obj, IIIFArray.ranges);
+                getArray(obj, IIIFArray.ranges);
                 getArray(jsonObject, IIIFArray.structures).put(obj);
                 return obj;
         }       
@@ -248,7 +258,7 @@ public class IIIFManifest {
         }
        
         public void addCanvasMetadata(JSONObject canvas, File f, MetadataInputFile itemMeta) {
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.label, itemMeta.getValue(IIIFLookup.Title, EMPTY));
+                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.label, itemMeta.getValue(IIIFLookup.Title, f.getName()));
                 setProperty(canvas, IIIFType.typeCanvas, IIIFProp.title, itemMeta.getValue(IIIFLookup.Title, EMPTY));
                 setProperty(canvas, IIIFType.typeCanvas, IIIFProp.dateCreated, itemMeta.getValue(IIIFLookup.DateCreated, EMPTY));
                 setProperty(canvas, IIIFType.typeCanvas, IIIFProp.creator, itemMeta.getValue(IIIFLookup.Creator, EMPTY));

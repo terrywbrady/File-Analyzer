@@ -204,17 +204,19 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         s.setVal(IIIFStatsItems.Path, s.key);
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
                                 s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
-                                JSONObject range = curmanifest.makeRange(s.key, f, currentMetadataFile);
-                                s.setVal(IIIFStatsItems.ParentRange, range.get(IIIFProp.label.getLabel())); 
+                                JSONObject range = curmanifest.makeRange(s.key, parent, currentMetadataFile);
+                                
+                                s.setVal(IIIFStatsItems.ParentRange, IIIFManifest.getProperty(range, IIIFProp.label, IIIFManifest.EMPTY)); 
                                 
                                 String canvasKey = curmanifest.addFile(s.key, f, currentMetadataFile);
                                 JSONObject canvas = curmanifest.getCanvas(canvasKey);
                                 curmanifest.linkRangeToCanvas(range, canvas);
                                 
-                                s.setVal(IIIFStatsItems.Height, canvas.getInt(IIIFProp.height.getLabel())); 
-                                s.setVal(IIIFStatsItems.Width, canvas.getInt(IIIFProp.width.getLabel())); 
-                                s.setVal(IIIFStatsItems.Identifier, canvas.get(IIIFProp.id.getLabel())); 
-                                s.setVal(IIIFStatsItems.Title, canvas.get(IIIFProp.label.getLabel())); 
+                                
+                                s.setVal(IIIFStatsItems.Height, IIIFManifest.getIntProperty(canvas, IIIFProp.height, 0)); 
+                                s.setVal(IIIFStatsItems.Width, IIIFManifest.getIntProperty(canvas, IIIFProp.width, 0)); 
+                                s.setVal(IIIFStatsItems.Identifier, IIIFManifest.getProperty(canvas, IIIFProp.id, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Title, IIIFManifest.getProperty(canvas, IIIFProp.label, IIIFManifest.EMPTY)); 
                                 s.setVal(IIIFStatsItems.Sequence, canvasKey); 
                         } else {
                                 s.setVal(IIIFStatsItems.Status, Status.Skip); 
