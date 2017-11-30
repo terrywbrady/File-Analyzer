@@ -1,47 +1,61 @@
 ## Input Parameters
-- IIIF Server root path
-- Manifest filename
-- Initial Metadata File (optional)
-  - Property File
-  - Collection mets.xml file (from DSpace)
-  - EAD file (from ArchivesSpace)
-- Create Collection Manifest
-  - Assume top level directories would become separate manifests (is this sufficient?)
-- Get Item Identifier
-  - From directory name
-  - From CSV
-  - From metadata - mets.xml
-  - From metadata - handle
-  - From metadata - dublin_core.xml
-- Get Metadata
-  - None (or use EAD)
-  - Rest API
-  - From CSV
-  - From metadata - mets.xml
-  - From metadata - handle
-  - From metadata - dublin_core.xml
-  
-## Stats Results Fields
+- Manifest Property File: manifestGenerate.prop
 
-- Key (iiif path and/or file path)
-- Iiif path
-- Status
-  - Matched_FileAndMetadata)
-  - File_Default
-  - File_NoMetadata
-  - Metadata_NoFileFound
-- Width
-- Height
-- Identifier
-- Sequence
-- ParentRange
-- Terms
-- HasFullText
+## manifestGenerate.prop format
+    # URL Prefix to prepend to IIIF resource URL's for this proejct
+    IIIFRoot: https://your.image.server.edu/project
+    
+    # Manifest Output Directory
+    # If blank, the current dir will be used
+    ManifestOuputDir: 
 
-## Questions
-- Subject terms behavior (multi link)
+    # Manifest Output File
+    # Name of the top level manifest file that will be generated
+    ManifestOuputFile: manifest.json 
+    
+    # Create Collection Manifest - An individual manifest will be generated for each subfolder 
+    # and registered in a collection level manifest
+    # CreateCollectionManifest: true
+    CreateCollectionManifest: false
+    
+    # Manifest Logo URL
+    # URL to a logo image to embed within the manifest
+    ManifestLogoURL: https://your.image.server.edu/logo.jpg
+    
+    # Manifest Metadata Input File
+    # - EAD File containing metadata
+    # - CSV File for each input directory of resources
+    # If blank, this property file will be utilized
+    ManifestMetadataInputFile: 
+    
+    # Manifest Metadata 
+    # - If not defined in another external metadata file
+    #Title: 
+    #Attribution:
+    #DateCreated:  
+    #Creator: 
+    #Description:
+    #Rights: 
+    
+    # Get Item Identifier
+    # - FolderName - determine the item identifier from the folder name
+    # - MetataFile - extract the item identifer from metadata 
+    #   - mets.xml from DSpace AIP export
+    #   - handle from DSpace Simple Archive Format format
+    #   - dublin_core.xml from DSpace Simple Archive Format metadata file
+    #GetItemIdentifer: MetadataFile
+    GetItemIdentifier: FolderName
+    
+    # Get Item Metadata
+    # - MetadataFile - extract metadata from a file
+    #   - mets.xml from DSpace AIP export
+    #   - dublin_core.xml from DSpace Simple Archive Format metadata file
+    # - RESTAPI - extract metadata using the DSpace REST API
+    #GetItemMetata: RESTAPI
+    GetItemMetadata: MetadataFile
+    
 
-## Implementation
+## Implementation of Use Cases
 
 Parameter     | McLaughlin | AIDS EAD   | Photo Arch     | Hoya         | Notes
 ------------- | ---------- | ---------- | -------------- | ------------ | ------------------- 
