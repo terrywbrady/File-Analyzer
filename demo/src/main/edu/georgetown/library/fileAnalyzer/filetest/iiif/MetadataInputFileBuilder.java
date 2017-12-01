@@ -25,13 +25,6 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
 
 public class MetadataInputFileBuilder {
-        public class InputFileException extends Exception {
-                private static final long serialVersionUID = -8244295017254682738L;
-
-                InputFileException(String s) {
-                        super(s);
-                }
-        }
 
         public static final String NA = "NA.txt";
         public enum InputFileType {

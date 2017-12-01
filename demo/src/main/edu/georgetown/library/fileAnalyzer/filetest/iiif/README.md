@@ -1,5 +1,6 @@
 ## Input Parameters
 - Manifest Property File: manifestGenerate.prop
+- ManifestProjectTranslate class - instance of a class that customizes aspects of manifest generation
 
 ## manifestGenerate.prop format
     # URL Prefix to prepend to IIIF resource URL's for this proejct
@@ -51,7 +52,9 @@
     #   - mets.xml from DSpace AIP export
     #   - dublin_core.xml from DSpace Simple Archive Format metadata file
     # - RESTAPI - extract metadata using the DSpace REST API
+    # - None - no metadata file exists
     #GetItemMetata: RESTAPI
+    #GetItemMetata: None
     GetItemMetadata: MetadataFile
     
 
