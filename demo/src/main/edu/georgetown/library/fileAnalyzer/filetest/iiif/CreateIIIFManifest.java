@@ -1,7 +1,6 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import gov.nara.nwts.ftapp.FTDriver;
-import gov.nara.nwts.ftapp.YN;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
@@ -10,8 +9,6 @@ import gov.nara.nwts.ftapp.ftprop.FTProp;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
 import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
-import gov.nara.nwts.ftapp.ftprop.InvalidInputException;
-import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
@@ -19,12 +16,7 @@ import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Vector;
-import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,12 +25,6 @@ import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileException;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
-import edu.georgetown.library.fileAnalyzer.importer.OutputToBursar;
-import edu.georgetown.library.fileAnalyzer.importer.OutputToBursar.Patron;
-import edu.georgetown.library.fileAnalyzer.importer.OutputToBursar.PatronPropFile;
 
 public class CreateIIIFManifest extends DefaultFileTest {
         protected static enum Type {Folder, Image;}
@@ -95,176 +81,42 @@ public class CreateIIIFManifest extends DefaultFileTest {
         }
         
         MetadataInputFileBuilder metaBuilder = new MetadataInputFileBuilder();
-        public void addProjectTranslator() {
-                addPropEnum(TRANSLATE, "Project Value Translator", DefaultManifestProjectTranslate.values(), DefaultManifestProjectTranslate.Default);                
+        public ManifestProjectTranslate[] getProjectTranslatorValues() {
+                return DefaultManifestProjectTranslate.values();                
         }
         
         ManifestGeneratePropFile manifestGen;
-        class ManifestGeneratePropFile extends FTPropString {
-                final String PROP_IIIFRoot                  = "IIIFRoot";
-                final String PROP_ManifestOuputDir          = "ManifestOuputDir";
-                final String PROP_ManifestOuputFile         = "ManifestOuputFile";
-                final String PROP_CreateCollectionManifest  = "CreateCollectionManifest";
-                final String PROP_ManifestLogoURL           = "ManifestLogoURL";
-                final String PROP_ManifestMetadataInputFile = "ManifestMetadataInputFile";
-                final String PROP_GetItemIdentifier         = "GetItemIdentifier";
-                final String PROP_GetItemMetadata           = "GetItemMetadata";
-                
-                final String VAL_ManifestOuputFile          = "manifest.json";
-                final String VAL_ItemFolder                 = "FolderName";
-                final String VAL_ItemMetadata               = "MetadataFile";
-                final String VAL_ItemREST                   = "RESTAPI";
-                final String VAL_None                       = "None";
-                final String VAL_true                       = "true";
-                
-                final String RX_tf                          = "(true|false)?";
-                final String RX_ItemId                      = "(FolderName|MetadataFile)";
-                final String RX_ItemMeta                    = "(None|RESTAPI|MetadataFile)";
-                
-                
-                Properties prop = new Properties();
-                
-                ManifestGeneratePropFile(FTDriver dt) {
-                    super(dt, CreateIIIFManifest.this.getClass().getName(), MANGEN, MANGEN,
-                            "Manifest Generation Filename", "manifestGenerate.prop");
-                }
-                @Override public InitializationStatus initValidation(File refFile) {
-                    InitializationStatus iStat = new InitializationStatus();
-                    try {
-                            File f = new File(refFile.getParentFile(), this.getValue().toString());
-                            readPropertyFile(f);
-                            File outdir = getManifestOutputDir();
-                            File manfile = getManifestOutputFile();
-                            if (manfile.exists()) {
-                                    if (!manfile.canWrite()) {
-                                            throw new InputFileException(String.format("Existing Manifest File [%s] must be writeable", manfile.getAbsolutePath()));
-                                    } else if (!outdir.canWrite()) {
-                                            throw new InputFileException(String.format("New Manifest File [%s] must be writeable", manfile.getAbsolutePath()));
-                                    }
-                            }
-                            File inMeta = getManifestInputFile(f);
-                            if (!inMeta.exists()) {
-                                    throw new InputFileException(String.format("Metadata File [%s] must exist", inMeta.getAbsolutePath()));
-                            }
-                            this.getItemIdentifierMethod();
-                            this.getItemMetadataMethod();
-                            this.getCreateCollectionManifest();
-                    } catch (InvalidInputException| IOException | InputFileException e) {
-                            iStat.addFailMessage(e.getMessage());
-                    }
-                    return iStat;
-                }
-                public void readPropertyFile(File selectedFile) throws IOException, InvalidInputException, InputFileException {
-                        try {
-                                prop.load(new FileReader(selectedFile));
-                        } catch (Exception e) {
-                                throw new InputFileException("Property Parsing Error "+e.getMessage());
-                        }
-                }
-                
-                public String getIIIFRoot() throws edu.georgetown.library.fileAnalyzer.filetest.iiif.InputFileException {
-                        String s = prop.getProperty(PROP_IIIFRoot, "");
-                        if (s.isEmpty()) {
-                                throw new InputFileException(String.format("%s cannot be empty", PROP_IIIFRoot));
-                        }
-                        return s;
-                }
-
-                /*
-                 * Default to current dir if empty
-                 */
-                public File getManifestOutputDir(){
-                        String dir = prop.getProperty(PROP_IIIFRoot, "");
-                        File root = CreateIIIFManifest.this.dt.root;
-                        if (dir.isEmpty()) {
-                                return root;
-                        }
-                        return new File(root, dir);
-                }
-
-                public File getManifestOutputFile(){
-                        String file = prop.getProperty(PROP_ManifestOuputFile, VAL_ManifestOuputFile);
-                        return new File(getManifestOutputDir(), file);
-                }
-                
-                public File getManifestInputFile(File defFile){
-                        String fname = prop.getProperty(PROP_ManifestMetadataInputFile, "");
-                        if (fname.isEmpty()) {
-                                return defFile;
-                        }
-                        File root = CreateIIIFManifest.this.dt.root;
-                        return new File(root, fname);
-                }
-
-                public boolean getCreateCollectionManifest() throws InputFileException {
-                        String s = prop.getProperty(PROP_CreateCollectionManifest, "");
-                        if (!Pattern.compile("(true|false)?").matcher(s).matches()) {
-                                throw new InputFileException(String.format("%s must be blank, 'true', or 'false'. [%s] found", PROP_CreateCollectionManifest, s));
-                        }
-                        return s.equals(VAL_true);
-                }
-
-                public MethodIdentifer getItemIdentifierMethod() throws InputFileException {
-                        String s = prop.getProperty(PROP_GetItemIdentifier, "");
-                        if (!Pattern.compile(RX_ItemId).matcher(s).matches()) {
-                                throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemId, s));
-                        }
-                        if (s.equals(VAL_ItemFolder)) {
-                                return MethodIdentifer.FolderName;
-                        }
-                        if (s.equals(VAL_ItemMetadata)) {
-                                return MethodIdentifer.MetadataFile;
-                        }
-                        throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemId, s));
-                }
-                public MethodMetadata getItemMetadataMethod() throws InputFileException {
-                        String s = prop.getProperty(PROP_GetItemMetadata, "");
-                        if (!Pattern.compile(RX_ItemMeta).matcher(s).matches()) {
-                                throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemMeta, s));
-                        }
-                        if (s.equals(VAL_ItemMetadata)) {
-                                return MethodMetadata.MetadataFile;
-                        }
-                        if (s.equals(VAL_ItemREST)) {
-                                return MethodMetadata.RestAPI;
-                        }
-                        if (s.equals(VAL_None)) {
-                                return MethodMetadata.None;
-                        }
-                        throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemMeta, s));
-                }
-
-                public String getManifestLogoURL() {
-                        return prop.getProperty(PROP_ManifestLogoURL);
-                }
-        }
-
         public CreateIIIFManifest(FTDriver dt) {
                 super(dt);
                 manifestGen = new ManifestGeneratePropFile(dt);
                 this.ftprops.add(manifestGen);
-                addProjectTranslator();
+                ManifestProjectTranslate[] vals = getProjectTranslatorValues();
+                ManifestProjectTranslate val = vals.length == 0 ? DefaultManifestProjectTranslate.Default: vals[0];
+                addPropEnum(TRANSLATE, "Project Value Translator", vals, val);                
         }
 
         public InitializationStatus init() {
-                //InitializationStatus is = new InitializationStatus();
                 InitializationStatus is = super.init();
+                
                 manifestProjectTranslate = (ManifestProjectTranslate)getProperty(TRANSLATE);
-                String sInit = this.getProperty(INITMETADATA).toString(); 
+                if (manifestProjectTranslate == DefaultManifestProjectTranslate.Default) {
+                        manifestProjectTranslate = manifestGen.getManifestProject(getProjectTranslatorValues()); 
+                }
+                File metadataInputFile = manifestGen.getManifestInputFile(manifestGen.getManifestGenPropFile());
                 try {
-                        inputMetadata = metaBuilder.identifyFile(this.getRoot(), sInit);
+                        inputMetadata = metaBuilder.identifyFile(metadataInputFile);
                 } catch (InputFileException e) {
                         is.addMessage(e.getMessage());
                         return is;
                 }
                 
-                File manFile = new File(this.getProperty(MANIFEST).toString());
+                File manFile = manifestGen.getManifestOutputFile();
                 try {
-                        manifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), manFile, hasCollectionManifest());
+                        manifest = new IIIFManifest(inputMetadata, manifestGen.getIIIFRoot(), manFile, manifestGen.getCreateCollectionManifest());
                         manifest.setProjectTranslate(manifestProjectTranslate);
                         manifest.init();
-                        manifest.setLogoUrl(getProperty(LOGOURL, IIIFManifest.EMPTY).toString());
-                } catch (IOException e) {
+                        manifest.setLogoUrl(manifestGen.getManifestLogoURL());
+                } catch (IOException | InputFileException e) {
                         is.addMessage(e);
                         return is;
                 }
@@ -298,17 +150,22 @@ public class CreateIIIFManifest extends DefaultFileTest {
         }
         
         public boolean hasCollectionManifest() {
-                return (this.getProperty(MAKECOLL) == YN.Y);
+                try {
+                        return manifestGen.getCreateCollectionManifest();
+                } catch (InputFileException e) {
+                        //validation should have already been applied
+                        return false;
+                }
         }
-
-        public IIIFManifest getCurrentManifest(File f) throws IOException {
+        
+        public IIIFManifest getCurrentManifest(File f) throws IOException, InputFileException {
                 if (!hasCollectionManifest()) {
                         return manifest;
                 }
                 
                 File curfile = manifest.getComponentManifestFile(f, getIdentifier(IIIFType.typeManifest, f));
                 inputMetadata.setCurrentKey(getKey(f));
-                IIIFManifest itemManifest = new IIIFManifest(inputMetadata, this.getProperty(IIIFROOT).toString(), curfile, false);
+                IIIFManifest itemManifest = new IIIFManifest(inputMetadata, manifestGen.getIIIFRoot(), curfile, false);
                 manifest.setProjectTranslate(manifestProjectTranslate);
                 manifest.init();
                 manifest.addManifestToCollection(itemManifest);
@@ -316,7 +173,13 @@ public class CreateIIIFManifest extends DefaultFileTest {
         }
         
         public String getIdentifier(IIIFType type, File f) {
-                MethodIdentifer methId = (MethodIdentifer)getProperty(METHOD_ID);
+                MethodIdentifer methId;
+                try {
+                        methId = manifestGen.getItemIdentifierMethod();
+                } catch (InputFileException e) {
+                        //validation should have already been applied
+                        methId = MethodIdentifer.FolderName;
+                }
                 String ret = f.getName();
                 if (methId == MethodIdentifer.MetadataFile) {
                         inputMetadata.setCurrentKey(f.getName());

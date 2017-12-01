@@ -57,6 +57,12 @@
     #GetItemMetata: None
     GetItemMetadata: MetadataFile
     
+    # Manifest Project
+    # Name of the Manifest Project (in code) class that will provide custom translation.
+    # If blank, a default value will be assigned.
+    # The class should be the name of an Enum that implements ManifestProjectTranslate
+    #ManifestProject: 
+    
 
 ## Implementation of Use Cases
 

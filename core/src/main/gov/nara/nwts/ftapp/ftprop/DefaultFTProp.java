@@ -15,7 +15,7 @@ public abstract class DefaultFTProp implements FTProp {
 	String shortname;
 	String description;
 	Object def;
-	FTDriver ft;
+	protected FTDriver ft;
 	String prefix = ""; 
 	
 	boolean failOnEmpty = false;
