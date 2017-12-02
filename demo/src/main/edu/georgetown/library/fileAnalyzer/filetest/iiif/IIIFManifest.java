@@ -169,9 +169,38 @@ public class IIIFManifest {
                 seq.put("viewingHint", "paged");
         }
         
+        public String chopPath(String rangeName) {
+                String[] paths = rangeName.split(RX_PATHSPLIT);
+                StringBuilder sb = new StringBuilder();
+                for(int i=0; i<paths.length-1; i++) {
+                        sb.append(i == 0 ? "" : PATHSPLIT);
+                        sb.append(paths[i]);
+                }
+                return sb.toString();
+        }
+        public String getLastPath(String rangeName) {
+                String[] paths = rangeName.split(RX_PATHSPLIT);
+                return paths.length == 0 ? "" : paths[paths.length-1];
+        }
         
-        public JSONObject makeRange(String key, File f, MetadataInputFile itemMeta) {
-                String rangeName = manifestProjectTranslate.getRangeName(key, f, itemMeta);
+        public String makeRangePath(String key, File f, MetadataInputFile itemMeta) {
+                String rangePath = manifestProjectTranslate.getRangeNames(key, f, itemMeta);
+                for(String chop = chopPath(rangePath); !chop.isEmpty(); chop = chopPath(chop)){
+                        makeRangeFromPath(chop);
+                }
+                makeRangeFromPath(rangePath);
+                return rangePath;
+        }
+
+        public JSONObject getRangeByName(String rangePath) {
+                return orderedRanges.get(rangePath);
+        }
+        public String getRangeLabel(String rangePath) {
+                JSONObject range = getRangeByName(rangePath);
+                return range == null ? "" : getProperty(range, IIIFProp.label, "");
+        }
+
+        public JSONObject makeRangeFromPath(String rangeName) {
                 if (!rangeName.isEmpty()) {
                         JSONObject range = orderedRanges.get(rangeName);
                         if (range == null) {
@@ -180,12 +209,14 @@ public class IIIFManifest {
                         }
                         return range;
                 }
-                return top;
+                return top;                
         }
         
-        public void linkRangeToCanvas(JSONObject range, JSONObject canvas) {
+        public static final String PATHSPLIT = "||";
+        public static final String RX_PATHSPLIT = "\\|\\|";
+        
+        public void linkRangeToCanvas(String rangeName, JSONObject canvas) {
                 String canvasid = getProperty(canvas, IIIFProp.id, EMPTY);
-                String rangeName = getProperty(range, IIIFProp.label, EMPTY);
                 if (!canvasid.isEmpty() && !rangeName.isEmpty()) {
                         parentRangeForCanvas.put(canvasid, rangeName);
                 }
@@ -194,7 +225,7 @@ public class IIIFManifest {
         public JSONObject makeRangeObject(String label, String id) {
                 JSONObject obj = new JSONObject();
                 label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, label);
-                setProperty(obj, IIIFType.typeRange, IIIFProp.label, label);
+                setProperty(obj, IIIFType.typeRange, IIIFProp.label, getLastPath(label));
                 setProperty(obj, IIIFType.typeRange, IIIFProp.id, id);
                 setProperty(obj, IIIFType.typeRange);
                 getArray(obj, IIIFArray.ranges);
@@ -218,12 +249,20 @@ public class IIIFManifest {
                 }
                 for(String rangeName: orderedRanges.keySet()) {
                         JSONObject range = orderedRanges.get(rangeName);
+                        String rangeLabel = getLastPath(rangeName);
                         int count = getArray(range, IIIFArray.canvases).length();
                         String rangeid = getProperty(range, IIIFProp.id, EMPTY);
-                        String label = String.format("%s (%d)", rangeName, count);
+                        String label = count == 0 ? rangeLabel : String.format("%s (%d)", rangeLabel, count);
                         this.setProperty(range, IIIFType.typeRange, IIIFProp.label, label);
                         if (!rangeid.isEmpty()) {
-                                getArray(top, IIIFArray.ranges).put(rangeid);
+                                String parentName = chopPath(rangeName);
+                                JSONObject parent = top;
+                                if (!parentName.isEmpty()) {
+                                        if (orderedRanges.containsKey(parentName)) {
+                                                parent = orderedRanges.get(parentName);
+                                        }
+                                }
+                                getArray(parent, IIIFArray.ranges).put(rangeid);
                         }
                 }                        
         }

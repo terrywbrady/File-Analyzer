@@ -8,6 +8,8 @@
     
     # Manifest Output Directory
     # If blank, the current dir will be used
+    # Enter the path as a linux style path even for windows
+    #   \\server\share\path --> //server/share/path
     ManifestOuputDir: 
 
     # Manifest Output File

@@ -99,7 +99,9 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 InitializationStatus is = super.init();
                 
                 manifestProjectTranslate = (ManifestProjectTranslate)getProperty(TRANSLATE);
-                if (manifestProjectTranslate == DefaultManifestProjectTranslate.Default) {
+                
+                //Since a custom enum may exist for a project, compare on enum name
+                if (manifestProjectTranslate.name() == DefaultManifestProjectTranslate.Default.name()) {
                         manifestProjectTranslate = manifestGen.getManifestProject(getProjectTranslatorValues()); 
                 }
                 File metadataInputFile = manifestGen.getManifestInputFile(manifestGen.getManifestGenPropFile());
@@ -207,13 +209,15 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         s.setVal(IIIFStatsItems.Path, s.key);
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
                                 s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
-                                JSONObject range = curmanifest.makeRange(s.key, parent, currentMetadataFile);
+                                String rangePath = curmanifest.makeRangePath(s.key, parent, currentMetadataFile);
+                                //JSONObject range = curmanifest.getRangeByName(rangePath);
+                                //String rangeName = curmanifest.getRangeLabel(rangePath);
                                 
-                                s.setVal(IIIFStatsItems.ParentRange, IIIFManifest.getProperty(range, IIIFProp.label, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.ParentRange, rangePath); 
                                 
                                 String canvasKey = curmanifest.addFile(s.key, f, currentMetadataFile);
                                 JSONObject canvas = curmanifest.getCanvas(canvasKey);
-                                curmanifest.linkRangeToCanvas(range, canvas);
+                                curmanifest.linkRangeToCanvas(rangePath, canvas);
                                 
                                 
                                 s.setVal(IIIFStatsItems.Height, IIIFManifest.getIntProperty(canvas, IIIFProp.height, 0)); 

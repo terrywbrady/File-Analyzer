@@ -15,10 +15,10 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
                 public String getSequenceValue(int count, MetadataInputFile itemMeta) {
                         return itemMeta.getValue(IIIFLookup.DateCreated, IIIFManifest.EMPTY) + "_" + super.getSequenceValue(count, itemMeta);
                 }
-                @Override String getSubtitle() {return "By Creation Date";}
+                @Override public String getSubtitle() {return "By Creation Date";}
                 
                 @Override
-                public String getRangeName(String key, File f, MetadataInputFile itemMeta) {
+                public String getRangeNames(String key, File f, MetadataInputFile itemMeta) {
                         return getDecade(itemMeta.getValue(IIIFLookup.DateCreated, IIIFManifest.EMPTY));
                 }
         }
@@ -34,7 +34,7 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
                 return true;
         }
 
-        String getSubtitle() {return "";}
+        public String getSubtitle() {return "";}
         
         @Override
         public String translate(IIIFType type, IIIFProp key, String val) {
@@ -42,11 +42,14 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
                         String suff = getSubtitle().isEmpty() ? "" : " - " + getSubtitle();
                         return val + suff;
                 }
+                if (type == IIIFType.typeRange && key == IIIFProp.label) {
+                        return rangeTranslate(val);
+                }
                 return val;
         }
 
         @Override
-        public String getRangeName(String key, File f, MetadataInputFile itemMeta) {
+        public String getRangeNames(String key, File f, MetadataInputFile itemMeta) {
                 return IIIFManifest.EMPTY;
         }
 
@@ -60,5 +63,10 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
 
                 return "Date Unknown";
 
+        }
+
+        @Override
+        public String rangeTranslate(String val) {
+                return val;
         }
 }
