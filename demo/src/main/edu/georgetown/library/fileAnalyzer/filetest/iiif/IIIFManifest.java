@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -129,9 +130,15 @@ public class IIIFManifest {
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY)); 
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Attribution, EMPTY));
 
-                top = makeRangeObject("Top Range","top-range").put("viewingHint", "top");
+                initRanges();
+                
                 seq = addSequence(jsonObject);
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.id,"https://repository-dev.library.georgetown.edu/xxx");
+        }
+        
+        public void initRanges() {
+                top = makeRangeObject("Top Range","top-range").put("viewingHint", "top");
+                List<String> rangePaths = inputMetadata.getInitRanges();
         }
         
         
@@ -200,16 +207,16 @@ public class IIIFManifest {
                 return range == null ? "" : getProperty(range, IIIFProp.label, "");
         }
 
-        public JSONObject makeRangeFromPath(String rangeName) {
-                if (!rangeName.isEmpty()) {
-                        JSONObject range = orderedRanges.get(rangeName);
+        public JSONObject makeRangeFromPath(String rangePath) {
+                if (!rangePath.isEmpty()) {
+                        JSONObject range = orderedRanges.get(rangePath);
                         if (range == null) {
-                                range = makeRangeObject(rangeName, makeRangeId(rangeName));
-                                orderedRanges.put(rangeName, range);
+                                range = makeRangeObject(rangePath, makeRangeId(rangePath));
+                                orderedRanges.put(rangePath, range);
                         }
                         return range;
                 }
-                return top;                
+                return this.manifestProjectTranslate.getParentRange(rangePath, top, orderedRanges);                
         }
         
         public static final String PATHSPLIT = "||";

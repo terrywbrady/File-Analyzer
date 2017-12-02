@@ -6,6 +6,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -96,7 +97,11 @@ public class MetadataInputFileBuilder {
                 DefaultInputFile(File file) {
                         this.file = file;
                 }
-        }
+                @Override
+                public List<String> getInitRanges() {
+                        return new ArrayList<String>();
+                }
+         }
         
         class UnidentifiedInputFile implements MetadataInputFile {
                 @Override
@@ -117,7 +122,12 @@ public class MetadataInputFileBuilder {
                 @Override
                 public void setCurrentKey(String key) {
                 }
-        }
+
+                @Override
+                public List<String> getInitRanges() {
+                        return new ArrayList<String>();
+                }
+       }
 
         //TODO
         class RESTResponseInputFile implements MetadataInputFile {
@@ -138,6 +148,10 @@ public class MetadataInputFileBuilder {
 
                 @Override
                 public void setCurrentKey(String key) {
+                }
+                @Override
+                public List<String> getInitRanges() {
+                        return new ArrayList<String>();
                 }
         }
 
@@ -213,6 +227,21 @@ public class MetadataInputFileBuilder {
                             e.printStackTrace();
                         }
                         return def;
+                }
+
+                @Override
+                public List<String> getInitRanges() {
+                        ArrayList<String> rangePaths = new ArrayList<>();
+                        if (fileType == InputFileType.EAD) {
+                                try {
+                                        NodeList nl = (NodeList)xp.evaluate("ead:c01", d, XPathConstants.NODESET);
+                                        for(int i=0; i<nl.getLength(); i++) {
+                                        }
+                                } catch (XPathExpressionException e) {
+                                        e.printStackTrace();
+                                }
+                        }
+                        return rangePaths;
                 }
         }
         

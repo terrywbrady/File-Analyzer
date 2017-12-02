@@ -1,8 +1,11 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
@@ -68,5 +71,10 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
         @Override
         public String rangeTranslate(String val) {
                 return val;
+        }
+
+        @Override
+        public JSONObject getParentRange(String rangePath, JSONObject top, TreeMap<String,JSONObject> orderedRanges) {
+                return top;
         }
 }
