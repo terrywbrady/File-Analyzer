@@ -98,7 +98,7 @@ public class MetadataInputFileBuilder {
                         this.file = file;
                 }
                 @Override
-                public List<String> getInitRanges() {
+                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
                         return new ArrayList<String>();
                 }
          }
@@ -124,7 +124,7 @@ public class MetadataInputFileBuilder {
                 }
 
                 @Override
-                public List<String> getInitRanges() {
+                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
                         return new ArrayList<String>();
                 }
        }
@@ -150,7 +150,7 @@ public class MetadataInputFileBuilder {
                 public void setCurrentKey(String key) {
                 }
                 @Override
-                public List<String> getInitRanges() {
+                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
                         return new ArrayList<String>();
                 }
         }
@@ -230,18 +230,31 @@ public class MetadataInputFileBuilder {
                 }
 
                 @Override
-                public List<String> getInitRanges() {
+                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
                         ArrayList<String> rangePaths = new ArrayList<>();
                         if (fileType == InputFileType.EAD) {
                                 try {
-                                        NodeList nl = (NodeList)xp.evaluate("ead:c01", d, XPathConstants.NODESET);
+                                        NodeList nl = (NodeList)xp.evaluate("//ead:c01", d, XPathConstants.NODESET);
                                         for(int i=0; i<nl.getLength(); i++) {
+                                                String prefix = "Subjects";
+                                                rangePaths.add(prefix);
+                                                addRange(manifestTranslate, rangePaths, nl.item(i), prefix + IIIFManifest.PATHSPLIT);
                                         }
                                 } catch (XPathExpressionException e) {
                                         e.printStackTrace();
                                 }
                         }
                         return rangePaths;
+                }
+                
+                public void addRange(ManifestProjectTranslate manifestTranslate, List<String> rangePaths, Node n, String prefix) throws XPathExpressionException {
+                        String rName = manifestTranslate.rangeTranslate(prefix + getXPathValue(n, "ead:did/ead:unittitle", "n/a"));
+                        rangePaths.add(rName);
+                        NodeList nl = (NodeList)xp.evaluate("ead:c02|ead:c03|ead:c04", n, XPathConstants.NODESET);
+                        for(int i=0; i<nl.getLength(); i++) {
+                                String nprefix = rName + IIIFManifest.PATHSPLIT;
+                                addRange(manifestTranslate, rangePaths, nl.item(i), nprefix);
+                        }
                 }
         }
         

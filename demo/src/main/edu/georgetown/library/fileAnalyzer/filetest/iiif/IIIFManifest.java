@@ -138,7 +138,10 @@ public class IIIFManifest {
         
         public void initRanges() {
                 top = makeRangeObject("Top Range","top-range").put("viewingHint", "top");
-                List<String> rangePaths = inputMetadata.getInitRanges();
+                List<String> rangePaths = inputMetadata.getInitRanges(manifestProjectTranslate);
+                for(String rangeName: rangePaths) {
+                        orderedRanges.put(rangeName, makeRangeFromPath(rangeName));                        
+                }
         }
         
         
