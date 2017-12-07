@@ -28,6 +28,7 @@ import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 
 /*
  * This code is included for illustrative purposes.  It is not currently active in the application.
+ * More robust file overwriting controls are needed.
  */
 public class SwapDelimitedColumns extends DefaultFileTest {
         static final String DELIM = "delim";
@@ -138,8 +139,11 @@ public class SwapDelimitedColumns extends DefaultFileTest {
                                 }
                         }
                         
-                        try(FileWriter fw = new FileWriter(f)) {
+                        try(
+                                FileWriter fw = new FileWriter(f);
                                 CSVPrinter cprint = new CSVPrinter(fw, csvf);
+                        ) {
+                                
                                 cprint.printRecords(data);
                         }
                         stats.setVal(ColStatsItems.Status, Status.Updated);
