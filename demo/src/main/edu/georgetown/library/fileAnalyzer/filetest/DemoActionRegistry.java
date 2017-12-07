@@ -15,6 +15,9 @@ public class DemoActionRegistry extends DSpaceActionRegistry {
         public DemoActionRegistry(FTDriver dt, boolean modifyAllowed) {
                 super(dt, modifyAllowed);
                 add(new PageCount(dt));
+                
+                //The following rule intentionally inactive 
+                //add(new SwapDelimitedColumns(dt));
                 add(new ImageProperties(dt));
                 add(new YearbookNameValidationTest(dt));
                 add(new CreateBag(dt));
