@@ -217,7 +217,7 @@ public class MetadataInputFileBuilder {
                                 try {
                                         NodeList nl = (NodeList)xp.evaluate("//ead:c01", d, XPathConstants.NODESET);
                                         for(int i=0; i<nl.getLength(); i++) {
-                                                String prefix = "Subjects";
+                                                String prefix = "_Subjects";
                                                 rangePaths.add(prefix);
                                                 addRange(manifestTranslate, rangePaths, nl.item(i), prefix + IIIFManifest.PATHSPLIT);
                                         }

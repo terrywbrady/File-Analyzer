@@ -190,7 +190,13 @@ public class IIIFManifest {
         }
         public String getLastPath(String rangeName) {
                 String[] paths = rangeName.split(RX_PATHSPLIT);
-                return paths.length == 0 ? "" : paths[paths.length-1];
+                if (paths.length == 0) {
+                        return "";
+                } else if (paths.length == 1) {
+                        //replace with ^_+
+                        return paths[0].replaceFirst("^__", "");
+                }
+                return paths[paths.length-1];
         }
         
         public String makeRangePath(String key, File f, MetadataInputFile itemMeta) {

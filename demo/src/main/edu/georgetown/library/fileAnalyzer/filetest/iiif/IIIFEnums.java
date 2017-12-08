@@ -62,7 +62,7 @@ public final class IIIFEnums {
                                 return "http://iiif.io/api/image/2/level2.json";
                         }
                 },
-                title("Title", true), 
+                title("Title"), 
                 dateCreated("Date Created", true), 
                 creator("Creator", true), 
                 description("Description", true),
@@ -92,9 +92,9 @@ public final class IIIFEnums {
         }
         
         public static enum IIIFLookup {
-                Title("title", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='title'][not(@qualifier)]",""),
-                Attribution("attribution", null, null),
-                Identifier("identifier",null, null),
+                Title("Title", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='title'][not(@qualifier)]",""),
+                Attribution("Attribution"),
+                Identifier("identifier"),
                 DateCreated("Date Created", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='date'][@qualifier='created']"), 
                 Creator("Creator", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='creator']"), 
                 Description("Description", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='description'][not(@qualifier)]"),

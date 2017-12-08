@@ -62,59 +62,6 @@
     # Manifest Project
     # Name of the Manifest Project (in code) class that will provide custom translation.
     # If blank, a default value will be assigned.
-    # The class should be the name of an Enum that implements ManifestProjectTranslate
+    # The class should be the name of an Enum that implements ManifestProjectTranslateEnum
     #ManifestProject: 
     
-
-## Implementation of Use Cases
-
-Parameter     | McLaughlin | AIDS EAD   | Photo Arch     | Hoya         | Notes
-------------- | ---------- | ---------- | -------------- | ------------ | ------------------- 
-Server Root   | dev        | dev        | dev            | dev          |
-Manifest      | ead        | ead2       | ua_photos2     | hoya*        |
-Create Coll   | N          | N          | N              | Y(1)         | Sequenced in CSV
-Indiv Manifest| N          | N          | N(1)           | Folder       | 1. manifests by high level subject?
-Init Metadata | ead        | ead        | Prop file      | N/a          |
-Ranges        | ead        | ead        | Create Date(1) | N/A          | 1. presumes subj index not generated
-Sequence      | ead        | ead+path   | Create Date    | Folder? CSV? | 1. unmapped items in folder order
-Item ID       | ead dao    | path       | path           | CSV          | 1. not yet in DG - at what level of granularity is a handle used?
-Item Metadata | ead        | ead        | mets or REST   | CSV or REST  |
-
-
-Sample ID's
-- McLaughlin:  10822/NNNNNN/pNNN
-- AIDS EAD:    10822/111111/boxNNN/folderNNN/itemNNN/pageNNN - would the whole collection share the same handle?
-- Photo UArch: 10822/NNNNN
-- Hoya:        10822/NNNNN/pNNN
-
-## Workflow
-
-### Create Collection
-- McLaughlin:  N/A
-- AIDS EAD:    N/A
-- Photo UArch: N/A
-- Hoya:        Boilerplate
-
-### Create Manifest
-- McLaughlin:  Generate from EAD
-- AIDS EAD:    Generate from EAD
-- Photo UArch: Generate from Property File
-- Hoya:        Generate manifest (1) from item data in CSV (2) REST, using handle file in each dir 
-
-### Create Ranges
-- McLaughlin:  Generate from EAD
-- AIDS EAD:    Generate from EAD
-- Photo UArch: Generate from Item Metadata
-- Hoya:        N/A
-
-### Create Canvases
-- McLaughlin:  Generate Item Metadata from EAD, get identifier from EAD/DAO and match to folder
-- AIDS EAD:    Generate from path info, link to sequence
-- Photo UArch: Get item id from folder, get item metadata (via REST)
-- Hoya:        Get from CSV or REST
-
-### Create IIIF Path
-- McLaughlin:  Get from EAD/DAO
-- AIDS EAD:    Generate from path info
-- Photo UArch: Get item id from path
-- Hoya:        Get item id from path
