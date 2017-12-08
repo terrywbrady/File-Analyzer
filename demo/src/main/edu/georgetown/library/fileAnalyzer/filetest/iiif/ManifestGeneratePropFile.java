@@ -158,13 +158,15 @@ public class ManifestGeneratePropFile extends FTPropString {
         
         public ManifestProjectTranslate getManifestProject(Object[] vals) {
                 String s = prop.getProperty(PROP_ManifestProject);
+                ManifestProjectTranslateEnum translateEnum = DefaultManifestProjectTranslateEnum.Default;
                 for(Object val: vals) {
-                        if (val instanceof ManifestProjectTranslate && val instanceof Enum) {
+                        if (val instanceof ManifestProjectTranslateEnum && val instanceof Enum) {
                                 if (((Enum<?>)val).name().equals(s)) {
-                                        return (ManifestProjectTranslate)val;
+                                        translateEnum = (ManifestProjectTranslateEnum)val;
+                                        break;
                                 }
                         }
                 }
-                return DefaultManifestProjectTranslate.Default;
+                return translateEnum.getTranslator();
         }
 }

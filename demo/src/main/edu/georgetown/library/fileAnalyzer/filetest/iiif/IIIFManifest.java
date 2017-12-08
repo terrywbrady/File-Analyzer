@@ -116,7 +116,7 @@ public class IIIFManifest {
                 jsonObject = new JSONObject();
                 this.iiifRootPath = iiifRootPath;
                 this.inputMetadata = inputMetadata;
-                this.manifestProjectTranslate = DefaultManifestProjectTranslate.Default;
+                this.manifestProjectTranslate = DefaultManifestProjectTranslateEnum.Default.getTranslator();
                 xp = XMLUtil.xf.newXPath();
         }      
         
@@ -194,12 +194,14 @@ public class IIIFManifest {
         }
         
         public String makeRangePath(String key, File f, MetadataInputFile itemMeta) {
-                String rangePath = manifestProjectTranslate.getRangeNames(key, f, itemMeta);
-                for(String chop = chopPath(rangePath); !chop.isEmpty(); chop = chopPath(chop)){
-                        makeRangeFromPath(chop);
+                List<String> ranges = manifestProjectTranslate.getRangeNames(key, f, itemMeta);
+                for(String rangePath: ranges) {
+                        for(String chop = chopPath(rangePath); !chop.isEmpty(); chop = chopPath(chop)){
+                                makeRangeFromPath(chop);
+                        }
+                        makeRangeFromPath(rangePath);
                 }
-                makeRangeFromPath(rangePath);
-                return rangePath;
+                return ranges.get(0);
         }
 
         public JSONObject getRangeByName(String rangePath) {

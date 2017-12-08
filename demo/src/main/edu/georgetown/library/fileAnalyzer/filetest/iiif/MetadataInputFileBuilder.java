@@ -207,26 +207,7 @@ public class MetadataInputFileBuilder {
                         return def;
                 }
                 public String getXPathValue(Node d, String xq, String def) {
-                        if (xq.isEmpty()) {
-                                return def;
-                        }
-                        StringBuilder sb = new StringBuilder();
-                        try {
-                            NodeList nl = (NodeList)xp.evaluate(xq, d, XPathConstants.NODESET);
-                            for(int i=0; i<nl.getLength(); i++) {
-                                    if (sb.length() > 0) {
-                                            sb.append("; ");
-                                    }
-                                    sb.append(nl.item(i).getTextContent());
-                            }
-                            if (sb.length() == 0) {
-                                    return def;
-                            }
-                            return sb.toString();
-                        } catch (XPathExpressionException e) {
-                            e.printStackTrace();
-                        }
-                        return def;
+                        return XMLUtil.getXPathValue(xp, d, xq, def);
                 }
 
                 @Override
@@ -250,12 +231,14 @@ public class MetadataInputFileBuilder {
                 public void addRange(ManifestProjectTranslate manifestTranslate, List<String> rangePaths, Node n, String prefix) throws XPathExpressionException {
                         String rName = manifestTranslate.rangeTranslate(prefix + getXPathValue(n, "ead:did/ead:unittitle", "n/a"));
                         rangePaths.add(rName);
+                        manifestTranslate.registerEADRange(xp, n, rName);
                         NodeList nl = (NodeList)xp.evaluate("ead:c02|ead:c03|ead:c04", n, XPathConstants.NODESET);
                         for(int i=0; i<nl.getLength(); i++) {
                                 String nprefix = rName + IIIFManifest.PATHSPLIT;
                                 addRange(manifestTranslate, rangePaths, nl.item(i), nprefix);
                         }
                 }
+                
         }
         
         public class CSVInputFile extends DefaultInputFile {

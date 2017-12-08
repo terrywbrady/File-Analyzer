@@ -1,32 +1,21 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.json.JSONObject;
+import javax.xml.xpath.XPath;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
+import org.json.JSONObject;
+import org.w3c.dom.Node;
+
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
-public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate {
-        Default,
-        ByCreationDate {
-                @Override
-                public String getSequenceValue(int count, MetadataInputFile itemMeta) {
-                        return itemMeta.getValue(IIIFLookup.DateCreated, IIIFManifest.EMPTY) + "_" + super.getSequenceValue(count, itemMeta);
-                }
-                @Override public String getSubtitle() {return "By Creation Date";}
-                
-                @Override
-                public String getRangeNames(String key, File f, MetadataInputFile itemMeta) {
-                        return getDecade(itemMeta.getValue(IIIFLookup.DateCreated, IIIFManifest.EMPTY));
-                }
-        }
-        ;
-
+public class DefaultManifestProjectTranslate implements ManifestProjectTranslate {
         @Override
         public String getSequenceValue(int count, MetadataInputFile itemMeta) {
                 return String.format("%06d", count);
@@ -52,8 +41,15 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
         }
 
         @Override
-        public String getRangeNames(String key, File f, MetadataInputFile itemMeta) {
+        public String getPrimaryRangeName(String key, File f, MetadataInputFile itemMeta) {
                 return IIIFManifest.EMPTY;
+        }
+
+        @Override
+        public List<String> getRangeNames(String key, File f, MetadataInputFile itemMeta) {
+                ArrayList<String> list = new ArrayList<>();
+                list.add(getPrimaryRangeName(key, f, itemMeta));
+                return list;
         }
 
         public static String getDecade(String dateCreated) {
@@ -76,5 +72,9 @@ public enum DefaultManifestProjectTranslate implements ManifestProjectTranslate 
         @Override
         public JSONObject getParentRange(String rangePath, JSONObject top, TreeMap<String,JSONObject> orderedRanges) {
                 return top;
+        }
+
+        @Override
+        public void registerEADRange(XPath xp, Node n, String rangePath) {
         }
 }

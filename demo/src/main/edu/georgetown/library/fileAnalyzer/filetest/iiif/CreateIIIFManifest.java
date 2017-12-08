@@ -81,8 +81,8 @@ public class CreateIIIFManifest extends DefaultFileTest {
         }
         
         MetadataInputFileBuilder metaBuilder = new MetadataInputFileBuilder();
-        public ManifestProjectTranslate[] getProjectTranslatorValues() {
-                return DefaultManifestProjectTranslate.values();                
+        public ManifestProjectTranslateEnum[] getProjectTranslatorValues() {
+                return DefaultManifestProjectTranslateEnum.values();                
         }
         
         ManifestGeneratePropFile manifestGen;
@@ -90,18 +90,19 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 super(dt);
                 manifestGen = new ManifestGeneratePropFile(dt);
                 this.ftprops.add(manifestGen);
-                ManifestProjectTranslate[] vals = getProjectTranslatorValues();
-                ManifestProjectTranslate val = vals.length == 0 ? DefaultManifestProjectTranslate.Default: vals[0];
-                addPropEnum(TRANSLATE, "Project Value Translator", vals, val);                
+                ManifestProjectTranslateEnum[] vals = getProjectTranslatorValues();
+                ManifestProjectTranslateEnum val = vals.length == 0 ? DefaultManifestProjectTranslateEnum.Default: vals[0];
+                addPropEnum(TRANSLATE, "Project Value Translator: if set to Default, use the value in the property file", vals, val);                
         }
 
         public InitializationStatus init() {
                 InitializationStatus is = super.init();
                 
-                manifestProjectTranslate = (ManifestProjectTranslate)getProperty(TRANSLATE);
+                ManifestProjectTranslateEnum manifestProjectTranslateEnum = (ManifestProjectTranslateEnum)getProperty(TRANSLATE);
+                manifestProjectTranslate = manifestProjectTranslateEnum.getTranslator();
                 
                 //Since a custom enum may exist for a project, compare on enum name
-                if (manifestProjectTranslate.name() == DefaultManifestProjectTranslate.Default.name()) {
+                if (manifestProjectTranslateEnum.name() == DefaultManifestProjectTranslateEnum.Default.name()) {
                         manifestProjectTranslate = manifestGen.getManifestProject(getProjectTranslatorValues()); 
                 }
                 File metadataInputFile = manifestGen.getManifestInputFile(manifestGen.getManifestGenPropFile());
