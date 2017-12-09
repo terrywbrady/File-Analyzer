@@ -81,77 +81,54 @@ public class MetadataInputFileBuilder {
         
         
                 
-        abstract class DefaultInputFile implements MetadataInputFile {
-                File file;
+        abstract class DefaultInput implements MetadataInputFile {
                 InputFileType fileType;
-                public File getFile() {
-                        return file;
-                }
-                public abstract String getValue(IIIFLookup key, String def);
-                public InputFileType getInputFileType() {
-                        return fileType;
-                }
-                public void setCurrentKey(String s) {
-                        //no action except for CSV
-                }
-                DefaultInputFile(File file) {
-                        this.file = file;
-                }
                 @Override
-                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
-                        return new ArrayList<String>();
-                }
-         }
-        
-        class UnidentifiedInputFile implements MetadataInputFile {
-                @Override
-                public String getValue(IIIFLookup key, String def) {
+                public String getValue(IIIFLookup key, String def){
                         return def;
                 }
-
                 @Override
                 public File getFile() {
                         return null;
                 }
+                @Override
+                public InputFileType getInputFileType() {
+                        return fileType;
+                }
+                @Override
+                public void setCurrentKey(String s) {
+                        //no action except for CSV
+                }
+                @Override
+                public List<RangePath> getInitRanges(RangePath parent, ManifestProjectTranslate manifestTranslate) {
+                        return new ArrayList<RangePath>();
+                }
+         }
+
+        abstract class DefaultInputFile extends DefaultInput {
+                File file;
+                @Override
+                public File getFile() {
+                        return file;
+                }
+                DefaultInputFile(File file) {
+                        this.file = file;
+                }
+         }
+        
+        class UnidentifiedInputFile extends DefaultInput {
 
                 @Override
                 public InputFileType getInputFileType() {
                         return InputFileType.NA;
                 }
-
-                @Override
-                public void setCurrentKey(String key) {
-                }
-
-                @Override
-                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
-                        return new ArrayList<String>();
-                }
        }
 
         //TODO
-        class RESTResponseInputFile implements MetadataInputFile {
-                @Override
-                public String getValue(IIIFLookup key, String def) {
-                        return def;
-                }
-
-                @Override
-                public File getFile() {
-                        return null;
-                }
-
+        class RESTResponseInputFile  extends DefaultInput {
                 @Override
                 public InputFileType getInputFileType() {
                         return InputFileType.REST;
-                }
-
-                @Override
-                public void setCurrentKey(String key) {
-                }
-                @Override
-                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
-                        return new ArrayList<String>();
                 }
         }
 
@@ -211,15 +188,17 @@ public class MetadataInputFileBuilder {
                 }
 
                 @Override
-                public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate) {
-                        ArrayList<String> rangePaths = new ArrayList<>();
+                public List<RangePath> getInitRanges(RangePath parent, ManifestProjectTranslate manifestTranslate) {
+                        ArrayList<RangePath> rangePaths = new ArrayList<>();
+                        RangePath rp = new RangePath("Subjects", "Subjects");
+                        rangePaths.add(rp);
+                        rp.setParent(parent);
+                        parent.addChildRange(rp);
                         if (fileType == InputFileType.EAD) {
                                 try {
                                         NodeList nl = (NodeList)xp.evaluate("//ead:c01", d, XPathConstants.NODESET);
                                         for(int i=0; i<nl.getLength(); i++) {
-                                                String prefix = "_Subjects";
-                                                rangePaths.add(prefix);
-                                                addRange(manifestTranslate, rangePaths, nl.item(i), prefix + IIIFManifest.PATHSPLIT);
+                                               addRange(manifestTranslate, rangePaths, nl.item(i), rp);
                                         }
                                 } catch (XPathExpressionException e) {
                                         e.printStackTrace();
@@ -228,17 +207,33 @@ public class MetadataInputFileBuilder {
                         return rangePaths;
                 }
                 
-                public void addRange(ManifestProjectTranslate manifestTranslate, List<String> rangePaths, Node n, String prefix) throws XPathExpressionException {
-                        String rName = manifestTranslate.rangeTranslate(prefix + getXPathValue(n, "ead:did/ead:unittitle", "n/a"));
-                        rangePaths.add(rName);
-                        manifestTranslate.registerEADRange(xp, n, rName);
+                public void addRange(ManifestProjectTranslate manifestTranslate, List<RangePath> rangePaths, Node n, RangePath parent) throws XPathExpressionException {
+                        String rName = manifestTranslate.rangeTranslate(getXPathValue(n, "ead:did/ead:unittitle", "n/a"));
+                        String rPath = getPath(n);
+                        RangePath rp = new RangePath(rPath, rName);
+                        rp.setParent(parent);
+                        parent.addChildRange(rp);
+                        rangePaths.add(rp);
+                        manifestTranslate.registerEADRange(xp, n, rp);
                         NodeList nl = (NodeList)xp.evaluate("ead:c02|ead:c03|ead:c04", n, XPathConstants.NODESET);
                         for(int i=0; i<nl.getLength(); i++) {
-                                String nprefix = rName + IIIFManifest.PATHSPLIT;
-                                addRange(manifestTranslate, rangePaths, nl.item(i), nprefix);
+                                addRange(manifestTranslate, rangePaths, nl.item(i), rp);
                         }
                 }
                 
+                public String getPath(Node n) throws XPathExpressionException {
+                        StringBuilder sb = new StringBuilder();
+                        NodeList nl = (NodeList)xp.evaluate("ancestor-or-self::ead:c01|ancestor-or-self::ead:c02|ancestor-or-self::ead:c03|ancestor-or-self::ead:c04", n, XPathConstants.NODESET);
+                        for(int i=0; i<nl.getLength(); i++) {
+                                Node cn = nl.item(i);
+                                NodeList cnl = (NodeList)xp.evaluate("preceding-sibling::ead:c01|preceding-sibling::ead:c02|preceding-sibling::ead:c03|preceding-sibling::ead:c04", cn, XPathConstants.NODESET);
+                                if (i > 0) {
+                                        sb.append("-");
+                                }
+                                sb.append(String.format("%03d", cnl.getLength()));
+                        }
+                        return sb.toString();
+                }
         }
         
         public class CSVInputFile extends DefaultInputFile {

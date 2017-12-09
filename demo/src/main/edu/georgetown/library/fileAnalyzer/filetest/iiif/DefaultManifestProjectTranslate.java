@@ -1,15 +1,12 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.TreeMap;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.xpath.XPath;
 
-import org.json.JSONObject;
 import org.w3c.dom.Node;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
@@ -41,15 +38,8 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
         }
 
         @Override
-        public String getPrimaryRangeName(String key, File f, MetadataInputFile itemMeta) {
-                return IIIFManifest.EMPTY;
-        }
-
-        @Override
-        public List<String> getRangeNames(String key, File f, MetadataInputFile itemMeta) {
-                ArrayList<String> list = new ArrayList<>();
-                list.add(getPrimaryRangeName(key, f, itemMeta));
-                return list;
+        public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta) {
+                return new RangePath("","");
         }
 
         public static String getDecade(String dateCreated) {
@@ -70,11 +60,10 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
         }
 
         @Override
-        public JSONObject getParentRange(String rangePath, JSONObject top, TreeMap<String,JSONObject> orderedRanges) {
-                return top;
+        public void registerEADRange(XPath xp, Node n, RangePath rangePath) {
         }
 
         @Override
-        public void registerEADRange(XPath xp, Node n, String rangePath) {
+        public void initProjectRanges(File root, RangePath top) {
         }
 }

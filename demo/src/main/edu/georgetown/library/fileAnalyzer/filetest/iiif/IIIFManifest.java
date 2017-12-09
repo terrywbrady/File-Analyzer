@@ -35,10 +35,9 @@ public class IIIFManifest {
         
         ManifestProjectTranslate manifestProjectTranslate;
         TreeMap<String,JSONObject> orderedCanvases = new TreeMap<>();
-        TreeMap<String,JSONObject> orderedRanges = new TreeMap<>();
-        HashMap<String,String> parentRangeForCanvas = new HashMap<>();
+        HashMap<String,RangePath> parentRangeForCanvas = new HashMap<>();
         
-        JSONObject top;
+        RangePath top;
         protected MetadataInputFile inputMetadata;
 
         public void setProperty(JSONObject json, IIIFType type, IIIFProp prop) {
@@ -123,25 +122,27 @@ public class IIIFManifest {
         /*
          * Call this after the proper translator object has been set
          */
-        public void init() {
+        public void init(File root) {
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.context);
                 setProperty(jsonObject, IIIFType.typeManifest);
                 
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY)); 
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Attribution, EMPTY));
 
-                initRanges();
+                initRanges(root);
                 
                 seq = addSequence(jsonObject);
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.id,"https://repository-dev.library.georgetown.edu/xxx");
         }
         
-        public void initRanges() {
-                top = makeRangeObject("Top Range","top-range").put("viewingHint", "top");
-                List<String> rangePaths = inputMetadata.getInitRanges(manifestProjectTranslate);
-                for(String rangeName: rangePaths) {
-                        orderedRanges.put(rangeName, makeRangeFromPath(rangeName));                        
+        public void initRanges(File root) {
+                top = new RangePath("__toprange","Top Range");
+                makeRangeObject(top).put("viewingHint", "top");
+                List<RangePath> rangePaths = inputMetadata.getInitRanges(top, manifestProjectTranslate);
+                for(RangePath rangePath: rangePaths) {
+                        makeRangeObject(rangePath);
                 }
+                manifestProjectTranslate.initProjectRanges(root, top);
         }
         
         
@@ -179,75 +180,29 @@ public class IIIFManifest {
                 seq.put("viewingHint", "paged");
         }
         
-        public String chopPath(String rangeName) {
-                String[] paths = rangeName.split(RX_PATHSPLIT);
-                StringBuilder sb = new StringBuilder();
-                for(int i=0; i<paths.length-1; i++) {
-                        sb.append(i == 0 ? "" : PATHSPLIT);
-                        sb.append(paths[i]);
-                }
-                return sb.toString();
-        }
-        public String getLastPath(String rangeName) {
-                String[] paths = rangeName.split(RX_PATHSPLIT);
-                if (paths.length == 0) {
-                        return "";
-                } else if (paths.length == 1) {
-                        //replace with ^_+
-                        return paths[0].replaceFirst("^__", "");
-                }
-                return paths[paths.length-1];
+        public RangePath makeRange(String key, File parent, MetadataInputFile currentMetadataFile) {
+                return manifestProjectTranslate.getPrimaryRangePath(key, parent, currentMetadataFile);
         }
         
-        public String makeRangePath(String key, File f, MetadataInputFile itemMeta) {
-                List<String> ranges = manifestProjectTranslate.getRangeNames(key, f, itemMeta);
-                for(String rangePath: ranges) {
-                        for(String chop = chopPath(rangePath); !chop.isEmpty(); chop = chopPath(chop)){
-                                makeRangeFromPath(chop);
-                        }
-                        makeRangeFromPath(rangePath);
-                }
-                return ranges.get(0);
-        }
-
-        public JSONObject getRangeByName(String rangePath) {
-                return orderedRanges.get(rangePath);
-        }
-        public String getRangeLabel(String rangePath) {
-                JSONObject range = getRangeByName(rangePath);
-                return range == null ? "" : getProperty(range, IIIFProp.label, "");
-        }
-
-        public JSONObject makeRangeFromPath(String rangePath) {
-                if (!rangePath.isEmpty()) {
-                        JSONObject range = orderedRanges.get(rangePath);
-                        if (range == null) {
-                                range = makeRangeObject(rangePath, makeRangeId(rangePath));
-                                orderedRanges.put(rangePath, range);
-                        }
-                        return range;
-                }
-                return this.manifestProjectTranslate.getParentRange(rangePath, top, orderedRanges);                
-        }
-        
-        public static final String PATHSPLIT = "||";
-        public static final String RX_PATHSPLIT = "\\|\\|";
-        
-        public void linkRangeToCanvas(String rangeName, JSONObject canvas) {
+        public void linkRangeToCanvas(RangePath rangePath, JSONObject canvas) {
                 String canvasid = getProperty(canvas, IIIFProp.id, EMPTY);
-                if (!canvasid.isEmpty() && !rangeName.isEmpty()) {
-                        parentRangeForCanvas.put(canvasid, rangeName);
+                if (!canvasid.isEmpty()) {
+                        if (!rangePath.hasObject()) {
+                                makeRangeObject(rangePath);
+                        }
+                        rangePath.addCanvasId(canvasid);
                 }
         }
         
-        public JSONObject makeRangeObject(String label, String id) {
+        public JSONObject makeRangeObject(RangePath rangePath) {
                 JSONObject obj = new JSONObject();
-                label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, label);
-                setProperty(obj, IIIFType.typeRange, IIIFProp.label, getLastPath(label));
-                setProperty(obj, IIIFType.typeRange, IIIFProp.id, id);
+                String label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, rangePath.displayPath);
+                setProperty(obj, IIIFType.typeRange, IIIFProp.label, label);
+                setProperty(obj, IIIFType.typeRange, IIIFProp.id, rangePath.getID());
                 setProperty(obj, IIIFType.typeRange);
                 getArray(obj, IIIFArray.ranges);
                 getArray(jsonObject, IIIFArray.structures).put(obj);
+                rangePath.setRangeObject(obj);
                 return obj;
         }       
         
@@ -256,33 +211,28 @@ public class IIIFManifest {
                         JSONObject canvas = orderedCanvases.get(canvasKey);
                         addCanvasToManifest(canvas);
                         String canvasid = getProperty(canvas, IIIFProp.id, EMPTY);
-                        String rangeName = parentRangeForCanvas.get(canvasid);
-                        if (rangeName != null) {
-                                JSONObject range = orderedRanges.get(rangeName);
+                        RangePath rangePath = parentRangeForCanvas.get(canvasid);
+                        if (rangePath != null) {
+                                if (!rangePath.hasObject()) {
+                                        makeRangeObject(rangePath);
+                                }
+                                JSONObject range = rangePath.getRangeObject();
                                 if (range != null) {
                                         getArray(range, IIIFArray.canvases).put(canvasid);
                                 }
                         }
-
                 }
-                for(String rangeName: orderedRanges.keySet()) {
-                        JSONObject range = orderedRanges.get(rangeName);
-                        String rangeLabel = getLastPath(rangeName);
-                        int count = getArray(range, IIIFArray.canvases).length();
-                        String rangeid = getProperty(range, IIIFProp.id, EMPTY);
-                        String label = count == 0 ? rangeLabel : String.format("%s (%d)", rangeLabel, count);
-                        this.setProperty(range, IIIFType.typeRange, IIIFProp.label, label);
-                        if (!rangeid.isEmpty()) {
-                                String parentName = chopPath(rangeName);
-                                JSONObject parent = top;
-                                if (!parentName.isEmpty()) {
-                                        if (orderedRanges.containsKey(parentName)) {
-                                                parent = orderedRanges.get(parentName);
-                                        }
-                                }
-                                getArray(parent, IIIFArray.ranges).put(rangeid);
+                for(RangePath rp: top.getDescendants()) {
+                        if (!rp.hasObject()) {
+                                makeRangeObject(rp);
                         }
-                }                        
+                        for(RangePath chRange: rp.getOrderedChildren()) {
+                                getArray(rp.getRangeObject(), IIIFArray.ranges).put(chRange.getID());
+                        }
+                        for(String canvasId: rp.getCanvasIds()) {
+                                getArray(rp.getRangeObject(), IIIFArray.canvases).put(canvasId);
+                        }
+                }
         }
         public void write() throws IOException {
                 refine();
@@ -383,11 +333,7 @@ public class IIIFManifest {
         
         
         
-        public String makeRangeId(String rangeName) {
-                return "r" + rangeName.replaceAll("[ ]", "");
-        }
-        
-        public void setProjectTranslate(ManifestProjectTranslate manifestProjectTranslate) {
+       public void setProjectTranslate(ManifestProjectTranslate manifestProjectTranslate) {
                 this.manifestProjectTranslate = manifestProjectTranslate;
         }
         public JSONObject getCanvas(String canvasKey) {

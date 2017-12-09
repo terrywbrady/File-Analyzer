@@ -7,6 +7,11 @@ public enum DefaultManifestProjectTranslateEnum implements ManifestProjectTransl
                 public ManifestProjectTranslate getTranslator() {
                         return new CreateDateProjectTranslate();
                 }
+        },
+        ByFolderName {
+                public ManifestProjectTranslate getTranslator() {
+                        return new FileSystemProjectTranslate();
+                }
         }
         ;
 

@@ -11,6 +11,6 @@ public interface MetadataInputFile {
         public String getValue(IIIFLookup key, String def);
         public InputFileType getInputFileType();
         public void setCurrentKey(String key);
-        public List<String> getInitRanges(ManifestProjectTranslate manifestTranslate);
+        public List<RangePath> getInitRanges(RangePath parent, ManifestProjectTranslate manifestTranslate);
 
 }

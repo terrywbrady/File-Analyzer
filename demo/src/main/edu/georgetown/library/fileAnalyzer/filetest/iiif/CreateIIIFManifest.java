@@ -117,7 +117,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 try {
                         manifest = new IIIFManifest(inputMetadata, manifestGen.getIIIFRoot(), manFile, manifestGen.getCreateCollectionManifest());
                         manifest.setProjectTranslate(manifestProjectTranslate);
-                        manifest.init();
+                        manifest.init(dt.getRoot());
                         manifest.setLogoUrl(manifestGen.getManifestLogoURL());
                 } catch (IOException | InputFileException e) {
                         is.addMessage(e);
@@ -170,7 +170,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 inputMetadata.setCurrentKey(getKey(f));
                 IIIFManifest itemManifest = new IIIFManifest(inputMetadata, manifestGen.getIIIFRoot(), curfile, false);
                 manifest.setProjectTranslate(manifestProjectTranslate);
-                manifest.init();
+                manifest.init(dt.getRoot());
                 manifest.addManifestToCollection(itemManifest);
                 return itemManifest;
         }
@@ -210,16 +210,14 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         s.setVal(IIIFStatsItems.Path, s.key);
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
                                 s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
-                                String rangePath = curmanifest.makeRangePath(s.key, parent, currentMetadataFile);
-                                //JSONObject range = curmanifest.getRangeByName(rangePath);
-                                //String rangeName = curmanifest.getRangeLabel(rangePath);
                                 
-                                s.setVal(IIIFStatsItems.ParentRange, rangePath); 
+                                RangePath rangePath = curmanifest.makeRange(s.key, parent, currentMetadataFile);
+                                
+                                s.setVal(IIIFStatsItems.ParentRange, rangePath.displayPath); 
                                 
                                 String canvasKey = curmanifest.addFile(s.key, f, currentMetadataFile);
                                 JSONObject canvas = curmanifest.getCanvas(canvasKey);
                                 curmanifest.linkRangeToCanvas(rangePath, canvas);
-                                
                                 
                                 s.setVal(IIIFStatsItems.Height, IIIFManifest.getIntProperty(canvas, IIIFProp.height, 0)); 
                                 s.setVal(IIIFStatsItems.Width, IIIFManifest.getIntProperty(canvas, IIIFProp.width, 0)); 
