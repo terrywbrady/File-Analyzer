@@ -8,6 +8,14 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
         RangePath containers;
         TreeMap<String,RangePath> dirPaths = new TreeMap<>();
         
+        @Override
+        public void initProjectRanges(File root, RangePath top) {
+                this.root = root;
+                containers = new RangePath("ZZContainers", "Containers");
+                top.addChildRange(containers);
+                dirPaths.put(root.getAbsolutePath(), containers);
+        }
+
         public String getRelPath(File f) {
                 return f.getAbsolutePath().substring(root.getAbsolutePath().length()).replaceAll("[\\\\\\/]", "_");
         }
@@ -39,11 +47,4 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
                 return rp;
         }
 
-        @Override
-        public void initProjectRanges(File root, RangePath top) {
-                this.root = root;
-                containers = new RangePath("ZZContainers", "Containers");
-                top.addChildRange(containers);
-                dirPaths.put(root.getAbsolutePath(), containers);
-        }
 }

@@ -226,11 +226,17 @@ public class IIIFManifest {
                         if (!rp.hasObject()) {
                                 makeRangeObject(rp);
                         }
+                        JSONObject range = rp.getRangeObject();
                         for(RangePath chRange: rp.getOrderedChildren()) {
-                                getArray(rp.getRangeObject(), IIIFArray.ranges).put(chRange.getID());
+                                getArray(range, IIIFArray.ranges).put(chRange.getID());
                         }
+                        int count = 0;
                         for(String canvasId: rp.getCanvasIds()) {
-                                getArray(rp.getRangeObject(), IIIFArray.canvases).put(canvasId);
+                                getArray(range, IIIFArray.canvases).put(canvasId);
+                                count++;
+                        }
+                        if (count > 0) {
+                                setProperty(range, IIIFType.typeRange, IIIFProp.label, String.format("%s (%d)", rp.displayPath, count));
                         }
                 }
         }
