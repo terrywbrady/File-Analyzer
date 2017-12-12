@@ -53,10 +53,12 @@
     # - MetadataFile - extract metadata from a file
     #   - mets.xml from DSpace AIP export
     #   - dublin_core.xml from DSpace Simple Archive Format metadata file
-    # - RESTAPI - extract metadata using the DSpace REST API
+    # - RESTAPI - extract metadata using the DSpace REST API (Future)
     # - None - no metadata file exists
-    #GetItemMetata: RESTAPI
-    #GetItemMetata: None
+    #
+    #In the future, we may add an option to extract metadata from the image file itself
+    #GetItemMetadata: RESTAPI
+    #GetItemMetadata: None
     GetItemMetadata: MetadataFile
     
     # Manifest Project
