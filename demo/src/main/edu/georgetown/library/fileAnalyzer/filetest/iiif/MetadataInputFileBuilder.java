@@ -21,6 +21,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
@@ -34,17 +35,19 @@ public class MetadataInputFileBuilder {
         
         private ArrayList<FilenameFilter> filters = new ArrayList<>();
         
-        public MetadataInputFileBuilder() {
-                filters.add(new FilenameFilter(){
-                        public boolean accept(File dir, String name) {
-                                return name.toLowerCase().equals("mets.xml");
-                        }
-                });
-                filters.add(new FilenameFilter(){
-                        public boolean accept(File dir, String name) {
-                                return name.toLowerCase().equals("dublin_core.xml");
-                        }
-                });
+        public MetadataInputFileBuilder(MethodMetadata method) {
+                if (method == MethodMetadata.MetadataFile) {
+                        filters.add(new FilenameFilter(){
+                                public boolean accept(File dir, String name) {
+                                        return name.toLowerCase().equals("mets.xml");
+                                }
+                        });
+                        filters.add(new FilenameFilter(){
+                                public boolean accept(File dir, String name) {
+                                        return name.toLowerCase().equals("dublin_core.xml");
+                                }
+                        });
+                }
         }
         
         public MetadataInputFile identifyFile(File parent, String s) throws InputFileException {
@@ -64,7 +67,7 @@ public class MetadataInputFileBuilder {
                                 return returnFile;
                         }
                 }
-                return manifestMeta;
+                return returnFile;
         }
         
         public MetadataInputFile identifyFile(File f) throws InputFileException {

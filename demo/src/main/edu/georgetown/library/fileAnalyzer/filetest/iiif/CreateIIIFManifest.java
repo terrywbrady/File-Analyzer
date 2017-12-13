@@ -81,7 +81,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return prop;
         }
         
-        MetadataInputFileBuilder metaBuilder = new MetadataInputFileBuilder();
+        MetadataInputFileBuilder metaBuilder;
         public ManifestProjectTranslateEnum[] getProjectTranslatorValues() {
                 return DefaultManifestProjectTranslateEnum.values();                
         }
@@ -98,6 +98,13 @@ public class CreateIIIFManifest extends DefaultFileTest {
 
         public InitializationStatus init() {
                 InitializationStatus is = super.init();
+                
+                try {
+                        metaBuilder = new MetadataInputFileBuilder(manifestGen.getItemMetadataMethod());
+                } catch (InputFileException e) {
+                        is.addMessage(e);
+                        return is;
+                }
                 
                 ManifestProjectTranslateEnum manifestProjectTranslateEnum = (ManifestProjectTranslateEnum)getProperty(TRANSLATE);
                 manifestProjectTranslate = manifestProjectTranslateEnum.getTranslator();
@@ -205,7 +212,6 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         if (!parent.equals(lastParent)) {
                                 lastParent = parent;
                                 curmanifest = getCurrentManifest(parent);
-                                //TODO: evaluate parameter to set this
                                 currentMetadataFile = metaBuilder.findMetadataFile(parent, inputMetadata);
                         }
                         s.setVal(IIIFStatsItems.Path, s.key);
