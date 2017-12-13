@@ -32,7 +32,7 @@ import javax.swing.JTextField;
  *
  */
 class CriteriaPanel extends MyPanel {
-	public static final int[] LIMITS = {10000,20000,40000,100000,500000,1000000,2000000,5000000,100,200,500,1000,2000,5000};
+	public static final int[] LIMITS = {10000,20000,40000,100000,500000,1000000,2000000,5000000,10,20,100,200,500,1000,2000,5000};
 	private static final long serialVersionUID = 1L;
 	JTextField rootLabel;
 	JButton analyze;
