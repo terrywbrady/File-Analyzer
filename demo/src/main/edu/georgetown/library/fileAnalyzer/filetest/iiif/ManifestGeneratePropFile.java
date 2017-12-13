@@ -39,8 +39,8 @@ public class ManifestGeneratePropFile extends FTPropString {
         Properties prop = new Properties();
         File propFile;
         
-        ManifestGeneratePropFile(FTDriver dt) {
-            super(dt, CreateIIIFManifest.class.getName(), CreateIIIFManifest.MANGEN, CreateIIIFManifest.MANGEN,
+        ManifestGeneratePropFile(FTDriver dt, String prefix) {
+            super(dt, prefix, CreateIIIFManifest.MANGEN, CreateIIIFManifest.MANGEN,
                     "Manifest Generation Filename", "manifestGenerate.prop");
         }
         @Override public InitializationStatus initValidation(File refFile) {

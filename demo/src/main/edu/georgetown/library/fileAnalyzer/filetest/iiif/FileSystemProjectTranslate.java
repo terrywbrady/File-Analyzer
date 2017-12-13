@@ -21,7 +21,7 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
         }
         
         public RangePath makeRangePath(File f) {
-                RangePath rp = new RangePath(getRelPath(f), f.getName());
+                RangePath rp = new RangePath(getRelPath(f), rangeTranslate(f.getName()));
                 dirPaths.put(f.getAbsolutePath(), rp);
                 return rp;
         }

@@ -63,8 +63,9 @@ public class CreateIIIFManifest extends DefaultFileTest {
 
         public static StatsItemConfig details = StatsItemConfig.create(IIIFStatsItems.class);
 
-        public static final String MANGEN        = "manifest-gen-prop";
+        public static final String MANGEN        = "manifest";
         public static final String TRANSLATE     = "translate";
+        
         IIIFManifest manifest;
         ManifestProjectTranslate manifestProjectTranslate;
         MetadataInputFile inputMetadata;
@@ -88,7 +89,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         ManifestGeneratePropFile manifestGen;
         public CreateIIIFManifest(FTDriver dt) {
                 super(dt);
-                manifestGen = new ManifestGeneratePropFile(dt);
+                manifestGen = new ManifestGeneratePropFile(dt, this.getClass().getSimpleName());
                 this.ftprops.add(manifestGen);
                 ManifestProjectTranslateEnum[] vals = getProjectTranslatorValues();
                 ManifestProjectTranslateEnum val = vals.length == 0 ? DefaultManifestProjectTranslateEnum.Default: vals[0];
