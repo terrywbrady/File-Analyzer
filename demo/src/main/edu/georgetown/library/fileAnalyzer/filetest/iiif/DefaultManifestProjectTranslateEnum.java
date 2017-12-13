@@ -17,6 +17,11 @@ public enum DefaultManifestProjectTranslateEnum implements ManifestProjectTransl
                 public ManifestProjectTranslate getTranslator() {
                         return new EADFolderTranslate();
                 }
+        },
+        EADFolderMapSubjectsOnly {
+                public ManifestProjectTranslate getTranslator() {
+                        return new EADFolderTranslateSubjectsOnly();
+                }
         }
         ;
 

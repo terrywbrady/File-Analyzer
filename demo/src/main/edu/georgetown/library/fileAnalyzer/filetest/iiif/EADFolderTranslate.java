@@ -64,11 +64,11 @@ public class EADFolderTranslate extends FileSystemProjectTranslate {
         }
 
         protected Pattern getBoxFolderPattern() {
-                return Pattern.compile("\\/[Bb]ox\\s*(\\d+)\\/(\\d)$");
+                return Pattern.compile(".*/[Bb]ox[_ ]*([0-9]+)/([0-9]+)$");
         }
         
         protected Matcher getBoxFolderMatcher(String key, File f) {
-                return getBoxFolderPattern().matcher(f.getAbsolutePath());
+                return getBoxFolderPattern().matcher(f.getAbsolutePath().replaceAll("\\\\", "/"));
         }
         
         @Override
@@ -89,6 +89,16 @@ public class EADFolderTranslate extends FileSystemProjectTranslate {
                 
                 return rp;
         }
+
+        @Override
+        public String rangeTranslate(String val) {
+                Matcher m = Pattern.compile("^box_(.*)$").matcher(val);
+                if (m.matches()) {
+                        return String.format("Box %s", m.group(1));
+                }
+                return val;
+        }
+
         @Override
         public void registerEADRange(XPath xp, Node n, RangePath rangePath) {
                 String box = XMLUtil.getXPathValue(xp, n, "ead:did/ead:container[@type='Box']","");
@@ -100,6 +110,8 @@ public class EADFolderTranslate extends FileSystemProjectTranslate {
                 }
         }
         
-        
-
+        @Override
+        public boolean processInitRanges() {
+                return true;
+        }
 }

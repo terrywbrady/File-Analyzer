@@ -9,10 +9,17 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
         TreeMap<String,RangePath> dirPaths = new TreeMap<>();
         
         @Override
+        public boolean showFolderRanges() {
+                return true;
+        }
+        
+        @Override
         public void initProjectRanges(File root, RangePath top) {
                 this.root = root;
                 containers = new RangePath("ZZContainers", "Containers");
-                top.addChildRange(containers);
+                if (showFolderRanges()) {
+                        top.addChildRange(containers);
+                }
                 dirPaths.put(root.getAbsolutePath(), containers);
         }
 

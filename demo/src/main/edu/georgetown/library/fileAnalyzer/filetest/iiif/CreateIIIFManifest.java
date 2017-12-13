@@ -63,7 +63,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
 
         public static StatsItemConfig details = StatsItemConfig.create(IIIFStatsItems.class);
 
-        public static final String MANGEN        = "manifest";
+        public static final String MANGEN        = "manifest-gen-prop";
         public static final String TRANSLATE     = "translate";
         
         IIIFManifest manifest;

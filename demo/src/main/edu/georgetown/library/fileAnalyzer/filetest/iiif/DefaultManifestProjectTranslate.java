@@ -47,7 +47,7 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
                 Matcher m = p.matcher(dateCreated);
                 if (m.matches()) {
                         int year = Integer.parseInt(m.group(1));
-                        return String.format("%d0 - %d0", year, year+1);
+                        return String.format("%d0 - %d", year, year*10+9);
                 }
 
                 return "Date Unknown";
@@ -64,6 +64,16 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
         }
 
         @Override
+        public boolean processInitRanges() {
+                return false;
+        }
+        @Override
         public void initProjectRanges(File root, RangePath top) {
         }
+
+        @Override
+        public boolean showFolderRanges() {
+                return false;
+        }
+
 }

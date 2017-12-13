@@ -17,5 +17,7 @@ public interface ManifestProjectTranslate {
         public String rangeTranslate(String val);
         public void registerEADRange(XPath xp, Node n, RangePath rangePath);
         public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta); 
+        public boolean processInitRanges();
+        public boolean showFolderRanges();
         public void initProjectRanges(File root, RangePath top);
 }

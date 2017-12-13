@@ -50,7 +50,10 @@ public class IIIFManifest {
                         return;
                 }
                 
-                if (prop.isMetadata) {
+                if (prop == IIIFProp.title) {
+                        addMetadata(json, prop.getLabel(), value);
+                        json.put(prop.getLabel(), value);                        
+                } else if (prop.isMetadata) {
                         addMetadata(json, prop.getLabel(), value);
                 } else {
                         json.put(prop.getLabel(), value);
@@ -138,9 +141,11 @@ public class IIIFManifest {
         public void initRanges(File root) {
                 top = new RangePath("__toprange","Top Range");
                 makeRangeObject(top).put("viewingHint", "top");
-                List<RangePath> rangePaths = inputMetadata.getInitRanges(top, manifestProjectTranslate);
-                for(RangePath rangePath: rangePaths) {
-                        makeRangeObject(rangePath);
+                if (manifestProjectTranslate.processInitRanges()) {
+                        List<RangePath> rangePaths = inputMetadata.getInitRanges(top, manifestProjectTranslate);
+                        for(RangePath rangePath: rangePaths) {
+                                makeRangeObject(rangePath);
+                        }
                 }
                 manifestProjectTranslate.initProjectRanges(root, top);
         }
