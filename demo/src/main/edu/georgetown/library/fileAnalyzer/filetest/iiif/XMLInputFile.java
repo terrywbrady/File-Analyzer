@@ -11,13 +11,16 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.json.JSONObject;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil.SimpleNamespaceContext;
@@ -104,6 +107,23 @@ class XMLInputFile extends DefaultInputFile {
                 parent.addChildRange(rp);
                 rangePaths.add(rp);
                 manifestTranslate.registerEADRange(xp, n, rp);
+                JSONObject range = manifest.makeRangeObject(rp);
+                manifest.setProperty(range, IIIFType.typeRange, IIIFProp.dateCreated, getXPathValue(n, "ead:did/ead:unitdate", ""));
+                try {
+                        NodeList nl = (NodeList)xp.evaluate("ead:did/ead:container", n, XPathConstants.NODESET);
+                        for(int i=0; i<nl.getLength(); i++) {
+                                Element elem = (Element)nl.item(i);
+                                String type = elem.getAttribute("type");
+                                String val = elem.getTextContent();
+                                String label = elem.getAttribute("label");
+                                if (!type.isEmpty() && !val.isEmpty()) {
+                                        IIIFManifest.addMetadata(range, type, label.isEmpty() ? val : String.format("%s (%s)", val, label));
+                                }
+                        }
+                } catch (XPathExpressionException | DOMException e) {
+                        e.printStackTrace();
+                }
+
                 NodeList nl = (NodeList)xp.evaluate("ead:c02|ead:c03|ead:c04", n, XPathConstants.NODESET);
                 for(int i=0; i<nl.getLength(); i++) {
                         addRange(manifest, manifestTranslate, rangePaths, nl.item(i), rp);
@@ -111,8 +131,10 @@ class XMLInputFile extends DefaultInputFile {
                 nl = (NodeList)xp.evaluate("ead:dao", n, XPathConstants.NODESET);
                 for(int i=0; i<nl.getLength(); i++) {
                         String url = this.getXPathValue(nl.item(i), "@ns2:href", "");
-                        JSONObject canvas = manifest.addEadCanvas(url, nl.item(i), this);
-                        rp.addCanvasId(canvas.get(IIIFProp.id.val).toString());
+                        if (url.endsWith(".jpg")) {
+                                JSONObject canvas = manifest.addEadCanvas(url, nl.item(i), this);
+                                rp.addCanvasId(canvas.get(IIIFProp.id.val).toString());
+                        }
                 }
         }
         

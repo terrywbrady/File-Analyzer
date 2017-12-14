@@ -201,6 +201,9 @@ public class IIIFManifest {
         }
         
         public JSONObject makeRangeObject(RangePath rangePath) {
+                if (rangePath.hasObject()) {
+                        return rangePath.getRangeObject();
+                }
                 JSONObject obj = new JSONObject();
                 String label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, rangePath.displayPath);
                 setProperty(obj, IIIFType.typeRange, IIIFProp.label, label);
