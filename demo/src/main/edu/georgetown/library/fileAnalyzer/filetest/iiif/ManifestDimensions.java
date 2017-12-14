@@ -42,10 +42,10 @@ public class ManifestDimensions {
                         this.width = 1000;
                 }
         }                
-        String height() {
-                return Integer.toString(height);
+        int height() {
+                return height;
         }
-        String width() {
-                return Integer.toString(width);
+        int width() {
+                return width;
         }
 }

@@ -166,10 +166,17 @@ public class XMLUtil {
                 try {
                     NodeList nl = (NodeList)xpath.evaluate(xq, d, XPathConstants.NODESET);
                     for(int i=0; i<nl.getLength(); i++) {
+                            String s = nl.item(i).getTextContent();
+                            if (s == null) {
+                                    continue;
+                            }
+                            if (s.trim().isEmpty()) {
+                                    continue;
+                            }
                             if (sb.length() > 0) {
                                     sb.append("; ");
                             }
-                            sb.append(nl.item(i).getTextContent());
+                            sb.append(s);
                     }
                     if (sb.length() == 0) {
                             return def;

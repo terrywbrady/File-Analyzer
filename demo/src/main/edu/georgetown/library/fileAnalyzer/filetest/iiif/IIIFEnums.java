@@ -62,13 +62,21 @@ public final class IIIFEnums {
                                 return "http://iiif.io/api/image/2/level2.json";
                         }
                 },
-                title("Title"), 
+                title("Title", true), 
                 dateCreated("Date Created", true), 
                 creator("Creator", true), 
                 description("Description", true),
                 subject("Subject(s)", true),
                 rights("Rights", true), 
-                permalink("Permanent URL", true);
+                permalink("Permanent URL", true),
+                motivation {
+                        String getDefault() {
+                                return "sc:painting";
+                        }
+                },
+                on,
+                resource,
+                service;
 
                 String val;
                 boolean isMetadata = false;
