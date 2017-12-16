@@ -76,4 +76,13 @@ public class RangePath implements Comparable<RangePath> {
         public List<String> getCanvasIds() {
                 return this.childCanvases;
         }
+        
+        public String getFullPath() {
+                StringBuilder sb = new StringBuilder();
+                for(RangePath rp = this; rp != null; rp = rp.parentRange) {
+                        sb.insert(0, "/");
+                        sb.insert(0, rp.displayPath);
+                }
+                return sb.toString();
+        }
 }

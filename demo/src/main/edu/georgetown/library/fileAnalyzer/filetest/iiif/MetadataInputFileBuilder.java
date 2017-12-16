@@ -16,7 +16,7 @@ public class MetadataInputFileBuilder {
         private ArrayList<FilenameFilter> filters = new ArrayList<>();
         
         public MetadataInputFileBuilder(MethodMetadata method) {
-                if (method == MethodMetadata.MetadataFile) {
+                if (method == MethodMetadata.ItemMetadataFile) {
                         filters.add(new FilenameFilter(){
                                 public boolean accept(File dir, String name) {
                                         return name.toLowerCase().equals("mets.xml");
@@ -57,12 +57,14 @@ public class MetadataInputFileBuilder {
                 } else if (f.getName().toLowerCase().endsWith(".prop")) {
                         return new PropertyFile(f);
                 } else if (f.getName().toLowerCase().endsWith(".csv")) {
-                        
+                        return new CSVInputFile(f);
                 }
-                return new UnidentifiedInputFile();
+                return emptyInputFile();
         }
         
-        
+        public MetadataInputFile emptyInputFile() {
+                return new UnidentifiedInputFile();
+        }
                 
         
         class UnidentifiedInputFile extends DefaultInput {

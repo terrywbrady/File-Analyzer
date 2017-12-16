@@ -40,6 +40,7 @@ public class IIIFManifest {
         
         RangePath top;
         protected MetadataInputFile inputMetadata;
+        ManifestGeneratePropFile manifestGen;
 
         public void setProperty(JSONObject json, IIIFType type, IIIFProp prop) {
                 setProperty(json, type, prop, prop.getDefault());
@@ -113,7 +114,10 @@ public class IIIFManifest {
                 metadata.put(m);
         }
        
-        public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile, boolean isCollectionManifest) throws IOException {
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen, boolean isCollectionManifest) throws IOException, InputFileException {
+                this.manifestGen = manifestGen;
+                File manifestFile = manifestGen.getManifestOutputFile();
+                String iiifRootPath = manifestGen.getIIIFRoot();
                 checkManifestFile(manifestFile);
                 file = manifestFile;
                 jsonObject = new JSONObject();
@@ -130,8 +134,18 @@ public class IIIFManifest {
                 setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.context);
                 setProperty(jsonObject, IIIFType.typeManifest);
                 
-                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY)); 
-                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Attribution, EMPTY));
+                String def = "";
+                def = manifestGen.getProperty(IIIFLookup.Title);
+                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, def)); 
+                def = manifestGen.getProperty(IIIFLookup.DateCreated);
+                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.DateCreated, def));
+                def = manifestGen.getProperty(IIIFLookup.Creator);
+                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Creator, def));
+                def = manifestGen.getProperty(IIIFLookup.Description);
+                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Description, def));
+                def = manifestGen.getProperty(IIIFLookup.Attribution);
+                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Attribution, def));
+                setLogoUrl(manifestGen.getManifestLogoURL());
 
                 initRanges(root);
                 
@@ -269,9 +283,6 @@ public class IIIFManifest {
                 getArray(obj, IIIFArray.canvases);
                 return obj;
         }
-        public String addFile(String key, File f, MetadataInputFile itemMeta) {
-                return addCanvas(key, f, itemMeta);
-        }
         public String getIIIFPath(String key, File f) {
                 return String.format("%s/%s", iiifRootPath, key.replaceAll("\\\\",  "/").replaceFirst("^/*", ""));
         }
@@ -296,15 +307,14 @@ public class IIIFManifest {
                 arr.put(canvas);
         }
 
-        public String addCanvas(String key, File f, MetadataInputFile itemMeta) {
+        public JSONObject addCanvas(String key, File f, MetadataInputFile itemMeta) {
                 String iiifpath = getIIIFPath(key, f);
                 
                 JSONObject canvas = createCanvas(iiifpath, getDimensions(f), f.getName());
-                addCanvasMetadata(canvas, f, itemMeta);
                 String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), itemMeta);
                 orderedCanvases.put(canvasKey, canvas);
                 
-                return canvasKey;
+                return canvas;
         }
         
         public ManifestDimensions getDimensions(File f) {

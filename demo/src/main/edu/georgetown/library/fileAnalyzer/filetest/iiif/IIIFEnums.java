@@ -4,10 +4,10 @@ import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilde
 
 public final class IIIFEnums {
         public enum MethodIdentifer {
-                FolderName, MetadataFile;
+                FolderName, FileName, ItemMetadataFile;
         }
         public enum MethodMetadata {
-                None, MetadataFile, RestAPI;
+                None, ItemMetadataFile, ManifestMetadataFile, RestAPI;
         }
 
         public static enum IIIFType {
@@ -102,51 +102,72 @@ public final class IIIFEnums {
         public static enum IIIFLookup {
                 Title(
                         "Title", 
-                        "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='title'][not(@qualifier)]",
-                        "/dublin_core/dcvalue[@element='title'][@qualifier='none']",
+                        "title",
+                        null,
                         "/ead:ead/ead:archdesc/ead:did/ead:unittitle"),
                 Attribution("Attribution"),
                 Identifier("identifier"),
                 DateCreated(
                         "Date Created", 
-                        "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='date'][@qualifier='created']",
-                        "/dublin_core/dcvalue[@element='date'][@qualifier='created']", 
+                        "date",
+                        "created",
                         "/ead:ead/ead:archdesc/ead:did/ead:unitdate"
                 ),
-                Creator("Creator", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='creator']"), 
+                Creator(
+                        "Creator", 
+                        "creator"
+                ), 
                 Description(
                         "Description", 
-                        "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='description'][not(@qualifier)]",
-                        "/dublin_core/dcvalue[@element='description'][@qualifier='none']"
+                        "description"
                 ),
                 Subject(
-                        "Subject(s)", 
-                        "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='subject']",
-                        "/dublin_core/dcvalue[@element='subject']"
+                        "Subject(s)",
+                        "subject",
+                        "*"
                 ),
-                Rights("Rights", "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='rights']"), 
+                Rights(
+                        "Rights", 
+                        "rights"
+                ), 
                 Permalink(
                         "Permanent URL", 
-                        "//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='identifier'][@qualifier='uri']",
-                        "/dublin_core/dcvalue[@element='identifier'][@qualifier='uri']"
+                        "identifier",
+                        "uri"
                 );
                 String property = null;
+                String dc = null;
                 String metsXpath = null; 
                 String eadXPath = null;
                 String dcXPath = null;
                 IIIFLookup(String property) {
-                        this(property, null, null, null);
+                        this(property, null, null);
                 }
-                IIIFLookup(String property, String metsXpath) {
-                        this(property, metsXpath, null, null);
+                IIIFLookup(String property, String dcelem) {
+                        this(property, dcelem, null, null);
                 }
-                IIIFLookup(String property, String metsXpath, String dcXPath) {
-                        this(property, metsXpath, dcXPath, null);
+                IIIFLookup(String property, String dcelem, String dcqual) {
+                        this(property, dcelem, dcqual, null);
                 }
-                IIIFLookup(String property, String metsXpath, String dcXPath, String eadXPath) {
+                IIIFLookup(String property, String dcelem, String dcqual, String eadXPath) {
                         this.property  = property;
-                        this.metsXpath = metsXpath;
-                        this.dcXPath   = dcXPath;
+                        dcelem = (dcelem == null) ? "" : dcelem;
+                        dcqual = (dcqual == null) ? "" : dcqual;
+                        if (!dcelem.isEmpty()) {
+                                if (dcqual.isEmpty()) {
+                                        this.dc = String.format("dc.%s", dcelem);
+                                        this.dcXPath = String.format("/dublin_core/dcvalue[@element='%s'][@qualifier='none']", dcelem);
+                                        this.metsXpath = String.format("//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='%s'][not(@qualifier)]", dcelem);
+                                } else if (dcqual.equals("*")) {
+                                        this.dc = String.format("dc.%s", dcelem);
+                                        this.dcXPath = String.format("/dublin_core/dcvalue[@element='%s']", dcelem);
+                                        this.metsXpath = String.format("//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='%s']", dcelem);
+                                } else {
+                                        this.dc = String.format("dc.%s.%s", dcelem, dcqual);
+                                        this.dcXPath = String.format("/dublin_core/dcvalue[@element='%s'][@qualifier='%s']", dcelem, dcqual);
+                                        this.metsXpath = String.format("//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='%s'][@qualifier='%s']", dcelem, dcqual);
+                                }
+                        }
                         this.eadXPath  = eadXPath;
                 }
                 String getFileTypeKey(InputFileType fileType) {
@@ -156,6 +177,8 @@ public final class IIIFEnums {
                                 return this.eadXPath;
                         } else if (fileType == InputFileType.DC) {
                                 return this.dcXPath;
+                        } else if (fileType == InputFileType.CSV) {
+                                return this.dc;
                         }
                         return property;
                 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 import gov.nara.nwts.ftapp.FTDriver;
@@ -26,18 +27,21 @@ public class ManifestGeneratePropFile extends FTPropString {
         
         final String VAL_ManifestOuputFile          = "manifest.json";
         final String VAL_ItemFolder                 = "FolderName";
-        final String VAL_ItemMetadata               = "MetadataFile";
+        final String VAL_ItemFile                   = "FileName";
+        final String VAL_ItemMetadata               = "ItemMetadataFile";
+        final String VAL_ManifestMetadata           = "ManifestMetadataFile";
         final String VAL_ItemREST                   = "RESTAPI";
         final String VAL_None                       = "None";
         final String VAL_true                       = "true";
         
         final String RX_tf                          = "(true|false)?";
-        final String RX_ItemId                      = "(FolderName|MetadataFile)";
-        final String RX_ItemMeta                    = "(None|RESTAPI|MetadataFile)";
+        final String RX_ItemId                      = "(FolderName|FileName|ItemMetadataFile)";
+        final String RX_ItemMeta                    = "(None|RESTAPI|ItemMetadataFile|ManifestMetadataFile)";
         
         
         Properties prop = new Properties();
         File propFile;
+        File inMeta;
         
         ManifestGeneratePropFile(FTDriver dt, String prefix) {
             super(dt, prefix, CreateIIIFManifest.MANGEN, CreateIIIFManifest.MANGEN,
@@ -57,8 +61,9 @@ public class ManifestGeneratePropFile extends FTPropString {
                                     throw new InputFileException(String.format("New Manifest File [%s] must be writeable", manfile.getAbsolutePath()));
                             }
                     }
-                    File inMeta = getManifestInputFile(propFile);
-                    if (!inMeta.exists()) {
+                    inMeta = getManifestInputFile(propFile);
+                    if (inMeta == null) {
+                    } else if (!inMeta.exists()) {
                             throw new InputFileException(String.format("Metadata File [%s] must exist", inMeta.getAbsolutePath()));
                     }
                     this.getItemIdentifierMethod();
@@ -68,6 +73,13 @@ public class ManifestGeneratePropFile extends FTPropString {
                     iStat.addFailMessage(e.getMessage());
             }
             return iStat;
+        }
+        
+        MetadataInputFile getMetadataInputFile(MetadataInputFileBuilder mifBuild) throws InputFileException {
+                if (inMeta == null) {
+                        return null;
+                }
+                return mifBuild.identifyFile(inMeta);
         }
         
         public File getManifestGenPropFile() {
@@ -130,8 +142,11 @@ public class ManifestGeneratePropFile extends FTPropString {
                 if (s.equals(VAL_ItemFolder)) {
                         return MethodIdentifer.FolderName;
                 }
+                if (s.equals(VAL_ItemFile)) {
+                        return MethodIdentifer.FileName;
+                }
                 if (s.equals(VAL_ItemMetadata)) {
-                        return MethodIdentifer.MetadataFile;
+                        return MethodIdentifer.ItemMetadataFile;
                 }
                 throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemId, s));
         }
@@ -140,8 +155,11 @@ public class ManifestGeneratePropFile extends FTPropString {
                 if (!Pattern.compile(RX_ItemMeta).matcher(s).matches()) {
                         throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemMeta, s));
                 }
+                if (s.equals(VAL_ManifestMetadata)) {
+                        return MethodMetadata.ManifestMetadataFile;
+                }
                 if (s.equals(VAL_ItemMetadata)) {
-                        return MethodMetadata.MetadataFile;
+                        return MethodMetadata.ItemMetadataFile;
                 }
                 if (s.equals(VAL_ItemREST)) {
                         return MethodMetadata.RestAPI;
@@ -168,5 +186,9 @@ public class ManifestGeneratePropFile extends FTPropString {
                         }
                 }
                 return translateEnum.getTranslator();
+        }
+        
+        public String getProperty(IIIFLookup lookup) {
+                return prop.getProperty(lookup.property, "");
         }
 }
