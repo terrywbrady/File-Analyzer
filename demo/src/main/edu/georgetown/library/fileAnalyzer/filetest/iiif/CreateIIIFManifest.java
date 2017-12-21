@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
@@ -234,15 +233,15 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 
                                 s.setVal(IIIFStatsItems.ParentRange, rangePath.getFullPath()); 
                                 
-                                JSONObject canvas = curmanifest.addCanvas(s.key, f, currentMetadataFile);
-                                curmanifest.addCanvasMetadata(canvas, f, currentMetadataFile);
-                                curmanifest.linkRangeToCanvas(rangePath, canvas);
+                                IIIFCanvasWrapper canvasWrap = curmanifest.addCanvas(s.key, f, currentMetadataFile);
+                                canvasWrap.addCanvasMetadata(f, currentMetadataFile);
+                                curmanifest.linkRangeToCanvas(rangePath, canvasWrap);
                                 
-                                s.setVal(IIIFStatsItems.Height, IIIFManifest.getIntProperty(canvas, IIIFProp.height, 0)); 
-                                s.setVal(IIIFStatsItems.Width, IIIFManifest.getIntProperty(canvas, IIIFProp.width, 0)); 
-                                s.setVal(IIIFStatsItems.Identifier, IIIFManifest.getProperty(canvas, IIIFProp.id, IIIFManifest.EMPTY)); 
-                                s.setVal(IIIFStatsItems.Title, IIIFManifest.getProperty(canvas, IIIFProp.label, IIIFManifest.EMPTY)); 
-                                s.setVal(IIIFStatsItems.DateCreated, IIIFManifest.getProperty(canvas, IIIFProp.dateCreated, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Height, canvasWrap.getIntProperty(IIIFProp.height, 0)); 
+                                s.setVal(IIIFStatsItems.Width, canvasWrap.getIntProperty(IIIFProp.width, 0)); 
+                                s.setVal(IIIFStatsItems.Identifier, canvasWrap.getProperty(IIIFProp.id, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Title, canvasWrap.getProperty(IIIFProp.label, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.DateCreated, canvasWrap.getProperty(IIIFProp.dateCreated, IIIFManifest.EMPTY)); 
                         } else {
                                 s.setVal(IIIFStatsItems.Status, Status.Skip); 
                         }

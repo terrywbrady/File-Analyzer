@@ -4,32 +4,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-import org.json.JSONObject;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
-public class RangePath implements Comparable<RangePath> {
+public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> {
         String orderedPath;
         String displayPath;
-        JSONObject range = null;
         TreeSet<RangePath> childRanges = new TreeSet<>();
         RangePath parentRange;
         ArrayList<String> childCanvases = new ArrayList<>();
         
-        public RangePath(String orderedPath, String displayPath) {
+        public RangePath(IIIFManifest manifest, String orderedPath, String displayPath) {
+                super(manifest.iiifRootPath, manifest.getManifestProjectTranslate());
                 this.orderedPath = orderedPath;
                 this.displayPath = displayPath;
-        }
-        
-        public void setRangeObject(JSONObject range) {
-                this.range = range;
-        }
-        
-        public JSONObject getRangeObject() {
-                return range;
-        }
 
-        public boolean hasObject() {
-                return this.range != null;
-        }
+                String label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, displayPath);
+                setProperty(IIIFType.typeRange, IIIFProp.label, label);
+                setProperty(IIIFType.typeRange, IIIFProp.id, getID());
+                setProperty(IIIFType.typeRange);
+                manifest.getArray(IIIFArray.structures).put(getJSONObject());
+         }
         
         @Override
         public int compareTo(RangePath rp) {

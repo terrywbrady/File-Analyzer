@@ -10,7 +10,7 @@ public class CreateDateProjectTranslate extends DefaultManifestProjectTranslate 
         RangePath decadesRangeRoot;
         
         @Override
-        public void initProjectRanges(File root, RangePath top) {
+        public void initProjectRanges(IIIFManifest manifest, File root, RangePath top) {
                 decadesRangeRoot = top;
         }
 
@@ -21,11 +21,11 @@ public class CreateDateProjectTranslate extends DefaultManifestProjectTranslate 
         @Override public String getSubtitle() {return "By Creation Date";}
         
         @Override
-        public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta) {
+        public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta) {
                 String decade = getDecade(itemMeta.getValue(IIIFLookup.DateCreated, IIIFManifest.EMPTY));
                 RangePath dr = decadeRanges.get(decade);
                 if (dr == null) {
-                        dr = new RangePath(decade, decade);
+                        dr = new RangePath(manifest, decade, decade);
                         decadeRanges.put(decade, dr);
                 }
                 decadesRangeRoot.addChildRange(dr);

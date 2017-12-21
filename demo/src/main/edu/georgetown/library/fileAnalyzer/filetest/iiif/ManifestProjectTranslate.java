@@ -16,8 +16,8 @@ public interface ManifestProjectTranslate {
         public String translate(IIIFType type, IIIFProp key, String val); 
         public String rangeTranslate(String val);
         public void registerEADRange(XPath xp, Node n, RangePath rangePath);
-        public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta); 
+        public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta); 
         public boolean processInitRanges();
         public boolean showFolderRanges();
-        public void initProjectRanges(File root, RangePath top);
+        public void initProjectRanges(IIIFManifest manifest, File root, RangePath top);
 }
