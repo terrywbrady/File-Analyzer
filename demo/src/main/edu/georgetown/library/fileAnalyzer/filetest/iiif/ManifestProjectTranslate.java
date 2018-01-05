@@ -6,7 +6,7 @@ import javax.xml.xpath.XPath;
 
 import org.w3c.dom.Node;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
 public interface ManifestProjectTranslate {

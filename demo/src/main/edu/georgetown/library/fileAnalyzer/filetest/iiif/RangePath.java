@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.TreeSet;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
 public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> {
@@ -20,9 +20,9 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
                 this.orderedPath = orderedPath;
                 this.displayPath = displayPath;
 
-                String label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, displayPath);
-                setProperty(IIIFType.typeRange, IIIFProp.label, label);
-                setProperty(IIIFType.typeRange, IIIFProp.id, getID());
+                String label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFStandardProp.label, displayPath);
+                setProperty(IIIFType.typeRange, IIIFStandardProp.label, label);
+                setProperty(IIIFType.typeRange, IIIFStandardProp.id, getID());
                 setProperty(IIIFType.typeRange);
                 manifest.getArray(IIIFArray.structures).put(getJSONObject());
          }

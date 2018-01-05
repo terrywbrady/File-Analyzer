@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 import gov.nara.nwts.ftapp.FTDriver;
@@ -189,6 +188,6 @@ public class ManifestGeneratePropFile extends FTPropString {
         }
         
         public String getProperty(IIIFLookup lookup) {
-                return prop.getProperty(lookup.property, "");
+                return prop.getProperty(lookup.getProperty(), "");
         }
 }

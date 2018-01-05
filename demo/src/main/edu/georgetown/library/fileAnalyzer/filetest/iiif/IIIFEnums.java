@@ -1,7 +1,5 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
-
 public final class IIIFEnums {
         public enum MethodIdentifer {
                 FolderName, FileName, ItemMetadataFile;
@@ -41,7 +39,9 @@ public final class IIIFEnums {
                 }
         }
         
-        public static enum IIIFProp {
+        
+        
+        public static enum IIIFStandardProp implements IIIFProp {
                 label,
                 attribution,
                 value,
@@ -52,25 +52,18 @@ public final class IIIFEnums {
                 width,
                 type("@type"),
                 context("@context") {
-                        String getDefault() {
+                        public String getDefault() {
                                 return "http://iiif.io/api/presentation/2/context.json";
                         }
                 },
                 logo,
                 profile {
-                        String getDefault() {
+                        public String getDefault() {
                                 return "http://iiif.io/api/image/2/level2.json";
                         }
                 },
-                title("Title", true), 
-                dateCreated("Date Created", true), 
-                creator("Creator", true), 
-                description("Description", true),
-                subject("Subject(s)", true),
-                rights("Rights", true), 
-                permalink("Permanent URL", true),
                 motivation {
-                        String getDefault() {
+                        public String getDefault() {
                                 return "sc:painting";
                         }
                 },
@@ -78,109 +71,87 @@ public final class IIIFEnums {
                 resource,
                 service;
 
-                String val;
-                boolean isMetadata = false;
-                IIIFProp() {
+                private String val;
+                IIIFStandardProp() {
                         this.val = name();
                 }
-                IIIFProp(String val) {
+                IIIFStandardProp(String val) {
                         this.val = val;
                 }
-                IIIFProp(String val, boolean isMetadata) {
-                        this.val = val;
-                        this.isMetadata = isMetadata;
-                }
-                String getLabel() {
+               public String getLabel() {
                         return val;
                 }
-                String getDefault() {
+                public String getDefault() {
                         return "";
                 }
 
+                public boolean isMetadata() {
+                        return false;
+                }
         }
-        
-        public static enum IIIFLookup {
+
+        public static enum IIIFMetadataProp implements IIIFProp {
+                title("Title"), 
+                dateCreated("Date Created"), 
+                creator("Creator"), 
+                description("Description"),
+                subject("Subject(s)"),
+                rights("Rights"), 
+                permalink("Permanent URL");
+
+                private String val;
+                IIIFMetadataProp() {
+                        this.val = name();
+                }
+                IIIFMetadataProp(String val) {
+                        this.val = val;
+                }
+                public String getLabel() {
+                        return val;
+                }
+                public String getDefault() {
+                        return "";
+                }
+
+                public boolean isMetadata() {
+                        return true;
+                }
+        }
+ 
+        public static enum IIIFLookupEnum {
                 Title(
-                        "Title", 
-                        "title",
-                        null,
-                        "/ead:ead/ead:archdesc/ead:did/ead:unittitle"),
-                Attribution("Attribution"),
-                Identifier("identifier"),
+                        new IIIFLookup(
+                                "Title", 
+                                "title",
+                                null,
+                                "/ead:ead/ead:archdesc/ead:did/ead:unittitle"
+                        )
+                ),
+                Attribution(new IIIFLookup("Attribution")),
+                Identifier(new IIIFLookup("identifier")),
                 DateCreated(
-                        "Date Created", 
-                        "date",
-                        "created",
-                        "/ead:ead/ead:archdesc/ead:did/ead:unitdate"
+                        new IIIFLookup(
+                                "Date Created", 
+                                "date",
+                                "created",
+                                "/ead:ead/ead:archdesc/ead:did/ead:unitdate"
+                        )
                 ),
-                Creator(
-                        "Creator", 
-                        "creator"
-                ), 
-                Description(
-                        "Description", 
-                        "description"
-                ),
-                Subject(
-                        "Subject(s)",
-                        "subject",
-                        "*"
-                ),
-                Rights(
-                        "Rights", 
-                        "rights"
-                ), 
-                Permalink(
-                        "Permanent URL", 
-                        "identifier",
-                        "uri"
-                );
-                String property = null;
-                String dc = null;
-                String metsXpath = null; 
-                String eadXPath = null;
-                String dcXPath = null;
-                IIIFLookup(String property) {
-                        this(property, null, null);
+                Creator(new IIIFLookup("Creator", "creator")), 
+                Description(new IIIFLookup("Description", "description")),
+                Subject(new IIIFLookup("Subject(s)", "subject")),
+                SubjectOther(new IIIFLookup("Subject Other", "subject", "other")),
+                SubjectLcsh(new IIIFLookup("Subject(s)", "subject", "lcsh")),
+                Rights(new IIIFLookup("Rights", "rights")), 
+                Permalink(new IIIFLookup("Permanent URL", "identifier", "uri"));
+                
+                private IIIFLookup lookup;
+                IIIFLookupEnum(IIIFLookup lookup) {
+                        this.lookup = lookup;
                 }
-                IIIFLookup(String property, String dcelem) {
-                        this(property, dcelem, null, null);
-                }
-                IIIFLookup(String property, String dcelem, String dcqual) {
-                        this(property, dcelem, dcqual, null);
-                }
-                IIIFLookup(String property, String dcelem, String dcqual, String eadXPath) {
-                        this.property  = property;
-                        dcelem = (dcelem == null) ? "" : dcelem;
-                        dcqual = (dcqual == null) ? "" : dcqual;
-                        if (!dcelem.isEmpty()) {
-                                if (dcqual.isEmpty()) {
-                                        this.dc = String.format("dc.%s", dcelem);
-                                        this.dcXPath = String.format("/dublin_core/dcvalue[@element='%s'][@qualifier='none']", dcelem);
-                                        this.metsXpath = String.format("//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='%s'][not(@qualifier)]", dcelem);
-                                } else if (dcqual.equals("*")) {
-                                        this.dc = String.format("dc.%s", dcelem);
-                                        this.dcXPath = String.format("/dublin_core/dcvalue[@element='%s']", dcelem);
-                                        this.metsXpath = String.format("//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='%s']", dcelem);
-                                } else {
-                                        this.dc = String.format("dc.%s.%s", dcelem, dcqual);
-                                        this.dcXPath = String.format("/dublin_core/dcvalue[@element='%s'][@qualifier='%s']", dcelem, dcqual);
-                                        this.metsXpath = String.format("//mets:mdWrap[@OTHERMDTYPE='DIM']//dim:field[@element='%s'][@qualifier='%s']", dcelem, dcqual);
-                                }
-                        }
-                        this.eadXPath  = eadXPath;
-                }
-                String getFileTypeKey(InputFileType fileType) {
-                        if (fileType == InputFileType.METS) {
-                                return this.metsXpath;
-                        } else if (fileType == InputFileType.EAD) {
-                                return this.eadXPath;
-                        } else if (fileType == InputFileType.DC) {
-                                return this.dcXPath;
-                        } else if (fileType == InputFileType.CSV) {
-                                return this.dc;
-                        }
-                        return property;
+                
+                public IIIFLookup getLookup() {
+                        return lookup;
                 }
         }
         

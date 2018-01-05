@@ -7,7 +7,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
 public class IIIFJSONWrapper {
@@ -43,30 +44,30 @@ public class IIIFJSONWrapper {
                         return;
                 }
                 
-                if (prop == IIIFProp.title && type == IIIFType.typeManifest) {
+                if (prop == IIIFMetadataProp.title && type == IIIFType.typeManifest) {
                         addMetadata(prop.getLabel(), value);
                         jsonObject.put(prop.getLabel(), value);                        
-                } else if (prop.isMetadata) {
+                } else if (prop.isMetadata()) {
                         addMetadata(prop.getLabel(), value);
                 } else {
                         jsonObject.put(prop.getLabel(), value);
                 }
         }
         public void setProperty(IIIFType type) {
-                jsonObject.put(IIIFProp.type.getLabel(), type.getValue());
+                jsonObject.put(IIIFStandardProp.type.getLabel(), type.getValue());
         }
 
         public String getProperty(IIIFProp prop, String defValue) {
                 String ret = null;
-                if (prop.isMetadata) {
+                if (prop.isMetadata()) {
                         JSONArray jarr = jsonObject.getJSONArray(IIIFArray.metadata.getLabel());
                         if (jarr == null) {
                                 return defValue;
                         }
                         for(int i = 0; i < jarr.length(); i++) {
                                 JSONObject obj = jarr.getJSONObject(i);
-                                if (prop.getLabel().equals(obj.getString(IIIFProp.label.getLabel()))) {
-                                        ret = obj.getString(IIIFProp.value.getLabel());
+                                if (prop.getLabel().equals(obj.getString(IIIFStandardProp.label.getLabel()))) {
+                                        ret = obj.getString(IIIFStandardProp.value.getLabel());
                                 }
                         }
                 } else {
@@ -100,8 +101,8 @@ public class IIIFJSONWrapper {
         public void addMetadata(String label, String value) {
                 JSONArray metadata = getArray(IIIFArray.metadata);
                 Map<String,String> m = new HashMap<>();
-                m.put(IIIFProp.label.name(), label);
-                m.put(IIIFProp.value.name(), value);
+                m.put(IIIFStandardProp.label.name(), label);
+                m.put(IIIFStandardProp.value.name(), value);
                 metadata.put(m);
         }
 

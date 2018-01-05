@@ -20,8 +20,9 @@ import java.io.IOException;
 
 import org.json.JSONException;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookupEnum;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
@@ -192,7 +193,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 String ret = f.getName();
                 if (methId == MethodIdentifer.ItemMetadataFile) {
                         inputMetadata.setCurrentKey(f.getName());
-                        ret = inputMetadata.getValue(IIIFLookup.Identifier, "NA");
+                        ret = inputMetadata.getValue(IIIFLookupEnum.Identifier.getLookup(), "NA");
                 } else if (methId == MethodIdentifer.FileName) {
                         ret = f.getName();
                         inputMetadata.setCurrentKey(ret);
@@ -200,7 +201,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                         ret = f.getParentFile().getName();
                         inputMetadata.setCurrentKey(ret);
                 }
-                return manifestProjectTranslate.translate(type, IIIFProp.identifier, ret);
+                return manifestProjectTranslate.translate(type, IIIFStandardProp.identifier, ret);
         }
         
         
@@ -237,11 +238,11 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 canvasWrap.addCanvasMetadata(f, currentMetadataFile);
                                 curmanifest.linkRangeToCanvas(rangePath, canvasWrap);
                                 
-                                s.setVal(IIIFStatsItems.Height, canvasWrap.getIntProperty(IIIFProp.height, 0)); 
-                                s.setVal(IIIFStatsItems.Width, canvasWrap.getIntProperty(IIIFProp.width, 0)); 
-                                s.setVal(IIIFStatsItems.Identifier, canvasWrap.getProperty(IIIFProp.id, IIIFManifest.EMPTY)); 
-                                s.setVal(IIIFStatsItems.Title, canvasWrap.getProperty(IIIFProp.label, IIIFManifest.EMPTY)); 
-                                s.setVal(IIIFStatsItems.DateCreated, canvasWrap.getProperty(IIIFProp.dateCreated, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Height, canvasWrap.getIntProperty(IIIFStandardProp.height, 0)); 
+                                s.setVal(IIIFStatsItems.Width, canvasWrap.getIntProperty(IIIFStandardProp.width, 0)); 
+                                s.setVal(IIIFStatsItems.Identifier, canvasWrap.getProperty(IIIFStandardProp.id, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Title, canvasWrap.getProperty(IIIFStandardProp.label, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.DateCreated, canvasWrap.getProperty(IIIFMetadataProp.dateCreated, IIIFManifest.EMPTY)); 
                         } else {
                                 s.setVal(IIIFStatsItems.Status, Status.Skip); 
                         }

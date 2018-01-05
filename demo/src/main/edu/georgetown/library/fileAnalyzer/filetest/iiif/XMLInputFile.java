@@ -17,8 +17,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
@@ -106,7 +106,7 @@ class XMLInputFile extends DefaultInputFile {
                 parent.addChildRange(rp);
                 rangePaths.add(rp);
                 manifestTranslate.registerEADRange(xp, n, rp);
-                rp.setProperty(IIIFType.typeRange, IIIFProp.dateCreated, getXPathValue(n, "ead:did/ead:unitdate", ""));
+                rp.setProperty(IIIFType.typeRange, IIIFMetadataProp.dateCreated, getXPathValue(n, "ead:did/ead:unitdate", ""));
                 try {
                         NodeList nl = (NodeList)xp.evaluate("ead:did/ead:container", n, XPathConstants.NODESET);
                         for(int i=0; i<nl.getLength(); i++) {
@@ -131,7 +131,7 @@ class XMLInputFile extends DefaultInputFile {
                         String url = this.getXPathValue(nl.item(i), "@ns2:href", "");
                         if (url.endsWith(".jpg")) {
                                 IIIFCanvasWrapper canvasWrap = manifest.addEadCanvas(url, nl.item(i), this);
-                                String canvasid = canvasWrap.getProperty(IIIFProp.id, "");
+                                String canvasid = canvasWrap.getProperty(IIIFStandardProp.id, "");
                                 rp.addCanvasId(canvasid);
                         }
                 }
