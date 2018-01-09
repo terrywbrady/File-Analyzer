@@ -10,7 +10,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
-import org.json.JSONObject;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,8 +17,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
@@ -82,7 +81,7 @@ class XMLInputFile extends DefaultInputFile {
         @Override
         public List<RangePath> getInitRanges(IIIFManifest manifest, RangePath parent, ManifestProjectTranslate manifestTranslate) {
                 ArrayList<RangePath> rangePaths = new ArrayList<>();
-                RangePath rp = new RangePath("Subjects", "Subjects");
+                RangePath rp = new RangePath(manifest, "Subjects", "Subjects");
                 rangePaths.add(rp);
                 rp.setParent(parent);
                 parent.addChildRange(rp);
@@ -102,13 +101,12 @@ class XMLInputFile extends DefaultInputFile {
         public void addRange(IIIFManifest manifest, ManifestProjectTranslate manifestTranslate, List<RangePath> rangePaths, Node n, RangePath parent) throws XPathExpressionException {
                 String rName = manifestTranslate.rangeTranslate(getXPathValue(n, "ead:did/ead:unittitle", "n/a"));
                 String rPath = getPath(n);
-                RangePath rp = new RangePath(rPath, rName);
+                RangePath rp = new RangePath(manifest, rPath, rName);
                 rp.setParent(parent);
                 parent.addChildRange(rp);
                 rangePaths.add(rp);
                 manifestTranslate.registerEADRange(xp, n, rp);
-                JSONObject range = manifest.makeRangeObject(rp);
-                manifest.setProperty(range, IIIFType.typeRange, IIIFProp.dateCreated, getXPathValue(n, "ead:did/ead:unitdate", ""));
+                rp.setProperty(IIIFType.typeRange, IIIFMetadataProp.dateCreated, getXPathValue(n, "ead:did/ead:unitdate", ""));
                 try {
                         NodeList nl = (NodeList)xp.evaluate("ead:did/ead:container", n, XPathConstants.NODESET);
                         for(int i=0; i<nl.getLength(); i++) {
@@ -117,7 +115,7 @@ class XMLInputFile extends DefaultInputFile {
                                 String val = elem.getTextContent();
                                 String label = elem.getAttribute("label");
                                 if (!type.isEmpty() && !val.isEmpty()) {
-                                        IIIFManifest.addMetadata(range, type, label.isEmpty() ? val : String.format("%s (%s)", val, label));
+                                        rp.addMetadata(type, label.isEmpty() ? val : String.format("%s (%s)", val, label));
                                 }
                         }
                 } catch (XPathExpressionException | DOMException e) {
@@ -132,8 +130,9 @@ class XMLInputFile extends DefaultInputFile {
                 for(int i=0; i<nl.getLength(); i++) {
                         String url = this.getXPathValue(nl.item(i), "@ns2:href", "");
                         if (url.endsWith(".jpg")) {
-                                JSONObject canvas = manifest.addEadCanvas(url, nl.item(i), this);
-                                rp.addCanvasId(canvas.get(IIIFProp.id.val).toString());
+                                IIIFCanvasWrapper canvasWrap = manifest.addEadCanvas(url, nl.item(i), this);
+                                String canvasid = canvasWrap.getProperty(IIIFStandardProp.id, "");
+                                rp.addCanvasId(canvasid);
                         }
                 }
         }

@@ -19,10 +19,10 @@ import java.io.File;
 import java.io.IOException;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookupEnum;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
@@ -68,6 +68,11 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public static final String TRANSLATE     = "translate";
         
         IIIFManifest manifest;
+        File lastParent;
+        File lastAncestor;
+        IIIFManifest curmanifest;
+        MetadataInputFile currentMetadataFile;
+        
         ManifestProjectTranslate manifestProjectTranslate;
         MetadataInputFile inputMetadata;
 
@@ -123,7 +128,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 }
                 
                 try {
-                        manifest = new IIIFManifest(inputMetadata, manifestGen, manifestGen.getCreateCollectionManifest());
+                        manifest = new IIIFManifest(inputMetadata, manifestGen);
                         manifest.setProjectTranslate(manifestProjectTranslate);
                         manifest.init(dt.getRoot());
                 } catch (IOException | InputFileException e) {
@@ -140,6 +145,10 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public void refineResults() {
                 try {
                         manifest.write();
+                        if (curmanifest != null && curmanifest != manifest) {
+                                curmanifest.write();
+                                curmanifest = null;
+                        }
                 } catch (JSONException e) {
                          e.printStackTrace();
                 } catch (IOException e) {
@@ -168,63 +177,81 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 }
         }
         
-        public IIIFManifest getCurrentManifest(File f) throws IOException, InputFileException {
-                if (!hasCollectionManifest()) {
-                        return manifest;
+        public IIIFManifest getCurrentManifest(File parent, MetadataInputFile currentInput) throws IOException, InputFileException {
+                if (hasCollectionManifest()) {
+                        File mf = manifest.getComponentManifestFile(parent, getIdentifier(IIIFType.typeManifest, parent));
+                        inputMetadata.setCurrentKey(getKey(parent));
+                        if (curmanifest != null) {
+                                curmanifest.write();
+                                curmanifest = null;
+                        }
+                        curmanifest = new IIIFManifest(currentInput, manifestGen, mf);
+                        curmanifest.setProjectTranslate(manifestProjectTranslate);
+                        return curmanifest;
                 }
-                
-                manifest.getComponentManifestFile(f, getIdentifier(IIIFType.typeManifest, f));
-                inputMetadata.setCurrentKey(getKey(f));
-                IIIFManifest itemManifest = new IIIFManifest(inputMetadata, manifestGen, false);
-                manifest.setProjectTranslate(manifestProjectTranslate);
-                manifest.init(dt.getRoot());
-                manifest.addManifestToCollection(itemManifest);
-                return itemManifest;
+                return manifest;
         }
         
         public String getIdentifier(IIIFType type, File f) {
-                MethodIdentifer methId;
-                try {
-                        methId = manifestGen.getItemIdentifierMethod();
-                } catch (InputFileException e) {
-                        //validation should have already been applied
-                        methId = MethodIdentifer.FolderName;
-                }
                 String ret = f.getName();
-                if (methId == MethodIdentifer.ItemMetadataFile) {
-                        inputMetadata.setCurrentKey(f.getName());
-                        ret = inputMetadata.getValue(IIIFLookup.Identifier, "NA");
-                } else if (methId == MethodIdentifer.FileName) {
+                if (type == IIIFType.typeManifest) {
                         ret = f.getName();
-                        inputMetadata.setCurrentKey(ret);
-                } else if (methId == MethodIdentifer.FolderName) {
-                        ret = f.getParentFile().getName();
-                        inputMetadata.setCurrentKey(ret);
+                } else {
+                        MethodIdentifer methId;
+                        try {
+                                methId = manifestGen.getItemIdentifierMethod();
+                        } catch (InputFileException e) {
+                                //validation should have already been applied
+                                methId = MethodIdentifer.FolderName;
+                        }
+                        if (methId == MethodIdentifer.ItemMetadataFile) {
+                                inputMetadata.setCurrentKey(f.getName());
+                                ret = inputMetadata.getValue(IIIFLookupEnum.Identifier.getLookup(), "NA");
+                        } else if (methId == MethodIdentifer.FileName) {
+                                ret = f.getName();
+                                inputMetadata.setCurrentKey(ret);
+                        } else if (methId == MethodIdentifer.FolderName) {
+                                ret = f.getParentFile().getName();
+                                inputMetadata.setCurrentKey(ret);
+                        }
                 }
-                return manifestProjectTranslate.translate(type, IIIFProp.identifier, ret);
+                return manifestProjectTranslate.translate(type, IIIFStandardProp.identifier, ret);
         }
         
-        
-        File lastParent;
-        IIIFManifest curmanifest;
-        MetadataInputFile currentMetadataFile;
+        public File getRootAncestor(File f) {
+                for(File cf=f; cf != null; cf = cf.getParentFile()) {
+                        if (dt.getRoot().equals(cf.getParentFile())) {
+                                return cf;
+                        }
+                }
+                return f;
+        }
         
         public Object fileTest(File f) {
                 Stats s = getStats(f);
                 File parent = f.getParentFile();
+                File ancestor = getRootAncestor(parent);
                 
                 try {
                         if (!parent.equals(lastParent)) {
                                 lastParent = parent;
-                                curmanifest = getCurrentManifest(parent);
                                 if (manifestGen.getItemMetadataMethod() == MethodMetadata.ItemMetadataFile) {
                                         currentMetadataFile = metaBuilder.findMetadataFile(parent, inputMetadata);
                                 } else if (manifestGen.getItemMetadataMethod() == MethodMetadata.ManifestMetadataFile) {
                                         currentMetadataFile = manifestGen.getMetadataInputFile(metaBuilder);
-                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
                                 } else {
                                         currentMetadataFile = metaBuilder.emptyInputFile(); 
                                 }
+                                if (!ancestor.equals(lastAncestor)) {
+                                        lastAncestor = ancestor;
+                                        curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
+                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
+                                        curmanifest.init(dt.getRoot());
+                                        manifest.addManifestToCollection(curmanifest);
+                                } else {
+                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
+                                }
+
                         }
                         s.setVal(IIIFStatsItems.Path, s.key);
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
@@ -234,15 +261,15 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 
                                 s.setVal(IIIFStatsItems.ParentRange, rangePath.getFullPath()); 
                                 
-                                JSONObject canvas = curmanifest.addCanvas(s.key, f, currentMetadataFile);
-                                curmanifest.addCanvasMetadata(canvas, f, currentMetadataFile);
-                                curmanifest.linkRangeToCanvas(rangePath, canvas);
+                                IIIFCanvasWrapper canvasWrap = curmanifest.addCanvas(s.key, f, currentMetadataFile);
+                                canvasWrap.addCanvasMetadata(f, currentMetadataFile);
+                                curmanifest.linkRangeToCanvas(rangePath, canvasWrap);
                                 
-                                s.setVal(IIIFStatsItems.Height, IIIFManifest.getIntProperty(canvas, IIIFProp.height, 0)); 
-                                s.setVal(IIIFStatsItems.Width, IIIFManifest.getIntProperty(canvas, IIIFProp.width, 0)); 
-                                s.setVal(IIIFStatsItems.Identifier, IIIFManifest.getProperty(canvas, IIIFProp.id, IIIFManifest.EMPTY)); 
-                                s.setVal(IIIFStatsItems.Title, IIIFManifest.getProperty(canvas, IIIFProp.label, IIIFManifest.EMPTY)); 
-                                s.setVal(IIIFStatsItems.DateCreated, IIIFManifest.getProperty(canvas, IIIFProp.dateCreated, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Height, canvasWrap.getIntProperty(IIIFStandardProp.height, 0)); 
+                                s.setVal(IIIFStatsItems.Width, canvasWrap.getIntProperty(IIIFStandardProp.width, 0)); 
+                                s.setVal(IIIFStatsItems.Identifier, canvasWrap.getProperty(IIIFStandardProp.id, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.Title, canvasWrap.getProperty(IIIFStandardProp.label, IIIFManifest.EMPTY)); 
+                                s.setVal(IIIFStatsItems.DateCreated, canvasWrap.getProperty(IIIFMetadataProp.dateCreated, IIIFManifest.EMPTY)); 
                         } else {
                                 s.setVal(IIIFStatsItems.Status, Status.Skip); 
                         }

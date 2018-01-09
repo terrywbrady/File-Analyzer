@@ -14,9 +14,9 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
         }
         
         @Override
-        public void initProjectRanges(File root, RangePath top) {
+        public void initProjectRanges(IIIFManifest manifest, File root, RangePath top) {
                 this.root = root;
-                containers = new RangePath("ZZContainers", "Containers");
+                containers = new RangePath(manifest, "ZZContainers", "Containers");
                 if (showFolderRanges()) {
                         top.addChildRange(containers);
                 }
@@ -27,18 +27,18 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
                 return f.getAbsolutePath().substring(root.getAbsolutePath().length()).replaceAll("[\\\\\\/]", "_");
         }
         
-        public RangePath makeRangePath(File f) {
-                RangePath rp = new RangePath(getRelPath(f), rangeTranslate(f.getName()));
+        public RangePath makeRangePath(IIIFManifest manifest, File f) {
+                RangePath rp = new RangePath(manifest, getRelPath(f), rangeTranslate(f.getName()));
                 dirPaths.put(f.getAbsolutePath(), rp);
                 return rp;
         }
         
         @Override
-        public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta) {
+        public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta) {
                 if (dirPaths.containsKey(f.getAbsolutePath())) {
                         return dirPaths.get(f.getAbsolutePath());
                 }
-                RangePath rp = makeRangePath(f);
+                RangePath rp = makeRangePath(manifest, f);
                 RangePath lastrp = rp;
                 for(File parent = f.getParentFile(); parent != null; parent = parent.getParentFile()) {
                         if (dirPaths.containsKey(parent.getAbsolutePath())) {
@@ -46,7 +46,7 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
                                 break;
                         }
                         
-                        RangePath parrp = makeRangePath(parent);
+                        RangePath parrp = makeRangePath(manifest, parent);
                         parrp.addChildRange(lastrp);
                         dirPaths.put(parent.getAbsolutePath(), parrp);
                         lastrp = parrp;

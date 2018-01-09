@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 import gov.nara.nwts.ftapp.FTDriver;
@@ -16,6 +15,7 @@ import gov.nara.nwts.ftapp.ftprop.InvalidInputException;
 
 public class ManifestGeneratePropFile extends FTPropString {
         final String PROP_IIIFRoot                  = "IIIFRoot";
+        final String PROP_ManifestRoot              = "ManifestRoot";
         final String PROP_ManifestOuputDir          = "ManifestOuputDir";
         final String PROP_ManifestOuputFile         = "ManifestOuputFile";
         final String PROP_CreateCollectionManifest  = "CreateCollectionManifest";
@@ -100,6 +100,10 @@ public class ManifestGeneratePropFile extends FTPropString {
                         throw new InputFileException(String.format("%s cannot be empty", PROP_IIIFRoot));
                 }
                 return s;
+        }
+
+        public String getManifestRoot() throws edu.georgetown.library.fileAnalyzer.filetest.iiif.InputFileException {
+                return prop.getProperty(PROP_ManifestRoot, "");
         }
 
         /*
@@ -189,6 +193,6 @@ public class ManifestGeneratePropFile extends FTPropString {
         }
         
         public String getProperty(IIIFLookup lookup) {
-                return prop.getProperty(lookup.property, "");
+                return prop.getProperty(lookup.getProperty(), "");
         }
 }

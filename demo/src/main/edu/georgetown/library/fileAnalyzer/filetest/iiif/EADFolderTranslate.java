@@ -72,8 +72,8 @@ public class EADFolderTranslate extends FileSystemProjectTranslate {
         }
         
         @Override
-        public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta) {
-                RangePath rp = super.getPrimaryRangePath(key, f, itemMeta);
+        public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta) {
+                RangePath rp = super.getPrimaryRangePath(manifest, key, f, itemMeta);
                 Matcher m = getBoxFolderMatcher(key, f);
                 
                 if (m.matches()) {
