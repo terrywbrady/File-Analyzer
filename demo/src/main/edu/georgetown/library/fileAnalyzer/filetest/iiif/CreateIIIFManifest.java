@@ -69,6 +69,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         
         IIIFManifest manifest;
         File lastParent;
+        File lastAncestor;
         IIIFManifest curmanifest;
         MetadataInputFile currentMetadataFile;
         
@@ -192,34 +193,44 @@ public class CreateIIIFManifest extends DefaultFileTest {
         }
         
         public String getIdentifier(IIIFType type, File f) {
-                MethodIdentifer methId;
-                try {
-                        methId = manifestGen.getItemIdentifierMethod();
-                } catch (InputFileException e) {
-                        //validation should have already been applied
-                        methId = MethodIdentifer.FolderName;
-                }
                 String ret = f.getName();
-                if (methId == MethodIdentifer.ItemMetadataFile) {
-                        inputMetadata.setCurrentKey(f.getName());
-                        ret = inputMetadata.getValue(IIIFLookupEnum.Identifier.getLookup(), "NA");
-                } else if (type == IIIFType.typeManifest) {
+                if (type == IIIFType.typeManifest) {
                         ret = f.getName();
-                        inputMetadata.setCurrentKey(ret);
-                } else if (methId == MethodIdentifer.FileName) {
-                        ret = f.getName();
-                        inputMetadata.setCurrentKey(ret);
-                } else if (methId == MethodIdentifer.FolderName) {
-                        ret = f.getParentFile().getName();
-                        inputMetadata.setCurrentKey(ret);
+                } else {
+                        MethodIdentifer methId;
+                        try {
+                                methId = manifestGen.getItemIdentifierMethod();
+                        } catch (InputFileException e) {
+                                //validation should have already been applied
+                                methId = MethodIdentifer.FolderName;
+                        }
+                        if (methId == MethodIdentifer.ItemMetadataFile) {
+                                inputMetadata.setCurrentKey(f.getName());
+                                ret = inputMetadata.getValue(IIIFLookupEnum.Identifier.getLookup(), "NA");
+                        } else if (methId == MethodIdentifer.FileName) {
+                                ret = f.getName();
+                                inputMetadata.setCurrentKey(ret);
+                        } else if (methId == MethodIdentifer.FolderName) {
+                                ret = f.getParentFile().getName();
+                                inputMetadata.setCurrentKey(ret);
+                        }
                 }
                 return manifestProjectTranslate.translate(type, IIIFStandardProp.identifier, ret);
         }
         
+        public File getRootAncestor(File f) {
+                for(File cf=f; cf != null; cf = cf.getParentFile()) {
+                        if (dt.getRoot().equals(cf.getParentFile())) {
+                                return cf;
+                        }
+                }
+                return f;
+        }
         
         public Object fileTest(File f) {
                 Stats s = getStats(f);
                 File parent = f.getParentFile();
+                File ancestor = getRootAncestor(parent);
                 
                 try {
                         if (!parent.equals(lastParent)) {
@@ -231,13 +242,16 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 } else {
                                         currentMetadataFile = metaBuilder.emptyInputFile(); 
                                 }
-                                curmanifest = getCurrentManifest(parent, currentMetadataFile);
-                                currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
-
-                                if (hasCollectionManifest()) {
+                                if (!ancestor.equals(lastAncestor)) {
+                                        lastAncestor = ancestor;
+                                        curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
+                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
                                         curmanifest.init(dt.getRoot());
                                         manifest.addManifestToCollection(curmanifest);
+                                } else {
+                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
                                 }
+
                         }
                         s.setVal(IIIFStatsItems.Path, s.key);
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
