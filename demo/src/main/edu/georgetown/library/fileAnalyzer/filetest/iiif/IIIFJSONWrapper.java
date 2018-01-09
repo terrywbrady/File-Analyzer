@@ -25,6 +25,14 @@ public class IIIFJSONWrapper {
                 return jsonObject;
         }
         
+        public JSONObject getMinimalJSONObject() {
+                JSONObject j = new JSONObject();
+                j.put(IIIFStandardProp.id.getLabel(), jsonObject.get(IIIFStandardProp.id.getLabel()));
+                j.put(IIIFStandardProp.type.getLabel(), jsonObject.get(IIIFStandardProp.type.getLabel()));
+                j.put(IIIFStandardProp.label.getLabel(), jsonObject.get(IIIFStandardProp.label.getLabel()));
+                return j;
+        }
+        
         IIIFJSONWrapper(String iiifRootPath) {
                 this(iiifRootPath, DefaultManifestProjectTranslateEnum.Default.getTranslator());
         }
@@ -60,7 +68,7 @@ public class IIIFJSONWrapper {
         public String getProperty(IIIFProp prop, String defValue) {
                 String ret = null;
                 if (prop.isMetadata()) {
-                        JSONArray jarr = jsonObject.getJSONArray(IIIFArray.metadata.getLabel());
+                        JSONArray jarr = getArray(IIIFArray.metadata);
                         if (jarr == null) {
                                 return defValue;
                         }

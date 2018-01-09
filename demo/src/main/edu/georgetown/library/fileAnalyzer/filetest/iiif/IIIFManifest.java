@@ -37,28 +37,46 @@ public class IIIFManifest extends IIIFJSONWrapper {
         RangePath top;
         protected MetadataInputFile inputMetadata;
         ManifestGeneratePropFile manifestGen;
+        private boolean isCollectionManifest = false;
+        private String manifestRoot = "";
 
        
-        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen, boolean isCollectionManifest) throws IOException, InputFileException {
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen) throws IOException, InputFileException {
+                this(inputMetadata, manifestGen, manifestGen.getManifestOutputFile(), manifestGen.getCreateCollectionManifest());
+        }      
+
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen, File compFile) throws IOException, InputFileException {
+                this(inputMetadata, manifestGen, compFile, false);
+        }
+
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen, File compFile, boolean isCollectionManifest) throws IOException, InputFileException {
                 super(manifestGen.getIIIFRoot());
                 this.manifestGen = manifestGen;
-                File manifestFile = manifestGen.getManifestOutputFile();
-                checkManifestFile(manifestFile);
-                file = manifestFile;
+                this.manifestRoot = manifestGen.getManifestRoot();
+                file = compFile;
+                checkManifestFile(file);
                 this.inputMetadata = inputMetadata;
                 xp = XMLUtil.xf.newXPath();
+                this.isCollectionManifest = isCollectionManifest;
+                if (!isCollectionManifest) {
+                        seq = addSequence();
+                }
         }      
-        
+
         /*
          * Call this after the proper translator object has been set
          */
         public void init(File root) {
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.context);
-                setProperty(IIIFType.typeManifest);
+                setProperty(isCollectionManifest ? IIIFType.typeCollection : IIIFType.typeManifest);
                 
                 String def = "";
                 def = manifestGen.getProperty(IIIFLookupEnum.Title.getLookup());
-                setProperty(IIIFType.typeManifest, IIIFStandardProp.label, inputMetadata.getValue(IIIFLookupEnum.Title.getLookup(), def)); 
+                String label = inputMetadata.getValue(IIIFLookupEnum.Title.getLookup(), def);
+                if (label.isEmpty()) {
+                        label = "--";
+                }
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.label, label); 
                 def = manifestGen.getProperty(IIIFLookupEnum.DateCreated.getLookup());
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.DateCreated.getLookup(), def));
                 def = manifestGen.getProperty(IIIFLookupEnum.Creator.getLookup());
@@ -69,10 +87,11 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Attribution.getLookup(), def));
                 setLogoUrl(manifestGen.getManifestLogoURL());
 
-                initRanges(root);
+                if (!isCollectionManifest) {
+                        initRanges(root);
+                }
                 
-                seq = addSequence();
-                setProperty(IIIFType.typeManifest, IIIFStandardProp.id,String.format("%s/misc", this.iiifRootPath));
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.id,String.format("%s/%s", this.manifestRoot, file.getName()));
         }
 
         public IIIFJSONWrapper addSequence() {
@@ -102,7 +121,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
         
         public void addManifestToCollection(IIIFManifest itemManifest) {
-                //TODO
+                this.getArray(IIIFArray.manifests).put(itemManifest.getMinimalJSONObject());
         }
         
         public File getManifestFile() {
@@ -110,7 +129,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
 
         public File getComponentManifestFile(File f, String identifier) {
-                return new File(file.getParentFile(), identifier);
+                return new File(file.getParentFile(), String.format("%s.json",identifier));
         }
 
         public void checkManifestFile(File manFile) throws IOException {
@@ -149,18 +168,20 @@ public class IIIFManifest extends IIIFJSONWrapper {
                                 rangePath.getArray(IIIFArray.canvases).put(canvasid);
                         }
                 }
-                for(RangePath rp: top.getDescendants()) {
-                        for(RangePath chRange: rp.getOrderedChildren()) {
-                                rp.getArray(IIIFArray.ranges).put(chRange.getID());
-                        }
-                        int count = 0;
-                        for(String canvasId: rp.getCanvasIds()) {
-                                rp.getArray(IIIFArray.canvases).put(canvasId);
-                                count++;
-                        }
-                        if (count > 0) {
-                                rp.setProperty(IIIFType.typeRange, IIIFStandardProp.label, String.format("%s (%d)", rp.displayPath, count));
-                        }
+                if (top != null) {
+                        for(RangePath rp: top.getDescendants()) {
+                                for(RangePath chRange: rp.getOrderedChildren()) {
+                                        rp.getArray(IIIFArray.ranges).put(chRange.getID());
+                                }
+                                int count = 0;
+                                for(String canvasId: rp.getCanvasIds()) {
+                                        rp.getArray(IIIFArray.canvases).put(canvasId);
+                                        count++;
+                                }
+                                if (count > 0) {
+                                        rp.setProperty(IIIFType.typeRange, IIIFStandardProp.label, String.format("%s (%d)", rp.displayPath, count));
+                                }
+                        }                        
                 }
         }
         public void write() throws IOException {

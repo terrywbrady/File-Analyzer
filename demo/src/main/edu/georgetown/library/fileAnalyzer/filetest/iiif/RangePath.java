@@ -24,7 +24,9 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
                 setProperty(IIIFType.typeRange, IIIFStandardProp.label, label);
                 setProperty(IIIFType.typeRange, IIIFStandardProp.id, getID());
                 setProperty(IIIFType.typeRange);
-                manifest.getArray(IIIFArray.structures).put(getJSONObject());
+                if (!orderedPath.isEmpty()) {
+                        manifest.getArray(IIIFArray.structures).put(getJSONObject());                        
+                }
          }
         
         @Override

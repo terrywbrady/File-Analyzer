@@ -9,6 +9,7 @@ public final class IIIFEnums {
         }
 
         public static enum IIIFType {
+                typeCollection("sc:Collection"),
                 typeManifest("sc:Manifest"),
                 typeRange("sc:Range"),
                 typeSequence("sc:Sequence"),
@@ -33,7 +34,8 @@ public final class IIIFEnums {
                 sequences,
                 canvases,
                 images,
-                ranges;                
+                ranges,
+                manifests;
                 String getLabel() {
                         return name();
                 }
