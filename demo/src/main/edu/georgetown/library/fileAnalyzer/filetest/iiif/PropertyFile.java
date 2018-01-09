@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Properties;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.MetadataInputFileBuilder.InputFileType;
 
 public class PropertyFile extends DefaultInputFile {

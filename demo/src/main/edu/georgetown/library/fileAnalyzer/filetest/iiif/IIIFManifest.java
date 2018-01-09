@@ -4,9 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+
+import java.util.TreeSet;
 
 import javax.xml.xpath.XPath;
 
@@ -18,148 +17,111 @@ import org.xml.sax.SAXException;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.DefaultDimensions;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookup;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookupEnum;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 
-public class IIIFManifest {
+public class IIIFManifest extends IIIFJSONWrapper {
         private File file;
-        protected JSONObject jsonObject;
-        protected String iiifRootPath;
-        protected JSONObject seq;
+        protected IIIFJSONWrapper seq;
         protected XPath xp;
         
         protected HashMap<File,JSONObject> ranges = new HashMap<>();
         
-        public static final String EMPTY = "";
-        
-        ManifestProjectTranslate manifestProjectTranslate;
-        TreeMap<String,JSONObject> orderedCanvases = new TreeMap<>();
+        TreeSet<IIIFCanvasWrapper> orderedCanvases = new TreeSet<>();
+        //TODO: store range ref inside of canvas
         HashMap<String,RangePath> parentRangeForCanvas = new HashMap<>();
         
         RangePath top;
         protected MetadataInputFile inputMetadata;
+        ManifestGeneratePropFile manifestGen;
+        private boolean isCollectionManifest = false;
+        private String manifestRoot = "";
 
-        public void setProperty(JSONObject json, IIIFType type, IIIFProp prop) {
-                setProperty(json, type, prop, prop.getDefault());
-        }
-        public void setProperty(JSONObject json, IIIFType type, IIIFProp prop, String value) {
-                value = manifestProjectTranslate.translate(type, prop, value);
-                
-                if (value.equals(EMPTY)) {
-                        return;
-                }
-                
-                if (prop == IIIFProp.title && type == IIIFType.typeManifest) {
-                        addMetadata(json, prop.getLabel(), value);
-                        json.put(prop.getLabel(), value);                        
-                } else if (prop.isMetadata) {
-                        addMetadata(json, prop.getLabel(), value);
-                } else {
-                        json.put(prop.getLabel(), value);
-                }
-        }
-        public static void setProperty(JSONObject json, IIIFType type) {
-                json.put(IIIFProp.type.getLabel(), type.getValue());
-        }
-
-        public static String getProperty(JSONObject json, IIIFProp prop, String defValue) {
-                String ret = null;
-                if (prop.isMetadata) {
-                        JSONArray jarr = json.getJSONArray(IIIFArray.metadata.getLabel());
-                        if (jarr == null) {
-                                return defValue;
-                        }
-                        for(int i = 0; i < jarr.length(); i++) {
-                                JSONObject obj = jarr.getJSONObject(i);
-                                if (prop.getLabel().equals(obj.getString(IIIFProp.label.getLabel()))) {
-                                        ret = obj.getString(IIIFProp.value.getLabel());
-                                }
-                        }
-                } else {
-                        if (json.has(prop.getLabel())) {
-                                ret = json.getString(prop.getLabel());
-                        }
-                }
-                return ret == null ? defValue : ret;
-        }
-
-        public static int getIntProperty(JSONObject json, IIIFProp prop, int defValue) {
-                if (json.has(prop.getLabel())) {
-                        return json.getInt(prop.getLabel());
-                }
-                return defValue;
-        }
-
-        
-        public static JSONArray getArray(JSONObject obj, IIIFArray iiifarr) {
-                String arrlabel = iiifarr.getLabel();
-                JSONArray arr = null;
-                if (obj.has(arrlabel)) {
-                        arr = obj.getJSONArray(arrlabel);
-                } else {
-                        arr = new JSONArray();
-                        obj.put(arrlabel, arr);
-                }
-                return arr;
-        }
-
-        public static void addMetadata(JSONObject json, String label, String value) {
-                JSONArray metadata = getArray(json, IIIFArray.metadata);
-                Map<String,String> m = new HashMap<>();
-                m.put(IIIFProp.label.name(), label);
-                m.put(IIIFProp.value.name(), value);
-                metadata.put(m);
-        }
        
-        public IIIFManifest(MetadataInputFile inputMetadata, String iiifRootPath, File manifestFile, boolean isCollectionManifest) throws IOException {
-                checkManifestFile(manifestFile);
-                file = manifestFile;
-                jsonObject = new JSONObject();
-                this.iiifRootPath = iiifRootPath;
-                this.inputMetadata = inputMetadata;
-                this.manifestProjectTranslate = DefaultManifestProjectTranslateEnum.Default.getTranslator();
-                xp = XMLUtil.xf.newXPath();
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen) throws IOException, InputFileException {
+                this(inputMetadata, manifestGen, manifestGen.getManifestOutputFile(), manifestGen.getCreateCollectionManifest());
         }      
-        
+
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen, File compFile) throws IOException, InputFileException {
+                this(inputMetadata, manifestGen, compFile, false);
+        }
+
+        public IIIFManifest(MetadataInputFile inputMetadata, ManifestGeneratePropFile manifestGen, File compFile, boolean isCollectionManifest) throws IOException, InputFileException {
+                super(manifestGen.getIIIFRoot());
+                this.manifestGen = manifestGen;
+                this.manifestRoot = manifestGen.getManifestRoot();
+                file = compFile;
+                checkManifestFile(file);
+                this.inputMetadata = inputMetadata;
+                xp = XMLUtil.xf.newXPath();
+                this.isCollectionManifest = isCollectionManifest;
+                if (!isCollectionManifest) {
+                        seq = addSequence();
+                }
+        }      
+
         /*
          * Call this after the proper translator object has been set
          */
         public void init(File root) {
-                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.context);
-                setProperty(jsonObject, IIIFType.typeManifest);
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.context);
+                setProperty(isCollectionManifest ? IIIFType.typeCollection : IIIFType.typeManifest);
                 
-                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.label, inputMetadata.getValue(IIIFLookup.Title, EMPTY)); 
-                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.attribution, inputMetadata.getValue(IIIFLookup.Attribution, EMPTY));
-
-                initRanges(root);
-                
-                seq = addSequence(jsonObject);
-                setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.id,String.format("%s/misc", this.iiifRootPath));
-        }
-        
-        public void initRanges(File root) {
-                top = new RangePath("__toprange","Top Range");
-                makeRangeObject(top).put("viewingHint", "top");
-                if (manifestProjectTranslate.processInitRanges()) {
-                        List<RangePath> rangePaths = inputMetadata.getInitRanges(this, top, manifestProjectTranslate);
-                        for(RangePath rangePath: rangePaths) {
-                                makeRangeObject(rangePath);
-                        }
+                String def = "";
+                def = manifestGen.getProperty(IIIFLookupEnum.Title.getLookup());
+                String label = inputMetadata.getValue(IIIFLookupEnum.Title.getLookup(), def);
+                if (label.isEmpty()) {
+                        label = "(no label)";
                 }
-                manifestProjectTranslate.initProjectRanges(root, top);
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.label, label); 
+                def = manifestGen.getProperty(IIIFLookupEnum.DateCreated.getLookup());
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.DateCreated.getLookup(), def));
+                def = manifestGen.getProperty(IIIFLookupEnum.Creator.getLookup());
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Creator.getLookup(), def));
+                def = manifestGen.getProperty(IIIFLookupEnum.Description.getLookup());
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Description.getLookup(), def));
+                def = manifestGen.getProperty(IIIFLookupEnum.Attribution.getLookup());
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Attribution.getLookup(), def));
+                setLogoUrl(manifestGen.getManifestLogoURL());
+
+                if (!isCollectionManifest) {
+                        initRanges(root);
+                }
+                
+                setProperty(IIIFType.typeManifest, IIIFStandardProp.id,String.format("%s/%s", this.manifestRoot, file.getName()));
+        }
+
+        public IIIFJSONWrapper addSequence() {
+                IIIFJSONWrapper obj = new IIIFJSONWrapper(this.iiifRootPath, this.getManifestProjectTranslate());
+                JSONArray arr = getArray(IIIFArray.sequences);
+                arr.put(obj.getJSONObject());
+                obj.setProperty(IIIFType.typeSequence, IIIFStandardProp.id, String.format("%s/seq", this.iiifRootPath));
+                obj.setProperty(IIIFType.typeSequence);
+                obj.getArray(IIIFArray.canvases);
+                return obj;
+        }
+
+        public void initRanges(File root) {
+                top = new RangePath(this, "__toprange","Top Range");
+                top.getJSONObject().put("viewingHint", "top");
+                if (manifestProjectTranslate.processInitRanges()) {
+                        inputMetadata.getInitRanges(this, top, manifestProjectTranslate);
+                }
+                manifestProjectTranslate.initProjectRanges(this, root, top);
         }
         
         
         public void setLogoUrl(String s) {
                 if (!s.equals(EMPTY)) {
-                        setProperty(jsonObject, IIIFType.typeManifest, IIIFProp.logo, s);
+                        setProperty(IIIFType.typeManifest, IIIFStandardProp.logo, s);
                 }
         }
         
         public void addManifestToCollection(IIIFManifest itemManifest) {
-                //TODO
+                this.getArray(IIIFArray.manifests).put(itemManifest.getMinimalJSONObject());
         }
         
         public File getManifestFile() {
@@ -167,7 +129,7 @@ public class IIIFManifest {
         }
 
         public File getComponentManifestFile(File f, String identifier) {
-                return new File(file.getParentFile(), identifier);
+                return new File(file.getParentFile(), String.format("%s.json",identifier));
         }
 
         public void checkManifestFile(File manFile) throws IOException {
@@ -183,70 +145,43 @@ public class IIIFManifest {
         
         
         public void set2Page() {
-                seq.put("viewingHint", "paged");
+                seq.getJSONObject().put("viewingHint", "paged");
         }
         
         public RangePath makeRange(String key, File parent, MetadataInputFile currentMetadataFile) {
-                return manifestProjectTranslate.getPrimaryRangePath(key, parent, currentMetadataFile);
+                return manifestProjectTranslate.getPrimaryRangePath(this, key, parent, currentMetadataFile);
         }
         
-        public void linkRangeToCanvas(RangePath rangePath, JSONObject canvas) {
-                String canvasid = getProperty(canvas, IIIFProp.id, EMPTY);
+        public void linkRangeToCanvas(RangePath rangePath, IIIFJSONWrapper canvas) {
+                String canvasid = canvas.getProperty(IIIFStandardProp.id, EMPTY);
                 if (!canvasid.isEmpty()) {
-                        if (!rangePath.hasObject()) {
-                                makeRangeObject(rangePath);
-                        }
                         rangePath.addCanvasId(canvasid);
                 }
         }
         
-        public JSONObject makeRangeObject(RangePath rangePath) {
-                if (rangePath.hasObject()) {
-                        return rangePath.getRangeObject();
-                }
-                JSONObject obj = new JSONObject();
-                String label = manifestProjectTranslate.translate(IIIFType.typeRange, IIIFProp.label, rangePath.displayPath);
-                setProperty(obj, IIIFType.typeRange, IIIFProp.label, label);
-                setProperty(obj, IIIFType.typeRange, IIIFProp.id, rangePath.getID());
-                setProperty(obj, IIIFType.typeRange);
-                getArray(obj, IIIFArray.ranges);
-                getArray(jsonObject, IIIFArray.structures).put(obj);
-                rangePath.setRangeObject(obj);
-                return obj;
-        }       
-        
         public void refine()  {
-                for(String canvasKey: orderedCanvases.keySet()) {
-                        JSONObject canvas = orderedCanvases.get(canvasKey);
-                        addCanvasToManifest(canvas);
-                        String canvasid = getProperty(canvas, IIIFProp.id, EMPTY);
+                for(IIIFCanvasWrapper canvasWrap: orderedCanvases) {
+                        addCanvasToManifest(canvasWrap);
+                        String canvasid = canvasWrap.getProperty(IIIFStandardProp.id, EMPTY);
                         RangePath rangePath = parentRangeForCanvas.get(canvasid);
                         if (rangePath != null) {
-                                if (!rangePath.hasObject()) {
-                                        makeRangeObject(rangePath);
-                                }
-                                JSONObject range = rangePath.getRangeObject();
-                                if (range != null) {
-                                        getArray(range, IIIFArray.canvases).put(canvasid);
-                                }
+                                rangePath.getArray(IIIFArray.canvases).put(canvasid);
                         }
                 }
-                for(RangePath rp: top.getDescendants()) {
-                        if (!rp.hasObject()) {
-                                makeRangeObject(rp);
-                        }
-                        JSONObject range = rp.getRangeObject();
-                        for(RangePath chRange: rp.getOrderedChildren()) {
-                                getArray(range, IIIFArray.ranges).put(chRange.getID());
-                        }
-                        int count = 0;
-                        for(String canvasId: rp.getCanvasIds()) {
-                                getArray(range, IIIFArray.canvases).put(canvasId);
-                                count++;
-                        }
-                        if (count > 0) {
-                                setProperty(range, IIIFType.typeRange, IIIFProp.label, String.format("%s (%d)", rp.displayPath, count));
-                        }
+                if (top != null) {
+                        for(RangePath rp: top.getDescendants()) {
+                                for(RangePath chRange: rp.getOrderedChildren()) {
+                                        rp.getArray(IIIFArray.ranges).put(chRange.getID());
+                                }
+                                int count = 0;
+                                for(String canvasId: rp.getCanvasIds()) {
+                                        rp.getArray(IIIFArray.canvases).put(canvasId);
+                                        count++;
+                                }
+                                if (count > 0) {
+                                        rp.setProperty(IIIFType.typeRange, IIIFStandardProp.label, String.format("%s (%d)", rp.displayPath, count));
+                                }
+                        }                        
                 }
         }
         public void write() throws IOException {
@@ -260,51 +195,23 @@ public class IIIFManifest {
                 return jsonObject.toString(2);
         }
         
-        public JSONObject addSequence(JSONObject parent) {
-                JSONArray arr = getArray(parent, IIIFArray.sequences);
-                JSONObject obj = new JSONObject();
-                arr.put(obj);
-                setProperty(obj, IIIFType.typeSequence, IIIFProp.id, String.format("%s/seq", this.iiifRootPath));
-                setProperty(obj, IIIFType.typeSequence);
-                getArray(obj, IIIFArray.canvases);
-                return obj;
-        }
-        public String addFile(String key, File f, MetadataInputFile itemMeta) {
-                return addCanvas(key, f, itemMeta);
-        }
         public String getIIIFPath(String key, File f) {
                 return String.format("%s/%s", iiifRootPath, key.replaceAll("\\\\",  "/").replaceFirst("^/*", ""));
         }
        
-        public void addCanvasMetadata(JSONObject canvas, File f, MetadataInputFile itemMeta) {
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.label, itemMeta.getValue(IIIFLookup.Title, f.getName()));
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.title, itemMeta.getValue(IIIFLookup.Title, EMPTY));
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.dateCreated, itemMeta.getValue(IIIFLookup.DateCreated, EMPTY));
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.creator, itemMeta.getValue(IIIFLookup.Creator, EMPTY));
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.description, itemMeta.getValue(IIIFLookup.Description, EMPTY));
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.subject, itemMeta.getValue(IIIFLookup.Subject, EMPTY));
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.rights, itemMeta.getValue(IIIFLookup.Rights, EMPTY));
-                String uri = itemMeta.getValue(IIIFLookup.Permalink, EMPTY);
-                if (!uri.isEmpty()) {
-                        uri = String.format("<a href='%s'>%s</a>", uri, uri);
-                }
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.permalink, uri);
-        }
         
-        public void addCanvasToManifest(JSONObject canvas) {
-                JSONArray arr = getArray(seq, IIIFArray.canvases);
-                arr.put(canvas);
+        public void addCanvasToManifest(IIIFCanvasWrapper canvasWrap) {
+                seq.getArray(IIIFArray.canvases).put(canvasWrap.getJSONObject());
         }
 
-        public String addCanvas(String key, File f, MetadataInputFile itemMeta) {
+        public IIIFCanvasWrapper addCanvas(String key, File f, MetadataInputFile itemMeta) {
                 String iiifpath = getIIIFPath(key, f);
-                
-                JSONObject canvas = createCanvas(iiifpath, getDimensions(f), f.getName());
-                addCanvasMetadata(canvas, f, itemMeta);
+                IIIFCanvasWrapper canvasWrap = new IIIFCanvasWrapper(this, iiifpath, getDimensions(f), f.getName());
                 String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), itemMeta);
-                orderedCanvases.put(canvasKey, canvas);
+                canvasWrap.setSortName(canvasKey);
+                orderedCanvases.add(canvasWrap);
                 
-                return canvasKey;
+                return canvasWrap;
         }
         
         public ManifestDimensions getDimensions(File f) {
@@ -315,20 +222,21 @@ public class IIIFManifest {
                 } 
                 return DefaultDimensions.PORTRAIT.dimensions;
         }
-        public JSONObject addEadCanvas(String imageUrl, Node eadNode, XMLInputFile itemMeta) {
+        public IIIFCanvasWrapper addEadCanvas(String imageUrl, Node eadNode, XMLInputFile itemMeta) {
                 String iiifpath = imageUrl.replaceFirst("^IIIFRoot", iiifRootPath);
                 String[] paths = iiifpath.split("/");
                 String name = paths[paths.length-1];
                 String infoJson = String.format("%s/info.json", iiifpath);
-                JSONObject canvas = createCanvas(iiifpath, getDimensions(infoJson), name);
+                IIIFCanvasWrapper canvasWrap = new IIIFCanvasWrapper(this, iiifpath, getDimensions(infoJson), name);
                 String title = itemMeta.getXPathValue(eadNode, "ead:daodesc//text()", "");
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.label, title);
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.title, title);
+                canvasWrap.setProperty(IIIFType.typeCanvas, IIIFStandardProp.label, title);
+                canvasWrap.setProperty(IIIFType.typeCanvas, IIIFMetadataProp.title, title);
 
                 String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), itemMeta);
-                orderedCanvases.put(canvasKey, canvas);
+                canvasWrap.setSortName(canvasKey);
+                orderedCanvases.add(canvasWrap);
                 
-                return canvas;
+                return canvasWrap;
         }
         
 
@@ -336,57 +244,12 @@ public class IIIFManifest {
                 return DefaultDimensions.PORTRAIT.dimensions;
         }
 
-        public JSONObject createCanvas(String iiifpath, ManifestDimensions dim, String qualifier) {
-                String canvasid = String.format("%s/Canvas/%s", this.iiifRootPath, qualifier);
-
-                JSONObject canvas = new JSONObject();
-                setProperty(canvas, IIIFType.typeCanvas, IIIFProp.id, canvasid);
-                setProperty(canvas, IIIFType.typeCanvas); 
-                canvas.put(IIIFProp.height.val, dim.height());
-                canvas.put(IIIFProp.width.val, dim.width());
-
-                JSONObject image = createImage(iiifpath, dim, qualifier);
-                getArray(canvas, IIIFArray.images).put(image);
-                return canvas;
-        }
-
-        public JSONObject createImage(String iiifpath, ManifestDimensions dim, String qualifier) {
-                String imageid = String.format("%s/Image/%s", this.iiifRootPath, qualifier);
-                JSONObject image = new JSONObject();
-                setProperty(image, IIIFType.typeImage, IIIFProp.context);
-                setProperty(image, IIIFType.typeImage, IIIFProp.id, imageid); 
-                setProperty(image, IIIFType.typeImageAnnotation);
-                setProperty(image, IIIFType.typeImage, IIIFProp.motivation);
-                setProperty(image, IIIFType.typeImage, IIIFProp.on, String.format("%s/img", this.iiifRootPath));
-                image.put(IIIFProp.resource.val, createImageResource(iiifpath, dim));
-                return image;
-        }
-
-        public JSONObject createImageResource(String iiifpath, ManifestDimensions dim) {
-                String resid = iiifpath + "/full/full/0/default.jpg";
-                JSONObject resource = new JSONObject();
-                setProperty(resource, IIIFType.typeImageResource, IIIFProp.id, resid); 
-                setProperty(resource, IIIFType.typeImageResource);
-                setProperty(resource, IIIFType.typeImageResource, IIIFProp.format, "image/jpeg");
-                resource.put(IIIFProp.height.val, dim.height());
-                resource.put(IIIFProp.width.val, dim.width());
-                resource.put(IIIFProp.service.val, createImageService(iiifpath));
-                return resource;
-        }
-
-        public JSONObject createImageService(String iiifpath) {
-                JSONObject service = new JSONObject();
-                setProperty(service, IIIFType.typeImageResourceService, IIIFProp.context); 
-                setProperty(service, IIIFType.typeImageResourceService, IIIFProp.id, iiifpath); 
-                setProperty(service, IIIFType.typeImageResourceService, IIIFProp.profile);    
-                return service;
+        public ManifestProjectTranslate getManifestProjectTranslate() {
+                return this.manifestProjectTranslate;
         }
         
         public void setProjectTranslate(ManifestProjectTranslate manifestProjectTranslate) {
                 this.manifestProjectTranslate = manifestProjectTranslate;
-        }
-        public JSONObject getCanvas(String canvasKey) {
-                return orderedCanvases.get(canvasKey);
         }
 
 }

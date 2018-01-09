@@ -9,7 +9,7 @@ import javax.xml.xpath.XPath;
 
 import org.w3c.dom.Node;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFProp;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
 public class DefaultManifestProjectTranslate implements ManifestProjectTranslate {
@@ -27,19 +27,19 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
         
         @Override
         public String translate(IIIFType type, IIIFProp key, String val) {
-                if (type == IIIFType.typeManifest && key == IIIFProp.label) {
+                if (type == IIIFType.typeManifest && key == IIIFStandardProp.label) {
                         String suff = getSubtitle().isEmpty() ? "" : " - " + getSubtitle();
                         return val + suff;
                 }
-                if (type == IIIFType.typeRange && key == IIIFProp.label) {
+                if (type == IIIFType.typeRange && key == IIIFStandardProp.label) {
                         return rangeTranslate(val);
                 }
                 return val;
         }
 
         @Override
-        public RangePath getPrimaryRangePath(String key, File f, MetadataInputFile itemMeta) {
-                return new RangePath("","");
+        public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta) {
+                return new RangePath(manifest, "","");
         }
 
         public static String getDecade(String dateCreated) {
@@ -68,7 +68,7 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
                 return false;
         }
         @Override
-        public void initProjectRanges(File root, RangePath top) {
+        public void initProjectRanges(IIIFManifest manifest, File root, RangePath top) {
         }
 
         @Override
