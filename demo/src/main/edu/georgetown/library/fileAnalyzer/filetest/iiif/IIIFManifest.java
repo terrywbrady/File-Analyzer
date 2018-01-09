@@ -74,7 +74,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 def = manifestGen.getProperty(IIIFLookupEnum.Title.getLookup());
                 String label = inputMetadata.getValue(IIIFLookupEnum.Title.getLookup(), def);
                 if (label.isEmpty()) {
-                        label = "--";
+                        label = "(no label)";
                 }
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.label, label); 
                 def = manifestGen.getProperty(IIIFLookupEnum.DateCreated.getLookup());
