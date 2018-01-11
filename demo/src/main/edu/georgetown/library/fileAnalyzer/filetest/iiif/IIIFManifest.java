@@ -232,7 +232,8 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 return DefaultDimensions.PORTRAIT.dimensions;
         }
         public IIIFCanvasWrapper addEadCanvas(String imageUrl, Node eadNode, XMLInputFile itemMeta) {
-                String iiifpath = imageUrl.replaceFirst("^IIIFRoot", iiifRootPath);
+                String slash = manifestGen.getDirSeparator();
+                String iiifpath = imageUrl.replaceAll("/",  slash).replaceFirst("^IIIFRoot", iiifRootPath);
                 String[] paths = iiifpath.split("/");
                 String name = paths[paths.length-1];
                 String infoJson = String.format("%s/info.json", iiifpath);
