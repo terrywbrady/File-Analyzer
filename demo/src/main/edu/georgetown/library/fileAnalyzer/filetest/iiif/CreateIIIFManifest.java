@@ -24,7 +24,7 @@ import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookupEnu
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifier;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 
 public class CreateIIIFManifest extends DefaultFileTest {
@@ -105,12 +105,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public InitializationStatus init() {
                 InitializationStatus is = super.init();
                 
-                try {
-                        metaBuilder = new MetadataInputFileBuilder(manifestGen.getItemMetadataMethod());
-                } catch (InputFileException e) {
-                        is.addMessage(e);
-                        return is;
-                }
+                metaBuilder = new MetadataInputFileBuilder(manifestGen.getItemMetadataMethod());
                 
                 ManifestProjectTranslateEnum manifestProjectTranslateEnum = (ManifestProjectTranslateEnum)getProperty(TRANSLATE);
                 manifestProjectTranslate = manifestProjectTranslateEnum.getTranslator();
@@ -130,7 +125,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 try {
                         manifest = new IIIFManifest(inputMetadata, manifestGen);
                         manifest.setProjectTranslate(manifestProjectTranslate);
-                        manifest.init(dt.getRoot());
+                        manifest.init(dt.getRoot(), "");
                 } catch (IOException | InputFileException e) {
                         is.addMessage(e);
                         return is;
@@ -197,20 +192,14 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 if (type == IIIFType.typeManifest) {
                         ret = f.getName();
                 } else {
-                        MethodIdentifer methId;
-                        try {
-                                methId = manifestGen.getItemIdentifierMethod();
-                        } catch (InputFileException e) {
-                                //validation should have already been applied
-                                methId = MethodIdentifer.FolderName;
-                        }
-                        if (methId == MethodIdentifer.ItemMetadataFile) {
+                        MethodIdentifier methId = manifestGen.getItemIdentifierMethod();
+                        if (methId == MethodIdentifier.ItemMetadataFile) {
                                 inputMetadata.setCurrentKey(f.getName());
                                 ret = inputMetadata.getValue(IIIFLookupEnum.Identifier.getLookup(), "NA");
-                        } else if (methId == MethodIdentifer.FileName) {
+                        } else if (methId == MethodIdentifier.FileName) {
                                 ret = f.getName();
                                 inputMetadata.setCurrentKey(ret);
-                        } else if (methId == MethodIdentifer.FolderName) {
+                        } else if (methId == MethodIdentifier.FolderName) {
                                 ret = f.getParentFile().getName();
                                 inputMetadata.setCurrentKey(ret);
                         }
@@ -246,8 +235,10 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                         lastAncestor = ancestor;
                                         curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
                                         currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
-                                        curmanifest.init(dt.getRoot());
-                                        manifest.addManifestToCollection(curmanifest);
+                                        if (manifestGen.getCreateCollectionManifest()) {
+                                                curmanifest.init(dt.getRoot(), getRelPath(parent));
+                                                manifest.addManifestToCollection(curmanifest);
+                                        }
                                 } else {
                                         currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
                                 }

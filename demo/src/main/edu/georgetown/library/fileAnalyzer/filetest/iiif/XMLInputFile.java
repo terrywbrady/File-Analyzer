@@ -99,14 +99,25 @@ class XMLInputFile extends DefaultInputFile {
         }
         
         public void addRange(IIIFManifest manifest, ManifestProjectTranslate manifestTranslate, List<RangePath> rangePaths, Node n, RangePath parent) throws XPathExpressionException {
-                String rName = manifestTranslate.rangeTranslate(getXPathValue(n, "ead:did/ead:unittitle", "n/a"));
+                String tName = manifestTranslate.rangeTranslate(getXPathValue(n, "ead:did/ead:unittitle", ""));
+                String tDate = manifestTranslate.rangeTranslate(getXPathValue(n, "ead:did/ead:unitdate", ""));
+                String rName = "";
+                if (tName.isEmpty() && tDate.isEmpty()) {
+                        rName = "No Title";
+                } else if (tName.isEmpty()) {
+                        rName = tDate;
+                } else if (tDate.isEmpty()) {
+                        rName = tName;
+                } else {
+                        rName = String.format("%s (%s)", tName, tDate);
+                }
                 String rPath = getPath(n);
                 RangePath rp = new RangePath(manifest, rPath, rName);
                 rp.setParent(parent);
                 parent.addChildRange(rp);
                 rangePaths.add(rp);
                 manifestTranslate.registerEADRange(xp, n, rp);
-                rp.setProperty(IIIFType.typeRange, IIIFMetadataProp.dateCreated, getXPathValue(n, "ead:did/ead:unitdate", ""));
+                rp.setProperty(IIIFType.typeRange, IIIFMetadataProp.dateCreated, tDate);
                 try {
                         NodeList nl = (NodeList)xp.evaluate("ead:did/ead:container", n, XPathConstants.NODESET);
                         for(int i=0; i<nl.getLength(); i++) {

@@ -14,10 +14,25 @@ ManifestOuputDir: //YOUR-SERVER-PATH/IIIF/manifests
 # Name of the top level manifest file that will be generated
 ManifestOuputFile: manifest.json 
 
+# IIIF Directory Separator.
+#  - "/" (default)
+#  - "%2F" may be needed for Cantaloupe Server.
+#DirectorySeparator: /
+#DirectorySeparator: %2F
+
 # Create Collection Manifest - An individual manifest will be generated for each subfolder 
 # and registered in a collection level manifest
-# CreateCollectionManifest: true
-CreateCollectionManifest: false
+#  - NoCollection: No collection manifest will be created (default)
+#  - OneItemPerFolder: Only one item per folder, use item name for folder name
+#  - ManyItemsPerFolder: Many items will exist per folder
+#CreateCollectionManifest: NoCollection
+#CreateCollectionManifest: OneItemPerFolder
+#CreateCollectionManifest: ManyItemsPerFolder
+
+# Set2PageView
+#  - false: do not enable 2 page view (default)
+#  - true: enable 2 page view
+#Set2PageView: true;
 
 # Manifest Logo URL
 # URL to a logo image to embed within the manifest
