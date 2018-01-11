@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.CollectionMode;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.DefaultDimensions;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookupEnum;
@@ -60,19 +61,25 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 this.isCollectionManifest = isCollectionManifest;
                 if (!isCollectionManifest) {
                         seq = addSequence();
+                        if (manifestGen.getSet2PageView()) {
+                                this.set2Page();
+                        }
                 }
         }      
 
         /*
          * Call this after the proper translator object has been set
          */
-        public void init(File root) {
+        public void init(File root, String path) {
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.context);
                 setProperty(isCollectionManifest ? IIIFType.typeCollection : IIIFType.typeManifest);
                 
                 String def = "";
                 def = manifestGen.getProperty(IIIFLookupEnum.Title.getLookup());
                 String label = inputMetadata.getValue(IIIFLookupEnum.Title.getLookup(), def);
+                if (manifestGen.getCreateCollectionMode() == CollectionMode.ManyItemsPerFolder) {
+                        label = this.getManifestProjectTranslate().translate(IIIFType.typeManifest, IIIFStandardProp.label, path);
+                }
                 if (label.isEmpty()) {
                         label = "(no label)";
                 }
@@ -196,7 +203,9 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
         
         public String getIIIFPath(String key, File f) {
-                return String.format("%s/%s", iiifRootPath, key.replaceAll("\\\\",  "/").replaceFirst("^/*", ""));
+                String slash = manifestGen.getDirSeparator();
+                String s = key.replaceAll("\\\\",  "/").replaceFirst("^/*", "").replaceAll("/", slash);
+                return String.format("%s%s%s", iiifRootPath, slash, s);
         }
        
         

@@ -1,11 +1,15 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 public final class IIIFEnums {
-        public enum MethodIdentifer {
+        public enum MethodIdentifier {
                 FolderName, FileName, ItemMetadataFile;
         }
         public enum MethodMetadata {
                 None, ItemMetadataFile, ManifestMetadataFile, RestAPI;
+        }
+        
+        public enum CollectionMode {
+                NoCollection, OneItemPerFolder, ManyItemsPerFolder;
         }
 
         public static enum IIIFType {
@@ -80,7 +84,7 @@ public final class IIIFEnums {
                 IIIFStandardProp(String val) {
                         this.val = val;
                 }
-               public String getLabel() {
+                public String getLabel() {
                         return val;
                 }
                 public String getDefault() {

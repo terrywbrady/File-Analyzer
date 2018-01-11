@@ -6,7 +6,8 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifer;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.CollectionMode;
+import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodIdentifier;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.MethodMetadata;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
@@ -24,6 +25,8 @@ public class ManifestGeneratePropFile extends FTPropString {
         final String PROP_GetItemIdentifier         = "GetItemIdentifier";
         final String PROP_GetItemMetadata           = "GetItemMetadata";
         final String PROP_ManifestProject           = "ManifestProject";
+        final String PROP_DirSeparator              = "DirectorySeparator";
+        final String PROP_Set2PageView              = "Set2PageView";
         
         final String VAL_ManifestOuputFile          = "manifest.json";
         final String VAL_ItemFolder                 = "FolderName";
@@ -32,16 +35,23 @@ public class ManifestGeneratePropFile extends FTPropString {
         final String VAL_ManifestMetadata           = "ManifestMetadataFile";
         final String VAL_ItemREST                   = "RESTAPI";
         final String VAL_None                       = "None";
-        final String VAL_true                       = "true";
+        final String VAL_NoCollection               = "NoCollection";
+        final String VAL_OneItemPerFolder           = "OneItemPerFolder";
+        final String VAL_ManyItemsPerFolder         = "ManyItemsPerFolder";
+                        
         
         final String RX_tf                          = "(true|false)?";
         final String RX_ItemId                      = "(FolderName|FileName|ItemMetadataFile)";
         final String RX_ItemMeta                    = "(None|RESTAPI|ItemMetadataFile|ManifestMetadataFile)";
-        
+        final String RX_Collection                  = "(NoCollection|OneItemPerFolder|ManyItemsPerFolder)";
         
         Properties prop = new Properties();
         File propFile;
         File inMeta;
+        private MethodIdentifier myMethodIdentifier;
+        private MethodMetadata   myMethodMetadata;
+        private CollectionMode   myCollectionMode;
+        
         
         ManifestGeneratePropFile(FTDriver dt, String prefix) {
             super(dt, prefix, CreateIIIFManifest.MANGEN, CreateIIIFManifest.MANGEN,
@@ -66,9 +76,9 @@ public class ManifestGeneratePropFile extends FTPropString {
                     } else if (!inMeta.exists()) {
                             throw new InputFileException(String.format("Metadata File [%s] must exist", inMeta.getAbsolutePath()));
                     }
-                    this.getItemIdentifierMethod();
-                    this.getItemMetadataMethod();
-                    this.getCreateCollectionManifest();
+                    setItemIdentifierMethod();
+                    setItemMetadataMethod();
+                    setCreateCollectionMode();
             } catch (InvalidInputException| IOException | InputFileException e) {
                     iStat.addFailMessage(e.getMessage());
             }
@@ -130,48 +140,64 @@ public class ManifestGeneratePropFile extends FTPropString {
                 return new File(ft.root, fname);
         }
 
-        public boolean getCreateCollectionManifest() throws InputFileException {
-                String s = prop.getProperty(PROP_CreateCollectionManifest, "");
-                if (!Pattern.compile("(true|false)?").matcher(s).matches()) {
-                        throw new InputFileException(String.format("%s must be blank, 'true', or 'false'. [%s] found", PROP_CreateCollectionManifest, s));
+        public CollectionMode getCreateCollectionMode() {
+                return this.myCollectionMode;
+        }
+        public void setCreateCollectionMode() throws InputFileException {
+                String s = prop.getProperty(PROP_CreateCollectionManifest, VAL_NoCollection);
+                if (!Pattern.compile(RX_Collection).matcher(s).matches()) {
+                        throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_Collection, s));
+                } else if (s.equals(VAL_NoCollection)) {
+                        this.myCollectionMode = CollectionMode.NoCollection;
+                } else if (s.equals(VAL_OneItemPerFolder)) {
+                        this.myCollectionMode = CollectionMode.OneItemPerFolder;
+                } else if (s.equals(VAL_ManyItemsPerFolder)) {
+                        this.myCollectionMode = CollectionMode.ManyItemsPerFolder;
+                } else {
+                        throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_Collection, s));
                 }
-                return s.equals(VAL_true);
+        }
+        public boolean getCreateCollectionManifest() throws InputFileException {
+                CollectionMode mode = getCreateCollectionMode();
+                return mode != CollectionMode.NoCollection;
         }
 
-        public MethodIdentifer getItemIdentifierMethod() throws InputFileException {
+        public MethodIdentifier getItemIdentifierMethod()  {
+                return this.myMethodIdentifier;
+        }
+        public void setItemIdentifierMethod() throws InputFileException {
                 String s = prop.getProperty(PROP_GetItemIdentifier, "");
                 if (!Pattern.compile(RX_ItemId).matcher(s).matches()) {
                         throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemId, s));
                 }
                 if (s.equals(VAL_ItemFolder)) {
-                        return MethodIdentifer.FolderName;
+                        this.myMethodIdentifier = MethodIdentifier.FolderName;
+                } else if (s.equals(VAL_ItemFile)) {
+                        this.myMethodIdentifier = MethodIdentifier.FileName;
+                } else if (s.equals(VAL_ItemMetadata)) {
+                        this.myMethodIdentifier = MethodIdentifier.ItemMetadataFile;
+                } else {
+                        throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemId, s));
                 }
-                if (s.equals(VAL_ItemFile)) {
-                        return MethodIdentifer.FileName;
-                }
-                if (s.equals(VAL_ItemMetadata)) {
-                        return MethodIdentifer.ItemMetadataFile;
-                }
-                throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemId, s));
         }
-        public MethodMetadata getItemMetadataMethod() throws InputFileException {
+        public MethodMetadata getItemMetadataMethod() {
+                return this.myMethodMetadata;
+        }
+        public void setItemMetadataMethod() throws InputFileException {
                 String s = prop.getProperty(PROP_GetItemMetadata, "");
                 if (!Pattern.compile(RX_ItemMeta).matcher(s).matches()) {
                         throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemMeta, s));
+                } else if (s.equals(VAL_ManifestMetadata)) {
+                        this.myMethodMetadata = MethodMetadata.ManifestMetadataFile;
+                } else if (s.equals(VAL_ItemMetadata)) {
+                        this.myMethodMetadata = MethodMetadata.ItemMetadataFile;
+                } else if (s.equals(VAL_ItemREST)) {
+                        this.myMethodMetadata = MethodMetadata.RestAPI;
+                } else if (s.equals(VAL_None)) {
+                        this.myMethodMetadata = MethodMetadata.None;
+                } else {
+                        throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemMeta, s));
                 }
-                if (s.equals(VAL_ManifestMetadata)) {
-                        return MethodMetadata.ManifestMetadataFile;
-                }
-                if (s.equals(VAL_ItemMetadata)) {
-                        return MethodMetadata.ItemMetadataFile;
-                }
-                if (s.equals(VAL_ItemREST)) {
-                        return MethodMetadata.RestAPI;
-                }
-                if (s.equals(VAL_None)) {
-                        return MethodMetadata.None;
-                }
-                throw new InputFileException(String.format("%s must be '%s'. [%s] found", PROP_GetItemIdentifier, RX_ItemMeta, s));
         }
 
         public String getManifestLogoURL() {
@@ -195,4 +221,18 @@ public class ManifestGeneratePropFile extends FTPropString {
         public String getProperty(IIIFLookup lookup) {
                 return prop.getProperty(lookup.getProperty(), "");
         }
+        
+        /*
+         * Return "/" by defualt.  "%2F" for Cantaloupe.
+         */
+        public String getDirSeparator() {
+                return prop.getProperty(PROP_DirSeparator, "/");
+        }
+
+        public boolean getSet2PageView() {
+                return prop.getProperty(PROP_Set2PageView, "false").equals("true");
+        }
+
 }
+
+
