@@ -158,8 +158,7 @@ public class ManifestGeneratePropFile extends FTPropString {
                 }
         }
         public boolean getCreateCollectionManifest() throws InputFileException {
-                CollectionMode mode = getCreateCollectionMode();
-                return mode != CollectionMode.NoCollection;
+                return myCollectionMode != CollectionMode.NoCollection;
         }
 
         public MethodIdentifier getItemIdentifierMethod()  {

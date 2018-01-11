@@ -163,17 +163,8 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return "IIIF";
         }
         
-        public boolean hasCollectionManifest() {
-                try {
-                        return manifestGen.getCreateCollectionManifest();
-                } catch (InputFileException e) {
-                        //validation should have already been applied
-                        return false;
-                }
-        }
-        
         public IIIFManifest getCurrentManifest(File parent, MetadataInputFile currentInput) throws IOException, InputFileException {
-                if (hasCollectionManifest()) {
+                if (manifestGen.getCreateCollectionManifest()) {
                         File mf = manifest.getComponentManifestFile(parent, getIdentifier(IIIFType.typeManifest, parent));
                         inputMetadata.setCurrentKey(getKey(parent));
                         if (curmanifest != null) {
