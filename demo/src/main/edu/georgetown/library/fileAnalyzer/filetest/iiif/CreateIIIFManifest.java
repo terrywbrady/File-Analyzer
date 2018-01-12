@@ -105,7 +105,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public InitializationStatus init() {
                 InitializationStatus is = super.init();
                 
-                metaBuilder = new MetadataInputFileBuilder(manifestGen.getItemMetadataMethod());
+                metaBuilder = new MetadataInputFileBuilder(manifestGen);
                 
                 ManifestProjectTranslateEnum manifestProjectTranslateEnum = (ManifestProjectTranslateEnum)getProperty(TRANSLATE);
                 manifestProjectTranslate = manifestProjectTranslateEnum.getTranslator();
@@ -215,7 +215,9 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 try {
                         if (!parent.equals(lastParent)) {
                                 lastParent = parent;
-                                if (manifestGen.getItemMetadataMethod() == MethodMetadata.ItemMetadataFile) {
+                                if (manifestGen.getItemMetadataMethod() == MethodMetadata.RestAPI) {
+                                        currentMetadataFile = new RESTResponseInputFile(manifestGen.getDSpaceRestUrl());
+                                } else if (manifestGen.getItemMetadataMethod() == MethodMetadata.ItemMetadataFile) {
                                         currentMetadataFile = metaBuilder.findMetadataFile(parent, inputMetadata);
                                 } else if (manifestGen.getItemMetadataMethod() == MethodMetadata.ManifestMetadataFile) {
                                         currentMetadataFile = manifestGen.getMetadataInputFile(metaBuilder);

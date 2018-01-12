@@ -47,6 +47,8 @@ public class IIIFLookup {
                         return this.dcXPath;
                 } else if (fileType == InputFileType.CSV) {
                         return this.dc;
+                } else if (fileType == InputFileType.REST) {
+                        return this.dc;
                 }
                 return property;
         }
