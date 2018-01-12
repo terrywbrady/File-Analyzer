@@ -73,9 +73,19 @@ public class IIIFJSONWrapper {
                                 return defValue;
                         }
                         for(int i = 0; i < jarr.length(); i++) {
-                                JSONObject obj = jarr.getJSONObject(i);
-                                if (prop.getLabel().equals(obj.getString(IIIFStandardProp.label.getLabel()))) {
-                                        ret = obj.getString(IIIFStandardProp.value.getLabel());
+                                if (jarr.get(i) instanceof JSONObject) {
+                                        JSONObject obj = jarr.getJSONObject(i);
+                                        if (prop.getLabel().equals(obj.getString(IIIFStandardProp.label.getLabel()))) {
+                                                ret = obj.getString(IIIFStandardProp.value.getLabel());
+                                        }
+                                } else if (jarr.get(i) instanceof HashMap){
+                                        HashMap<String,String> map = (HashMap<String,String>)jarr.get(i);
+                                        for(String key: map.keySet()) {
+                                                if (key.equals(IIIFStandardProp.label.getLabel())) {
+                                                        ret = map.get(key);
+                                                        break;
+                                                }
+                                        }
                                 }
                         }
                 } else {

@@ -12,11 +12,10 @@ public class MetadataInputFileBuilder {
         public enum InputFileType {
                 NA, Property, CSV, DC, METS, EAD, REST;
         }
-        
         private ArrayList<FilenameFilter> filters = new ArrayList<>();
         
-        public MetadataInputFileBuilder(MethodMetadata method) {
-                if (method == MethodMetadata.ItemMetadataFile) {
+        public MetadataInputFileBuilder(ManifestGeneratePropFile manGen) {
+                if (manGen.getItemMetadataMethod() == MethodMetadata.ItemMetadataFile) {
                         filters.add(new FilenameFilter(){
                                 public boolean accept(File dir, String name) {
                                         return name.toLowerCase().equals("mets.xml");
@@ -74,15 +73,4 @@ public class MetadataInputFileBuilder {
                         return InputFileType.NA;
                 }
        }
-
-        //TODO
-        class RESTResponseInputFile  extends DefaultInput {
-                @Override
-                public InputFileType getInputFileType() {
-                        return InputFileType.REST;
-                }
-        }
-
-        
-
 }

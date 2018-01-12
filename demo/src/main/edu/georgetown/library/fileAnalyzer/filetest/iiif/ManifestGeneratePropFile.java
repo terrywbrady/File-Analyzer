@@ -27,6 +27,7 @@ public class ManifestGeneratePropFile extends FTPropString {
         final String PROP_ManifestProject           = "ManifestProject";
         final String PROP_DirSeparator              = "DirectorySeparator";
         final String PROP_Set2PageView              = "Set2PageView";
+        final String PROP_DSpaceRestUrl              = "DSpaceRestUrl";
         
         final String VAL_ManifestOuputFile          = "manifest.json";
         final String VAL_ItemFolder                 = "FolderName";
@@ -230,6 +231,10 @@ public class ManifestGeneratePropFile extends FTPropString {
 
         public boolean getSet2PageView() {
                 return prop.getProperty(PROP_Set2PageView, "false").equals("true");
+        }
+
+        public String getDSpaceRestUrl() {
+                return prop.getProperty(PROP_DSpaceRestUrl, "");
         }
 
 }

@@ -1,5 +1,6 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -193,9 +194,9 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
         public void write() throws IOException {
                 refine();
-                FileWriter fw = new FileWriter(file);
-                jsonObject.write(fw);
-                fw.close();
+                try(BufferedWriter fw = new BufferedWriter(new FileWriter(file))){
+                        fw.write(jsonObject.toString());
+                }
         }
 
         public String serialize() {
