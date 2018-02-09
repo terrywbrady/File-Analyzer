@@ -2,6 +2,7 @@
 *.class
 .project
 .settings/*
+.idea/*
 bin/*
 export/*
 gulibrary/*
