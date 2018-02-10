@@ -33,9 +33,8 @@ public abstract class DefaultImporter implements Importer {
 	}
 	public String getShortNameFormatted() {
 		StringBuffer buf = new StringBuffer();
-		buf.append(getShortNameNormalized());
-		buf.append("                     ");
-		return buf.substring(0,20);
+		buf.append(String.format("%-30s", getShortNameNormalized()));
+		return buf.substring(0,30);
 	}
 	public List<FTProp> getPropertyList() {
 		return ftprops;

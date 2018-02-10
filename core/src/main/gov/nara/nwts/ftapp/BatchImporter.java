@@ -1,5 +1,6 @@
 package gov.nara.nwts.ftapp;
 
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.importer.Importer;
 import gov.nara.nwts.ftapp.importer.ImporterRegistry;
 
@@ -92,6 +93,11 @@ public class BatchImporter {
 		dt.saveDir = outdir;
 		dt.saveFile = outfile;
 		try {
+		        InitializationStatus is = impsel.initValidate(infile);
+		        if (is.hasFailTest()) {
+		                reportError(is.getMessage());
+		                return false;
+		        }
 			dt.importFile(impsel, infile);
 		} catch (IOException e) {
 			reportError(e.getMessage());
