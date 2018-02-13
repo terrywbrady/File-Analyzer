@@ -93,11 +93,6 @@ public abstract class DefaultFileTest implements FileTest {
 	public String getShortNameNormalized() {
 		return getShortName().replaceAll("[\\s&]","");
 	}
-	public String getShortNameFormatted() {
-		StringBuffer buf = new StringBuffer();
-		buf.append(String.format("%-30s", getShortNameNormalized()));
-		return buf.substring(0,30);
-	}
 	public Stats getStats(File f) {
 		return getStats(getKey(f));
 	}

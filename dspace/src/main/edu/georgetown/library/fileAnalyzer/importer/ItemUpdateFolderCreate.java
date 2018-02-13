@@ -72,7 +72,7 @@ public abstract class ItemUpdateFolderCreate extends DefaultImporter {
         public static final String DELCONTENTS = "delete_contents";
         public static final String DUBLINCORE = "dublin_core.xml";
 
-        public static final String HANDLE_PREFIX = "Handle Prefix";
+        public static final String HANDLE_PREFIX = "handle-service-baseurl";
 
         public ItemUpdateFolderCreate(FTDriver dt) {
                 super(dt);
@@ -80,7 +80,7 @@ public abstract class ItemUpdateFolderCreate extends DefaultImporter {
                 nf.setMinimumIntegerDigits(8);
                 nf.setGroupingUsed(false);
 
-                this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(), HANDLE_PREFIX, "handle",
+                this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(), HANDLE_PREFIX, HANDLE_PREFIX,
                 "Handle prefix to create match existing item", "http://hdl.handle.net/"));
         }
 
