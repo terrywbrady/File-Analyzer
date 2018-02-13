@@ -31,12 +31,6 @@ public abstract class DefaultImporter implements Importer {
 	public String getShortNameNormalized() {
 		return getShortName().replaceAll("[\\s&]","");
 	}
-	public String getShortNameFormatted() {
-		StringBuffer buf = new StringBuffer();
-		buf.append(getShortNameNormalized());
-		buf.append("                     ");
-		return buf.substring(0,20);
-	}
 	public List<FTProp> getPropertyList() {
 		return ftprops;
 	}

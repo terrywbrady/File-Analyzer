@@ -14,16 +14,15 @@ import java.util.List;
  *
  */
 public interface Importer {
-    public InitializationStatus initValidate(File refFile);
+        public InitializationStatus initValidate(File refFile);
     
-	public ActionResult importFile(File selectedFile) throws IOException;
-	public String getDescription();
-	public boolean allowForceKey();
-    public String getShortName();
-    public String getShortNameFormatted();
-    public String getShortNameNormalized();
+        public ActionResult importFile(File selectedFile) throws IOException;
+        public String getDescription();
+        public boolean allowForceKey();
+        public String getShortName();
+        public String getShortNameNormalized();
 
-	public List<FTProp> getPropertyList();
-	public Object getProperty(String name);
-	public void setProperty(String name, String str);
+        public List<FTProp> getPropertyList();
+        public Object getProperty(String name);
+        public void setProperty(String name, String str);
 }
