@@ -15,8 +15,8 @@ public class CreateDateProjectTranslate extends DefaultManifestProjectTranslate 
         }
 
         @Override
-        public String getSequenceValue(int count, MetadataInputFile itemMeta) {
-                return itemMeta.getValue(IIIFLookupEnum.DateCreated.getLookup(), IIIFManifest.EMPTY) + "_" + super.getSequenceValue(count, itemMeta);
+        public String getSequenceValue(String key, MetadataInputFile itemMeta) {
+                return itemMeta.getValue(IIIFLookupEnum.DateCreated.getLookup(), IIIFManifest.EMPTY) + "_" + key;
         }
         @Override public String getSubtitle() {return "By Creation Date";}
         

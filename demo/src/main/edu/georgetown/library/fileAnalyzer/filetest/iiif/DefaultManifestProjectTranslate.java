@@ -14,8 +14,8 @@ import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
 public class DefaultManifestProjectTranslate implements ManifestProjectTranslate {
         @Override
-        public String getSequenceValue(int count, MetadataInputFile itemMeta) {
-                return String.format("%06d", count);
+        public String getSequenceValue(String key, MetadataInputFile itemMeta) {
+                return key;
         }
 
         @Override
@@ -39,7 +39,8 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
 
         @Override
         public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta) {
-                return new RangePath(manifest, "","");
+                String s = manifest.getProperty(IIIFStandardProp.label, "");
+                return new RangePath(manifest, s, s);
         }
 
         public static String getDecade(String dateCreated) {

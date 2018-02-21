@@ -2,8 +2,9 @@ package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.HashMap;
 
 import java.util.TreeSet;
@@ -141,7 +142,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
 
         public void checkManifestFile(File manFile) throws IOException {
-                try(FileWriter fw = new FileWriter(manFile)){
+                try(OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(manFile), "UTF-8")) {
                         fw.write("");
                 } catch (IOException e) {
                         throw e;
@@ -194,7 +195,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
         public void write() throws IOException {
                 refine();
-                try(BufferedWriter fw = new BufferedWriter(new FileWriter(file))){
+                try(BufferedWriter fw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))){
                         fw.write(jsonObject.toString());
                 }
         }
@@ -217,7 +218,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
         public IIIFCanvasWrapper addCanvas(String key, File f, MetadataInputFile itemMeta) {
                 String iiifpath = getIIIFPath(key, f);
                 IIIFCanvasWrapper canvasWrap = new IIIFCanvasWrapper(this, iiifpath, getDimensions(f), f.getName());
-                String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), itemMeta);
+                String canvasKey = manifestProjectTranslate.getSequenceValue(key, itemMeta);
                 canvasWrap.setSortName(canvasKey);
                 orderedCanvases.add(canvasWrap);
                 
@@ -243,7 +244,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 canvasWrap.setProperty(IIIFType.typeCanvas, IIIFStandardProp.label, title);
                 canvasWrap.setProperty(IIIFType.typeCanvas, IIIFMetadataProp.title, title);
 
-                String canvasKey = manifestProjectTranslate.getSequenceValue(orderedCanvases.size(), itemMeta);
+                String canvasKey = manifestProjectTranslate.getSequenceValue(iiifpath, itemMeta);
                 canvasWrap.setSortName(canvasKey);
                 orderedCanvases.add(canvasWrap);
                 

@@ -38,6 +38,7 @@ public class FileSystemProjectTranslate extends DefaultManifestProjectTranslate 
                 if (dirPaths.containsKey(f.getAbsolutePath())) {
                         return dirPaths.get(f.getAbsolutePath());
                 }
+                
                 RangePath rp = makeRangePath(manifest, f);
                 RangePath lastrp = rp;
                 for(File parent = f.getParentFile(); parent != null; parent = parent.getParentFile()) {

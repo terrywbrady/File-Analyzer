@@ -138,6 +138,8 @@ public class CreateIIIFManifest extends DefaultFileTest {
         }
         
         public void refineResults() {
+                lastParent = null;
+                lastAncestor = null;
                 try {
                         manifest.write();
                         if (curmanifest != null && curmanifest != manifest) {
@@ -229,7 +231,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                         curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
                                         currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
                                         if (manifestGen.getCreateCollectionManifest()) {
-                                                curmanifest.init(dt.getRoot(), getRelPath(parent));
+                                                curmanifest.init(dt.getRoot(), getRelPath(parent.getParentFile()));
                                                 manifest.addManifestToCollection(curmanifest);
                                         }
                                 } else {
