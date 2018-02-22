@@ -77,4 +77,9 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
                 return false;
         }
 
+        @Override
+        public boolean isOneItemPerRange() {
+                 return false;
+        }
+
 }

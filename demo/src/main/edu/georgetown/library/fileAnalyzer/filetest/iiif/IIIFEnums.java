@@ -101,8 +101,11 @@ public final class IIIFEnums {
                 dateCreated("Date Created"), 
                 creator("Creator"), 
                 description("Description"),
+                manifestDescription("Manifest Description"),
                 subject("Subject(s)"),
                 rights("Rights"), 
+                type("Type"), 
+                language("Language"), 
                 permalink("Permanent URL");
 
                 private String val;
@@ -145,11 +148,15 @@ public final class IIIFEnums {
                 ),
                 Creator(new IIIFLookup("Creator", "creator")), 
                 Description(new IIIFLookup("Description", "description")),
+                ManifestDescription(new IIIFLookup("ManifestDescription", "na")),
                 Subject(new IIIFLookup("Subject(s)", "subject")),
                 SubjectOther(new IIIFLookup("Subject Other", "subject", "other")),
                 SubjectLcsh(new IIIFLookup("Subject(s)", "subject", "lcsh")),
                 Rights(new IIIFLookup("Rights", "rights")), 
-                Permalink(new IIIFLookup("Permanent URL", "identifier", "uri"));
+                Permalink(new IIIFLookup("Permanent URL", "identifier", "uri")),
+                Type(new IIIFLookup("Type", "type")),
+                Language(new IIIFLookup("Language", "language"))
+                ;
                 
                 private IIIFLookup lookup;
                 IIIFLookupEnum(IIIFLookup lookup) {

@@ -5,15 +5,15 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
-
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.xml.xpath.XPath;
 
 import org.apache.tika.exception.TikaException;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
@@ -31,13 +31,12 @@ public class IIIFManifest extends IIIFJSONWrapper {
         protected IIIFJSONWrapper seq;
         protected XPath xp;
         
-        protected HashMap<File,JSONObject> ranges = new HashMap<>();
-        
         TreeSet<IIIFCanvasWrapper> orderedCanvases = new TreeSet<>();
-        //TODO: store range ref inside of canvas
+
         HashMap<String,RangePath> parentRangeForCanvas = new HashMap<>();
+        TreeMap<String,IIIFManifest> collectionManifests = new TreeMap<>();
         
-        RangePath top;
+        private RangePath top;
         protected MetadataInputFile inputMetadata;
         ManifestGeneratePropFile manifestGen;
         private boolean isCollectionManifest = false;
@@ -87,11 +86,11 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 }
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.label, label); 
                 def = manifestGen.getProperty(IIIFLookupEnum.DateCreated.getLookup());
-                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.DateCreated.getLookup(), def));
+                setProperty(IIIFType.typeManifest, IIIFMetadataProp.dateCreated, inputMetadata.getValue(IIIFLookupEnum.DateCreated.getLookup(), def));
                 def = manifestGen.getProperty(IIIFLookupEnum.Creator.getLookup());
-                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Creator.getLookup(), def));
-                def = manifestGen.getProperty(IIIFLookupEnum.Description.getLookup());
-                setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Description.getLookup(), def));
+                setProperty(IIIFType.typeManifest, IIIFMetadataProp.creator, inputMetadata.getValue(IIIFLookupEnum.Creator.getLookup(), def));
+                def = manifestGen.getProperty(IIIFLookupEnum.ManifestDescription.getLookup());
+                setProperty(IIIFType.typeManifest, IIIFMetadataProp.manifestDescription, def);
                 def = manifestGen.getProperty(IIIFLookupEnum.Attribution.getLookup());
                 setProperty(IIIFType.typeManifest, IIIFStandardProp.attribution, inputMetadata.getValue(IIIFLookupEnum.Attribution.getLookup(), def));
                 setLogoUrl(manifestGen.getManifestLogoURL());
@@ -129,10 +128,13 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 }
         }
         
-        public void addManifestToCollection(IIIFManifest itemManifest) {
-                this.getArray(IIIFArray.manifests).put(itemManifest.getMinimalJSONObject());
+        public void addManifestToCollection(IIIFManifest itemManifest, String seq) {
+                if (seq.isEmpty()) {
+                        seq = String.format("%-5d", collectionManifests.size());
+                }
+                collectionManifests.put(seq, itemManifest);
         }
-        
+
         public File getManifestFile() {
                 return file;
         }
@@ -169,6 +171,9 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
         
         public void refine()  {
+                for(IIIFManifest cman: collectionManifests.values()) {
+                        this.getArray(IIIFArray.manifests).put(cman.getMinimalJSONObject());
+                }
                 for(IIIFCanvasWrapper canvasWrap: orderedCanvases) {
                         addCanvasToManifest(canvasWrap);
                         String canvasid = canvasWrap.getProperty(IIIFStandardProp.id, EMPTY);
@@ -264,6 +269,30 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 this.manifestProjectTranslate = manifestProjectTranslate;
         }
 
+        public void addItemMetadata(IIIFJSONWrapper obj, IIIFType type, File f, MetadataInputFile itemMeta) {
+                obj.setProperty(type, IIIFMetadataProp.title, itemMeta.getValue(IIIFLookupEnum.Title.getLookup(), EMPTY));
+                obj.setProperty(type, IIIFMetadataProp.dateCreated, itemMeta.getValue(IIIFLookupEnum.DateCreated.getLookup(), EMPTY));
+                obj.setProperty(type, IIIFMetadataProp.creator, itemMeta.getValue(IIIFLookupEnum.Creator.getLookup(), EMPTY));
+                obj.setProperty(type, IIIFMetadataProp.description, itemMeta.getValue(IIIFLookupEnum.Description.getLookup(), EMPTY));
+                obj.setProperty(type, IIIFMetadataProp.type, itemMeta.getValue(IIIFLookupEnum.Type.getLookup(), EMPTY));
+                obj.setProperty(type, IIIFMetadataProp.language, itemMeta.getValue(IIIFLookupEnum.Language.getLookup(), EMPTY));
+                ArrayList<IIIFLookup> subjectLookups = new ArrayList<>();
+                subjectLookups.add(IIIFLookupEnum.Subject.getLookup());
+                subjectLookups.add(IIIFLookupEnum.SubjectLcsh.getLookup());
+                subjectLookups.add(IIIFLookupEnum.SubjectOther.getLookup());
+                obj.setProperty(type, IIIFMetadataProp.subject, itemMeta.getValue(subjectLookups, EMPTY, "; ").replaceAll("\\|\\|", "; "));
+                obj.setProperty(type, IIIFMetadataProp.rights, itemMeta.getValue(IIIFLookupEnum.Rights.getLookup(), EMPTY));
+                String uri = itemMeta.getValue(IIIFLookupEnum.Permalink.getLookup(), EMPTY);
+                if (!uri.isEmpty()) {
+                        uri = String.format("<a href='%s'>%s</a>", uri, uri);
+                }
+                obj.setProperty(type, IIIFMetadataProp.permalink, uri);
+        }
+
+        public boolean isCollectionManifest() {
+                return isCollectionManifest;
+        }
+        
 }
 
 

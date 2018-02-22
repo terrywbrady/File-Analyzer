@@ -20,4 +20,5 @@ public interface ManifestProjectTranslate {
         public boolean processInitRanges();
         public boolean showFolderRanges();
         public void initProjectRanges(IIIFManifest manifest, File root, RangePath top);
+        public boolean isOneItemPerRange();
 }

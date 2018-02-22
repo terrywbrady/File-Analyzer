@@ -231,8 +231,11 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                         curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
                                         currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
                                         if (manifestGen.getCreateCollectionManifest()) {
-                                                curmanifest.init(dt.getRoot(), getRelPath(parent.getParentFile()));
-                                                manifest.addManifestToCollection(curmanifest);
+                                                String label = manifestProjectTranslate.translate(IIIFType.typeManifest, IIIFStandardProp.label, getRelPath(parent.getParentFile())); 
+                                                curmanifest.init(dt.getRoot(), label);
+                                                //Special handling may be needed if seq is ever diff from display
+                                                String seqlabel = manifestProjectTranslate.translate(IIIFType.typeManifest, IIIFStandardProp.label, getRelPath(parent.getParentFile()));                                                 
+                                                manifest.addManifestToCollection(curmanifest, seqlabel);
                                         }
                                 } else {
                                         currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
@@ -248,7 +251,16 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 s.setVal(IIIFStatsItems.ParentRange, rangePath.getFullPath()); 
                                 
                                 IIIFCanvasWrapper canvasWrap = curmanifest.addCanvas(s.key, f, currentMetadataFile);
-                                canvasWrap.addCanvasMetadata(f, currentMetadataFile);
+                                if (manifestProjectTranslate.isOneItemPerRange()) {
+                                        if (!rangePath.hasMetadata()) {
+                                                manifest.addItemMetadata(rangePath, IIIFType.typeRange, f, currentMetadataFile);
+                                                rangePath.setHasMetadata(true);
+                                        }
+                                        canvasWrap.setProperty(IIIFType.typeCanvas, IIIFStandardProp.label, f.getName());
+                                } else {
+                                        canvasWrap.setProperty(IIIFType.typeCanvas, IIIFStandardProp.label, currentMetadataFile.getValue(IIIFLookupEnum.Title.getLookup(), f.getName()));
+                                        manifest.addItemMetadata(canvasWrap, IIIFType.typeCanvas, f, currentMetadataFile);
+                                }
                                 curmanifest.linkRangeToCanvas(rangePath, canvasWrap);
                                 
                                 s.setVal(IIIFStatsItems.Height, canvasWrap.getIntProperty(IIIFStandardProp.height, 0)); 

@@ -14,6 +14,7 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
         TreeSet<RangePath> childRanges = new TreeSet<>();
         RangePath parentRange;
         ArrayList<String> childCanvases = new ArrayList<>();
+        boolean hasMetadata = false;
         
         public RangePath(IIIFManifest manifest, String orderedPath, String displayPath) {
                 super(manifest.iiifRootPath, manifest.getManifestProjectTranslate());
@@ -27,7 +28,19 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
                 if (!orderedPath.isEmpty()) {
                         manifest.getArray(IIIFArray.structures).put(getJSONObject());                        
                 }
-         }
+        }
+        
+        public boolean hasMetadata() {
+                return hasMetadata;
+        }
+        
+        public void setHasMetadata(boolean b) {
+                hasMetadata = b;
+        }
+        
+        public void setDisplayPath(String s) {
+                displayPath = s;
+        }
         
         @Override
         public int compareTo(RangePath rp) {

@@ -1,14 +1,9 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
-import java.io.File;
-import java.util.ArrayList;
-
 import org.json.JSONObject;
 
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFArray;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFLookupEnum;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFStandardProp;
-import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFMetadataProp;
 import edu.georgetown.library.fileAnalyzer.filetest.iiif.IIIFEnums.IIIFType;
 
 public class IIIFCanvasWrapper extends IIIFJSONWrapper implements Comparable<IIIFCanvasWrapper> {
@@ -66,26 +61,7 @@ public class IIIFCanvasWrapper extends IIIFJSONWrapper implements Comparable<III
                 return getSortName().compareTo(arg0.getSortName());
         }
 
-        public void addCanvasMetadata(File f, MetadataInputFile itemMeta) {
-                setProperty(IIIFType.typeCanvas, IIIFStandardProp.label, itemMeta.getValue(IIIFLookupEnum.Title.getLookup(), f.getName()));
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.title, itemMeta.getValue(IIIFLookupEnum.Title.getLookup(), EMPTY));
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.dateCreated, itemMeta.getValue(IIIFLookupEnum.DateCreated.getLookup(), EMPTY));
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.creator, itemMeta.getValue(IIIFLookupEnum.Creator.getLookup(), EMPTY));
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.description, itemMeta.getValue(IIIFLookupEnum.Description.getLookup(), EMPTY));
-                ArrayList<IIIFLookup> subjectLookups = new ArrayList<>();
-                subjectLookups.add(IIIFLookupEnum.Subject.getLookup());
-                subjectLookups.add(IIIFLookupEnum.SubjectLcsh.getLookup());
-                subjectLookups.add(IIIFLookupEnum.SubjectOther.getLookup());
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.subject, itemMeta.getValue(subjectLookups, EMPTY, "; ").replaceAll("\\|\\|", "; "));
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.rights, itemMeta.getValue(IIIFLookupEnum.Rights.getLookup(), EMPTY));
-                String uri = itemMeta.getValue(IIIFLookupEnum.Permalink.getLookup(), EMPTY);
-                if (!uri.isEmpty()) {
-                        uri = String.format("<a href='%s'>%s</a>", uri, uri);
-                }
-                setProperty(IIIFType.typeCanvas, IIIFMetadataProp.permalink, uri);
-        }
-
-        public JSONObject createImage(String iiifpath, ManifestDimensions dim, String qualifier) {
+       public JSONObject createImage(String iiifpath, ManifestDimensions dim, String qualifier) {
                 String imageid = String.format("%s/Image/%s", this.iiifRootPath, qualifier);
                 IIIFJSONWrapper image = new IIIFJSONWrapper(this.iiifRootPath, this.manifestProjectTranslate);
                 image.setProperty(IIIFType.typeImage, IIIFStandardProp.context);
