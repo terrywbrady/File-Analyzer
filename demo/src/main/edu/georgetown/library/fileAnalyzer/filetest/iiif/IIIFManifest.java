@@ -165,6 +165,9 @@ public class IIIFManifest extends IIIFJSONWrapper {
         
         public void linkRangeToCanvas(RangePath rangePath, IIIFCanvasWrapper canvas) {
                 String canvasid = canvas.getProperty(IIIFStandardProp.id, EMPTY);
+                if (canvasid == null) {
+                        return;
+                }
                 if (!canvasid.isEmpty()) {
                         rangePath.addCanvas(canvas);
                 }
