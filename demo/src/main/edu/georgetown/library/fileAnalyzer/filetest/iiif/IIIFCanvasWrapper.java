@@ -32,6 +32,10 @@ public class IIIFCanvasWrapper extends IIIFJSONWrapper implements Comparable<III
                 this.name = name;
         }
         
+        public String getId() {
+                return this.getProperty(IIIFStandardProp.id, "");
+        }
+        
         public String getSortName() {
                 return (sortName == null)  ? name : sortName;
         }

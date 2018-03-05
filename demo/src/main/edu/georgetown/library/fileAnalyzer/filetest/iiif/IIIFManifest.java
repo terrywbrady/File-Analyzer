@@ -163,10 +163,10 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 return manifestProjectTranslate.getPrimaryRangePath(this, key, parent, currentMetadataFile);
         }
         
-        public void linkRangeToCanvas(RangePath rangePath, IIIFJSONWrapper canvas) {
+        public void linkRangeToCanvas(RangePath rangePath, IIIFCanvasWrapper canvas) {
                 String canvasid = canvas.getProperty(IIIFStandardProp.id, EMPTY);
                 if (!canvasid.isEmpty()) {
-                        rangePath.addCanvasId(canvasid);
+                        rangePath.addCanvas(canvas);
                 }
         }
         

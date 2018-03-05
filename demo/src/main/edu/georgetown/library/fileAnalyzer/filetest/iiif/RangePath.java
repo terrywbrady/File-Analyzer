@@ -13,7 +13,7 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
         String displayPath;
         TreeSet<RangePath> childRanges = new TreeSet<>();
         RangePath parentRange;
-        ArrayList<String> childCanvases = new ArrayList<>();
+        TreeSet<IIIFCanvasWrapper> childCanvases = new TreeSet<>();
         boolean hasMetadata = false;
         
         public RangePath(IIIFManifest manifest, String orderedPath, String displayPath) {
@@ -80,12 +80,16 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
                 }
         }
 
-        public void addCanvasId(String canvasid) {
-                this.childCanvases.add(canvasid);
+        public void addCanvas(IIIFCanvasWrapper cw) {
+                this.childCanvases.add(cw);
         }
         
         public List<String> getCanvasIds() {
-                return this.childCanvases;
+                ArrayList<String> childIds = new ArrayList<>();
+                for(IIIFCanvasWrapper icw: childCanvases) {
+                        childIds.add(icw.getId());
+                }
+                return childIds;
         }
         
         public String getFullPath() {
