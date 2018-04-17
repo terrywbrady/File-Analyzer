@@ -56,11 +56,12 @@ ManifestLogoURL:
 #Description:
 #Rights: 
 
+# Get Item Identifier
 # - ItemMetadataFile - extract metadata from an item-specific file
 #   - mets.xml from DSpace AIP export
 #   - dublin_core.xml from DSpace Simple Archive Format metadata file
-# - RESTAPI - extract metadata using the DSpace REST API (Future)
-# - None - no item-specific metadata exists
+# - FolderName - folder name contains item identifier
+# - FileName - file name contains item identifier
 #GetItemIdentifer: ItemMetadataFile
 #GetItemIdentifier: FolderName
 GetItemIdentifier: FileName
