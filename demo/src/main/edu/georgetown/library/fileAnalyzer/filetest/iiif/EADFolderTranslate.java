@@ -81,6 +81,7 @@ public class EADFolderTranslate extends FileSystemProjectTranslate {
                                 if (fi.inRange(m)) {
                                         if (fi.hasRangePath()) {
                                                 fi.getRangePath().addChildRange(rp);
+                                                rp.setParent(fi.getRangePath());
                                                 break;
                                         }
                                 }

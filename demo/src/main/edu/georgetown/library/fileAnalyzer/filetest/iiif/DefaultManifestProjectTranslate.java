@@ -40,7 +40,7 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
         @Override
         public RangePath getPrimaryRangePath(IIIFManifest manifest, String key, File f, MetadataInputFile itemMeta) {
                 String s = manifest.getProperty(IIIFStandardProp.label, "");
-                return new RangePath(manifest, s, s);
+                return RangePath.makeRangePath(manifest, s, s);
         }
 
         public static String getDecade(String dateCreated) {

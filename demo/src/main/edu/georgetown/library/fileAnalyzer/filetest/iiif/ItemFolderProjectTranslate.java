@@ -5,7 +5,7 @@ import java.io.File;
 public class ItemFolderProjectTranslate extends FolderProjectTranslate {
         @Override
         public RangePath makeRangePath(IIIFManifest manifest, File f) {
-                RangePath rp = new RangePath(manifest, getRelPath(f), rangeTranslate(f.getName()));
+                RangePath rp = RangePath.makeRangePath(manifest, getRelPath(f), rangeTranslate(f.getName()));
                 top.addChildRange(rp);
                 return rp;
         }

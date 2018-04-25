@@ -25,7 +25,7 @@ public class CreateDateProjectTranslate extends DefaultManifestProjectTranslate 
                 String decade = getDecade(itemMeta.getValue(IIIFLookupEnum.DateCreated.getLookup(), IIIFManifest.EMPTY));
                 RangePath dr = decadeRanges.get(decade);
                 if (dr == null) {
-                        dr = new RangePath(manifest, decade, decade);
+                        dr = RangePath.makeRangePath(manifest, decade, decade);
                         decadeRanges.put(decade, dr);
                 }
                 decadesRangeRoot.addChildRange(dr);

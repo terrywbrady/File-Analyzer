@@ -113,7 +113,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
 
         public void initRanges(File root) {
-                top = new RangePath(this, "__toprange","Top Range");
+                top = RangePath.makeRangePath(this, "__toprange","Top Range");
                 top.getJSONObject().put("viewingHint", "top");
                 if (manifestProjectTranslate.processInitRanges()) {
                         inputMetadata.getInitRanges(this, top, manifestProjectTranslate);

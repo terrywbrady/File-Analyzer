@@ -32,14 +32,13 @@ public class CreateIIIFManifest extends DefaultFileTest {
         protected static enum Status {NA, Skip, Complete, NoMetadata, NoImage, Error;}
         static enum IIIFStatsItems implements StatsItemEnum {
                 Key(StatsItem.makeStringStatsItem("Key", 300)),
-                Path(StatsItem.makeStringStatsItem("Path", 300)),
                 Status(StatsItem.makeEnumStatsItem(Status.class, "Status")),
+                ParentRange(StatsItem.makeStringStatsItem("Parent Range", 200)),
+                Title(StatsItem.makeStringStatsItem("Title", 200)),
+                DateCreated(StatsItem.makeStringStatsItem("Date Created")),
                 Width(StatsItem.makeIntStatsItem("Width").setWidth(60)),
                 Height(StatsItem.makeIntStatsItem("Height").setWidth(60)),
                 Identifier(StatsItem.makeStringStatsItem("Identifier")),
-                Title(StatsItem.makeStringStatsItem("Title", 200)),
-                DateCreated(StatsItem.makeStringStatsItem("Date Created")),
-                ParentRange(StatsItem.makeStringStatsItem("Parent Range", 200)),
                 Note(StatsItem.makeStringStatsItem("Note", 200))
                 ;
 
@@ -105,6 +104,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         public InitializationStatus init() {
                 InitializationStatus is = super.init();
                 
+                RangePath.clearCache();
                 metaBuilder = new MetadataInputFileBuilder(manifestGen);
                 
                 ManifestProjectTranslateEnum manifestProjectTranslateEnum = (ManifestProjectTranslateEnum)getProperty(TRANSLATE);
@@ -242,7 +242,6 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 }
 
                         }
-                        s.setVal(IIIFStatsItems.Path, s.key);
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
                                 s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
                                 

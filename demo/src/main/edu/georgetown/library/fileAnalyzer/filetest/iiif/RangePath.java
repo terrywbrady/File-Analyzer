@@ -1,6 +1,7 @@
 package edu.georgetown.library.fileAnalyzer.filetest.iiif;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -14,9 +15,23 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
         TreeSet<RangePath> childRanges = new TreeSet<>();
         RangePath parentRange;
         TreeSet<IIIFCanvasWrapper> childCanvases = new TreeSet<>();
+        private static HashMap<String, RangePath> cache = new HashMap<>();
         boolean hasMetadata = false;
         
-        public RangePath(IIIFManifest manifest, String orderedPath, String displayPath) {
+        public static RangePath makeRangePath(IIIFManifest manifest, String orderedPath, String displayPath) {
+                RangePath rp = cache.get(orderedPath);
+                if (rp == null) {
+                        rp = new RangePath(manifest, orderedPath, displayPath);
+                        cache.put(orderedPath, rp);
+                }
+                return rp;
+        }
+        
+        public static void clearCache() {
+                cache.clear();
+        }
+        
+        private RangePath(IIIFManifest manifest, String orderedPath, String displayPath) {
                 super(manifest.iiifRootPath, manifest.getManifestProjectTranslate());
                 this.orderedPath = orderedPath;
                 this.displayPath = displayPath;

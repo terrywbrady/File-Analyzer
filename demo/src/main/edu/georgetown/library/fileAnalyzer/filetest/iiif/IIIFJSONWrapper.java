@@ -65,6 +65,7 @@ public class IIIFJSONWrapper {
                 jsonObject.put(IIIFStandardProp.type.getLabel(), type.getValue());
         }
 
+        @SuppressWarnings("unchecked")
         public String getProperty(IIIFProp prop, String defValue) {
                 String ret = null;
                 if (prop.isMetadata()) {

@@ -80,7 +80,7 @@ class XMLInputFile extends DefaultInputFile {
         @Override
         public List<RangePath> getInitRanges(IIIFManifest manifest, RangePath parent, ManifestProjectTranslate manifestTranslate) {
                 ArrayList<RangePath> rangePaths = new ArrayList<>();
-                RangePath rp = new RangePath(manifest, "Subjects", "Subjects");
+                RangePath rp = RangePath.makeRangePath(manifest, "Subjects", "Subjects");
                 rangePaths.add(rp);
                 rp.setParent(parent);
                 parent.addChildRange(rp);
@@ -111,7 +111,7 @@ class XMLInputFile extends DefaultInputFile {
                         rName = String.format("%s (%s)", tName, tDate);
                 }
                 String rPath = getPath(n);
-                RangePath rp = new RangePath(manifest, rPath, rName);
+                RangePath rp = RangePath.makeRangePath(manifest, rPath, rName);
                 rp.setParent(parent);
                 parent.addChildRange(rp);
                 rangePaths.add(rp);

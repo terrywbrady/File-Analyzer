@@ -8,7 +8,7 @@ public class FileSystemProjectTranslate extends FolderProjectTranslate {
         @Override
         public void initProjectRanges(IIIFManifest manifest, File root, RangePath top) {
                 super.initProjectRanges(manifest, root, top);
-                containers = new RangePath(manifest, "ZZContainers", "Containers");
+                containers = RangePath.makeRangePath(manifest, "ZZContainers", "Containers");
                 if (showFolderRanges()) {
                         top.addChildRange(containers);
                 }
@@ -17,17 +17,19 @@ public class FileSystemProjectTranslate extends FolderProjectTranslate {
 
         @Override
         public RangePath makeRangePath(IIIFManifest manifest, File f) {
-                RangePath rp = new RangePath(manifest, getRelPath(f), rangeTranslate(f.getName()));
+                RangePath rp = RangePath.makeRangePath(manifest, getRelPath(f), rangeTranslate(f.getName()));
                 RangePath lastrp = rp;
                 for(File parent = f.getParentFile(); parent != null; parent = parent.getParentFile()) {
                         if (dirPaths.containsKey(parent.getAbsolutePath())) {
                                 RangePath parrp = dirPaths.get(parent.getAbsolutePath());
                                 parrp.addChildRange(lastrp);
+                                lastrp.setParent(parrp);
                                 break;
                         }
                         
-                        RangePath parrp = new RangePath(manifest, getRelPath(parent), rangeTranslate(parent.getName()));
+                        RangePath parrp = RangePath.makeRangePath(manifest, getRelPath(parent), rangeTranslate(parent.getName()));
                         parrp.addChildRange(lastrp);
+                        lastrp.setParent(parrp);
                         dirPaths.put(parent.getAbsolutePath(), parrp);
                         lastrp = parrp;
                 }
