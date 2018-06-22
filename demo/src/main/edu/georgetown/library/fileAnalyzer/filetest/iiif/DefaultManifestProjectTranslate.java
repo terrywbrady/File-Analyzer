@@ -82,4 +82,33 @@ public class DefaultManifestProjectTranslate implements ManifestProjectTranslate
                  return false;
         }
 
+        @Override
+        public File getCollComponentRootAncestor(File root, File f) {
+                for(File cf=f; cf != null; cf = cf.getParentFile()) {
+                        if (root.equals(cf.getParentFile())) {
+                                return cf;
+                        }
+                }
+                return f;
+        }
+
+        @Override
+        public String getCollComponentRootLabel(File root, File f, MetadataInputFile curMeta) {
+                String s = f.getName();
+                if (f.getAbsolutePath().length() > root.getAbsolutePath().length()) {
+                        s = f.getAbsolutePath().substring(root.getAbsolutePath().length());
+                }
+                return this.translate(IIIFType.typeCollection, IIIFStandardProp.label, s);
+        }
+
+        @Override
+        public String getCollManifestLabel(File root, File f, MetadataInputFile curMeta) {
+                File p = f.getParentFile();
+                String s = p.getName();
+                if (p.getAbsolutePath().length() > root.getAbsolutePath().length()) {
+                        s = p.getAbsolutePath().substring(root.getAbsolutePath().length());
+                }
+                return this.translate(IIIFType.typeCollection, IIIFStandardProp.label, s);
+        }
+
 }

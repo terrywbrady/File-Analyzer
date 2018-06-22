@@ -33,6 +33,7 @@ public class CreateIIIFManifest extends DefaultFileTest {
         static enum IIIFStatsItems implements StatsItemEnum {
                 Key(StatsItem.makeStringStatsItem("Key", 300)),
                 Status(StatsItem.makeEnumStatsItem(Status.class, "Status")),
+                Manifest(StatsItem.makeStringStatsItem("Manifest", 140)),
                 ParentRange(StatsItem.makeStringStatsItem("Parent Range", 200)),
                 Title(StatsItem.makeStringStatsItem("Title", 200)),
                 DateCreated(StatsItem.makeStringStatsItem("Date Created")),
@@ -200,19 +201,10 @@ public class CreateIIIFManifest extends DefaultFileTest {
                 return manifestProjectTranslate.translate(type, IIIFStandardProp.identifier, ret);
         }
         
-        public File getRootAncestor(File f) {
-                for(File cf=f; cf != null; cf = cf.getParentFile()) {
-                        if (dt.getRoot().equals(cf.getParentFile())) {
-                                return cf;
-                        }
-                }
-                return f;
-        }
-        
         public Object fileTest(File f) {
                 Stats s = getStats(f);
                 File parent = f.getParentFile();
-                File ancestor = getRootAncestor(parent);
+                File ancestor = manifestProjectTranslate.getCollComponentRootAncestor(dt.getRoot(), parent);
                 
                 try {
                         if (!parent.equals(lastParent)) {
@@ -226,22 +218,23 @@ public class CreateIIIFManifest extends DefaultFileTest {
                                 } else {
                                         currentMetadataFile = metaBuilder.emptyInputFile(); 
                                 }
-                                if (!ancestor.equals(lastAncestor)) {
-                                        lastAncestor = ancestor;
-                                        curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
-                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
-                                        if (manifestGen.getCreateCollectionManifest()) {
-                                                String label = manifestProjectTranslate.translate(IIIFType.typeManifest, IIIFStandardProp.label, getRelPath(parent.getParentFile())); 
-                                                curmanifest.init(dt.getRoot(), label);
-                                                //Special handling may be needed if seq is ever diff from display
-                                                String seqlabel = manifestProjectTranslate.translate(IIIFType.typeManifest, IIIFStandardProp.label, getRelPath(parent.getParentFile()));                                                 
-                                                manifest.addManifestToCollection(curmanifest, seqlabel);
-                                        }
-                                } else {
-                                        currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
-                                }
-
                         }
+                        if (!ancestor.equals(lastAncestor)) {
+                                lastAncestor = ancestor;
+                                curmanifest = getCurrentManifest(ancestor, currentMetadataFile);
+                                currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
+                                if (manifestGen.getCreateCollectionManifest()) {
+                                        String label = manifestProjectTranslate.getCollComponentRootLabel(dt.getRoot(), f, currentMetadataFile);
+                                        curmanifest.init(dt.getRoot(), label);
+                                        //Special handling may be needed if seq is ever diff from display
+                                        String seqlabel = manifestProjectTranslate.getCollManifestLabel(dt.getRoot(), f, currentMetadataFile);
+                                        manifest.addManifestToCollection(curmanifest, seqlabel);
+                                }
+                        } else {
+                                currentMetadataFile.setCurrentKey(getIdentifier(IIIFType.typeCanvas, f));
+                        }
+
+                        s.setVal(IIIFStatsItems.Manifest, curmanifest.getManifestFile().getName());
                         if (manifestProjectTranslate.includeItem(currentMetadataFile)) {
                                 s.setVal(IIIFStatsItems.Status, Status.Complete); //TODO - evaluate
                                 
