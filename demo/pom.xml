@@ -21,7 +21,11 @@
 	</properties>
 
 	<dependencies>
-
+        <dependency>
+            <groupId>edu.georgetown.library</groupId>
+            <artifactId>FileAnalyzerCoreUtils</artifactId>
+            <version>2.0</version>
+        </dependency>
 		<dependency>
 			<groupId>edu.georgetown.library</groupId>
 			<artifactId>CoreFileAnalyzer</artifactId>
@@ -33,14 +37,24 @@
 			<version>2.0</version>
 		</dependency>
         <dependency>
+            <groupId>edu.georgetown.library</groupId>
+            <artifactId>FileAnalyzerBagUtils</artifactId>
+            <version>2.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-app</artifactId>
-            <version>1.4</version>
+            <version>1.13</version>
         </dependency>
         <dependency>
             <groupId>gov.loc</groupId>
             <artifactId>bagit</artifactId>
-            <version>4.8</version>
+            <version>4.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>info.freelibrary</groupId>
+            <artifactId>freelib-marc4j</artifactId>
+            <version>2.6.6</version>
         </dependency>
 	</dependencies>
 	<build>

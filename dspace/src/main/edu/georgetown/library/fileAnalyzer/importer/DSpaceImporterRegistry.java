@@ -10,15 +10,18 @@ import gov.nara.nwts.ftapp.importer.ImporterRegistry;
  *
  */
 public class DSpaceImporterRegistry extends ImporterRegistry {
-	
-	private static final long serialVersionUID = 1L;
+        
+        private static final long serialVersionUID = 1L;
 
-	public DSpaceImporterRegistry(FTDriver dt) {
-		super(dt);
-		add(new IngestFolderCreate(dt));
-		add(new CSVBatcher(dt));
-		add(new DSpaceMetadata2Marc(dt));
-	}
-	
+        public DSpaceImporterRegistry(FTDriver dt) {
+                super(dt);
+                add(new IngestFolderCreate(dt));
+                add(new ItemUpdateFolderCreateAddBitstream(dt));
+                add(new ItemUpdateFolderCreateDeleteBitstream(dt));
+                add(new CSVBatcher(dt));
+                add(new DSpaceMetadata2Marc(dt));
+                add(new ReadMetadataRegistry(dt));
+        }
+        
 
 }

@@ -9,7 +9,9 @@ import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.TreeMap;
 import java.util.Vector;
 
@@ -43,6 +45,10 @@ public class DelimitedFileImporter extends DefaultImporter {
 	int rowKey = 1000000;
 	
 	public static String KEY = "key";
+	
+	public DelimitedFileReader getDelimitedFileReader(File selectedFile, String sep) throws FileNotFoundException, UnsupportedEncodingException {
+	        return new DelimitedFileReader(selectedFile, sep);
+	}
 
 	public ActionResult importFile(File selectedFile) throws IOException {
 		Separator fileSeparator = (Separator)getProperty(DELIM);
@@ -58,7 +64,7 @@ public class DelimitedFileImporter extends DefaultImporter {
 		
 		int colset = 0;
 
-		DelimitedFileReader dfr = new DelimitedFileReader(selectedFile, fileSeparator.separator);
+		DelimitedFileReader dfr = getDelimitedFileReader(selectedFile, fileSeparator.separator);
 		boolean firstRow = (YN)getProperty(HEADROW) == YN.Y;
 		
 		for(Vector<String> cols = dfr.getRow(); cols != null; cols = dfr.getRow()){
@@ -72,7 +78,7 @@ public class DelimitedFileImporter extends DefaultImporter {
 		}
 
 		firstRow = (YN)getProperty(HEADROW) == YN.Y;
-		dfr = new DelimitedFileReader(selectedFile, fileSeparator.separator);
+		dfr = getDelimitedFileReader(selectedFile, fileSeparator.separator);
 		for(Vector<String> cols = dfr.getRow(); cols != null; cols = dfr.getRow()){
 			if (firstRow) {
 				firstRow = false;

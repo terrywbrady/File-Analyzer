@@ -1,5 +1,7 @@
 package gov.nara.nwts.ftapp.ftprop;
 
+import java.io.File;
+
 import javax.swing.JComponent;
 
 /**
@@ -8,16 +10,16 @@ import javax.swing.JComponent;
  *
  */
 public interface FTProp {
-	public String getName();
-	public String describe();
-	public JComponent getEditor();
-	public Object getDefault();
-	public Object validate(String s);
-	public Object getValue();
-	public void setValue(Object obj);
+        public String getName();
+        public String describe();
+        public JComponent getEditor();
+        public Object getDefault();
+        public Object validate(String s);
+        public Object getValue();
+        public void setValue(Object obj);
 
-    public String getShortName();
-    public String getShortNameFormatted();
-    public String getShortNameNormalized();
-    public String describeFormatted();
+        public String getShortName();
+        public String getShortNameNormalized();
+    
+        public InitializationStatus initValidation(File refFile);
 }

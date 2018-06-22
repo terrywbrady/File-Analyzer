@@ -17,8 +17,12 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.pdfbox.pdfparser.PDFParser;
-import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Extract all metadata fields from a TIF or JPG using categorized tag defintions.
@@ -91,20 +95,25 @@ class PageCount extends DefaultFileTest {
 	public Object fileTest(File f) {
 		Stats s = getStats(f);
 		int x = 0;
-		try {
-			FileInputStream fis = new FileInputStream(f);
-			PDFParser pp = new PDFParser(fis);
-			pp.parse();
-			PDDocument pd = pp.getPDDocument();
-			x = pd.getNumberOfPages();
+		try (FileInputStream fis = new FileInputStream(f)){
+		    AutoDetectParser pp = new AutoDetectParser();
+			Metadata m = new Metadata();
+			pp.parse(fis, new DefaultHandler(), m, new ParseContext());
+			try {
+                x = Integer.parseInt(m.get("xmpTPg:NPages"));
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
 			s.setVal(PagesStatsItems.Pages, x);
-			pd.close();
-			fis.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			//e.printStackTrace();
-		}
+		} catch (SAXException e) {
+            e.printStackTrace();
+        } catch (TikaException e) {
+            e.printStackTrace();
+        }
 		
 		return x;
 	}

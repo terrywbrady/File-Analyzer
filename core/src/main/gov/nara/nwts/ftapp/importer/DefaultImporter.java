@@ -3,6 +3,7 @@ package gov.nara.nwts.ftapp.importer;
 import gov.nara.nwts.ftapp.ActionResult;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,12 +31,6 @@ public abstract class DefaultImporter implements Importer {
 	public String getShortNameNormalized() {
 		return getShortName().replaceAll("[\\s&]","");
 	}
-	public String getShortNameFormatted() {
-		StringBuffer buf = new StringBuffer();
-		buf.append(getShortNameNormalized());
-		buf.append("                     ");
-		return buf.substring(0,20);
-	}
 	public List<FTProp> getPropertyList() {
 		return ftprops;
 	}
@@ -59,4 +54,11 @@ public abstract class DefaultImporter implements Importer {
 			}
 		}
 	}
+    public InitializationStatus initValidate(File refFile) { 
+        InitializationStatus iStat = new InitializationStatus();
+        for(FTProp prop: ftprops) {
+            iStat.addMessage(prop.initValidation(refFile));
+        }
+        return iStat;
+    }
 }

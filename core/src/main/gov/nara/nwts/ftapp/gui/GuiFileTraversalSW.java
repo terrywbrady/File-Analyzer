@@ -3,6 +3,7 @@ package gov.nara.nwts.ftapp.gui;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 
@@ -52,6 +53,17 @@ class GuiFileTraversalSW extends SwingWorker<String,String>  {
 	
 
 	public void done() {
+
+        if (traversal.iStat != null) {
+            if (traversal.iStat.hasMessage()) {
+                if (traversal.iStat.hasFailTest()) {
+                    JOptionPane.showMessageDialog(dt.frame, traversal.iStat.getMessage(), "Property Error - Cannot Run Task", JOptionPane.ERROR_MESSAGE);                                 
+                } else {
+                    JOptionPane.showMessageDialog(dt.frame, traversal.iStat.getMessage(), "Property Warning", JOptionPane.WARNING_MESSAGE);                                  
+                }
+
+            }
+        }
 		if (isCancelled()) {
 			publish("Processing cancelled");
 		}

@@ -3,6 +3,7 @@ package gov.nara.nwts.ftapp.filetest;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.YN;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.ChecksumStats;
 import gov.nara.nwts.ftapp.stats.ChecksumStats.ChecksumStatsItems;
 import gov.nara.nwts.ftapp.stats.Stats;
@@ -28,7 +29,7 @@ public class NameChecksum extends DefaultFileTest {
 	HashMap<String, List<ChecksumStats>> keymap;
 	public static final String ALGORITHM = "Algorithm";
 	public static final String KEY = "Key";
-	static enum KEYTYPE {NAME, PATH;}
+	public static enum KEYTYPE {NAME, PATH;}
 	
 	static enum Algorithm {
 		MD5("MD5"),
@@ -60,8 +61,9 @@ public class NameChecksum extends DefaultFileTest {
 		return getRelPath(f);
 	}
 	
-	@Override public void init() {
+	@Override public InitializationStatus init() {
 		keymap.clear();
+		return super.init();
 	}
 	
 	public void setChecksumKey(String s, ChecksumStats stat) {

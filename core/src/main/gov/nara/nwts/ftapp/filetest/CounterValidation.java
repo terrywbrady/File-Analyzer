@@ -15,6 +15,7 @@ import gov.nara.nwts.ftapp.filter.TsvFilter;
 import gov.nara.nwts.ftapp.filter.TxtFilter;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
 import gov.nara.nwts.ftapp.importer.DelimitedFileWriter;
 import gov.nara.nwts.ftapp.importer.Importer;
@@ -233,9 +234,6 @@ public class CounterValidation extends DefaultFileTest implements Importer {
 		showValid = false;
 	}
 	
-	public void init() {
-	}
-	
     public Stats createStats(String key){ 
     	return Generator.INSTANCE.create(key);
     }
@@ -267,6 +265,10 @@ public class CounterValidation extends DefaultFileTest implements Importer {
 	public boolean allowForceKey() {
 		return false;
 	}
+    @Override
+    public InitializationStatus initValidate(File refFile) {
+        return init();
+    }
 	
 
 }

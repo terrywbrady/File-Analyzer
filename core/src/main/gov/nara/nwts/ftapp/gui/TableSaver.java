@@ -43,7 +43,7 @@ class TableSaver extends JDialog {
 	JTable jt;
 	JPanel colPanel;
 	ArrayList<JCheckBox> checks;
-	JComboBox delim;
+	JComboBox<Separator> delim;
 	
 	DirectoryTable parent;
     TableSaver(DirectoryTable parent, DefaultTableModel tm, JTable jt, String fname) {
@@ -134,7 +134,7 @@ class TableSaver extends JDialog {
    			colPanel.add(cb);
    			checks.add(cb);
    		}
-   		delim = new JComboBox(Separator.values());
+   		delim = new JComboBox<Separator>(Separator.values());
    		delim.setBorder(BorderFactory.createTitledBorder("Column Delimiter"));
    		delim.setSelectedItem(Separator.Tab);
    		add(delim, BorderLayout.SOUTH);

@@ -1,7 +1,10 @@
 package gov.nara.nwts.ftapp.filetest;
 
 import gov.nara.nwts.ftapp.FTDriver;
+import gov.nara.nwts.ftapp.filetest.NameChecksum.KEYTYPE;
 import gov.nara.nwts.ftapp.filter.DefaultFileTestFilter;
+import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
+import gov.nara.nwts.ftapp.ftprop.FTPropString;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
@@ -51,11 +54,17 @@ public class ReadChecksum extends DefaultFileTest {
 			if (!f.equals(this.f)) {
 				this.f = f;
 				try {
-					Vector<Vector<String>> data = DelimitedFileReader.parseFile(f," *");
+				    String sep = ReadChecksum.this.getProperty(SEPARATOR, " *").toString();
+					Vector<Vector<String>> data = DelimitedFileReader.parseFile(f, sep);
 					if (data.size() > 0) {
 						if (data.get(0).size() > 1) {
 							checksum = data.get(0).get(0);
-							key = getRelPath(new File(f.getParentFile(),data.get(0).get(1)));
+							String filekey = data.get(0).get(1);
+						    if (((KEYTYPE)getProperty(NameChecksum.KEY)) == KEYTYPE.NAME) {
+						        key = filekey;
+						    } else {
+	                            key = getRelPath(new File(f.getParentFile(), filekey));						        
+						    }
 						}
 					}
 				} catch (IOException e) {
@@ -66,8 +75,14 @@ public class ReadChecksum extends DefaultFileTest {
 	
 	Cache cache;
 	
+	public static final String SEPARATOR = "separator";
+	
 	public ReadChecksum(FTDriver dt) {
 		super(dt);
+        this.ftprops.add(new FTPropEnum(dt, this.getClass().getName(), NameChecksum.KEY, NameChecksum.KEY,
+                "Result Key", KEYTYPE.values(), KEYTYPE.PATH));
+        ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  SEPARATOR, SEPARATOR,
+                "Separator string between the checksum and the file name", " *"));
 		cache = new Cache();
 	}
 

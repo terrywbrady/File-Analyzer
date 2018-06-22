@@ -112,6 +112,7 @@ public class CSVBatcher extends DefaultImporter {
 			rec++;
 			currec++;
 		}
+		br.close();
 		if (bw!=null) {
 			bw.close();
 			Stats stats = Generator.INSTANCE.create(outFileName);

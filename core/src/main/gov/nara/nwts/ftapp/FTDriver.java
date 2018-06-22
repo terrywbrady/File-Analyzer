@@ -51,6 +51,9 @@ public class FTDriver {
 	public String saveFile;
 	public File lastSavedFile;
 	public boolean overwrite = true;
+	public boolean followLinks() {
+		return false;
+	}
 	
 	public FileTestFilter myfilter;
 	public ResultFilter myresfilter;
@@ -115,6 +118,7 @@ public class FTDriver {
 	static {
 		nf = NumberFormat.getIntegerInstance();
 		ndurf = NumberFormat.getNumberInstance();
+		ndurf.setMinimumFractionDigits(2);
 		//nf.setGroupingUsed(true);
 		df = SimpleDateFormat.getDateInstance();
 	}
