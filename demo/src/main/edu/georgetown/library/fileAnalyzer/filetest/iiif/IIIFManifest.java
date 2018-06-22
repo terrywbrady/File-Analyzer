@@ -174,7 +174,8 @@ public class IIIFManifest extends IIIFJSONWrapper {
         }
         
         public void refine()  {
-                for(IIIFManifest cman: collectionManifests.values()) {
+                for(String seq: collectionManifests.keySet()) {
+                        IIIFManifest cman = collectionManifests.get(seq);
                         this.getArray(IIIFArray.manifests).put(cman.getMinimalJSONObject());
                 }
                 for(IIIFCanvasWrapper canvasWrap: orderedCanvases) {

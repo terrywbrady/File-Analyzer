@@ -21,4 +21,8 @@ public interface ManifestProjectTranslate {
         public boolean showFolderRanges();
         public void initProjectRanges(IIIFManifest manifest, File root, RangePath top);
         public boolean isOneItemPerRange();
+        
+        public File getCollComponentRootAncestor(File root, File f);
+        public String getCollComponentRootLabel(File root, File f, MetadataInputFile curMeta);
+        public String getCollManifestLabel(File root, File f, MetadataInputFile curMeta);
 }

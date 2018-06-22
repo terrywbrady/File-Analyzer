@@ -26,7 +26,12 @@ public class RangePath extends IIIFJSONWrapper implements Comparable<RangePath> 
                 }
                 return rp;
         }
+
+        public static RangePath makeEmptyRangePath(IIIFManifest manifest) {
+                return makeRangePath(manifest, "", "");
+        }
         
+
         public static void clearCache() {
                 cache.clear();
         }
