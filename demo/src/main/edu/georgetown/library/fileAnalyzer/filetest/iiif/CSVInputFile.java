@@ -54,7 +54,8 @@ public class CSVInputFile extends DefaultInputFile {
                         return def;
                 }
                 if (cols.containsKey(col)) {
-                        return currentRow.get(cols.get(col));
+                        String s = currentRow.get(cols.get(col));
+                        return s == null ? "" : s.replaceAll("\\|\\|", "; ");
                 }
                 return def;
         }
