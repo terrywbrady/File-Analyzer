@@ -101,11 +101,12 @@ public final class IIIFEnums {
                 dateCreated("Date Created"), 
                 creator("Creator"), 
                 description("Description"),
-                manifestDescription("Manifest Description"),
+                manifestDescription("Collection Overview"),
                 subject("Subject(s)"),
                 rights("Rights"), 
                 type("Type"), 
                 language("Language"), 
+                isPartOf("Is Part Of"), 
                 permalink("Permanent URL");
 
                 private String val;
@@ -155,6 +156,7 @@ public final class IIIFEnums {
                 Rights(new IIIFLookup("Rights", "rights")), 
                 Permalink(new IIIFLookup("Permanent URL", "identifier", "uri")),
                 Type(new IIIFLookup("Type", "type")),
+                IsPartOf(new IIIFLookup("Is Part Of", "relation", "isPartOf")),
                 Language(new IIIFLookup("Language", "language"))
                 ;
                 

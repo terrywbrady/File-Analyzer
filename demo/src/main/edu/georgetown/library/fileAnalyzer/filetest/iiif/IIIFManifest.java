@@ -280,6 +280,7 @@ public class IIIFManifest extends IIIFJSONWrapper {
                 obj.setProperty(type, IIIFMetadataProp.description, itemMeta.getValue(IIIFLookupEnum.Description.getLookup(), EMPTY));
                 obj.setProperty(type, IIIFMetadataProp.type, itemMeta.getValue(IIIFLookupEnum.Type.getLookup(), EMPTY));
                 obj.setProperty(type, IIIFMetadataProp.language, itemMeta.getValue(IIIFLookupEnum.Language.getLookup(), EMPTY));
+                obj.setProperty(type, IIIFMetadataProp.isPartOf, itemMeta.getValue(IIIFLookupEnum.IsPartOf.getLookup(), EMPTY));
                 ArrayList<IIIFLookup> subjectLookups = new ArrayList<>();
                 subjectLookups.add(IIIFLookupEnum.Subject.getLookup());
                 subjectLookups.add(IIIFLookupEnum.SubjectLcsh.getLookup());
