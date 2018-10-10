@@ -21,22 +21,34 @@
         <xsl:text>dc.relation.isPartOf[en]</xsl:text>
         <xsl:text>,</xsl:text>
         <xsl:text>dc.rights[en]</xsl:text>
+        <xsl:text>,</xsl:text>
+        <xsl:text>dc.language[en]</xsl:text>
+        <xsl:text>,</xsl:text>
+        <xsl:text>dc.contributor[en]</xsl:text>
+        <xsl:text>,</xsl:text>
+        <xsl:text>dc.subject[en]</xsl:text>
         <xsl:text>&#10;</xsl:text>
         
         <xsl:apply-templates select="//ead:c"/>
     </xsl:template>
     
     <xsl:template match="ead:c">
+
         <xsl:text>&quot;</xsl:text>
         <xsl:text>+</xsl:text>
+
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="$collection"/>
+
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select=".//ead:unittitle"/>
+
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select=".//ead:unitdate"/>
+
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="normalize-space(translate(.//ead:physdesc,'&quot;',''))"/>
+
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:choose>
             <xsl:when test="contains(.//ead:unitdate,'-')">
@@ -49,13 +61,30 @@
                 <xsl:value-of select=".//ead:unitdate"/>
             </xsl:otherwise>
         </xsl:choose>
+
         <xsl:text>&quot;,&quot;</xsl:text>
-        <xsl:value-of select="//ead:titlestmt/ead:titleproper[1]"/>
+        <xsl:value-of select="concat(//ead:archdesc//ead:unittitle, ' (',//ead:archdesc//ead:unitid,'')"/>
         <xsl:for-each select=".//ead:container">
             <xsl:value-of select="concat('||',@type, ' ', text())"/>
         </xsl:for-each>
+
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="$rights"/>
+
+        <xsl:text>&quot;,&quot;</xsl:text>
+        <xsl:value-of select="//ead:archdesc//ead:language"/>
+
+        <xsl:text>&quot;,&quot;</xsl:text>
+        <xsl:value-of select="//ead:archdesc//ead:repository/ead:corpname"/>
+
+        <xsl:text>&quot;,&quot;</xsl:text>
+        <xsl:for-each select="//ead:archdesc//ead:controlaccess/ead:subject">
+          <xsl:if test="position()>1">
+            <xsl:text>||</xsl:text>
+          </xsl:if>
+          <xsl:value-of select="."/>
+        </xsl:for-each>
+
         <xsl:text>&quot;</xsl:text>
         <xsl:text>&#10;</xsl:text>
     </xsl:template>

@@ -91,7 +91,7 @@ public class EAD2DC extends DefaultImporter {
     }
 
     public String getShortName() {
-        return "Dspace2Marc";
+        return "EAD2DC";
     }
 
     public ActionResult importFile(File selectedFile) throws IOException {
@@ -129,7 +129,7 @@ public class EAD2DC extends DefaultImporter {
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-        return new ActionResult(selectedFile, selectedFile.getName(),
+        return new ActionResult(selectedFile, "EAD2DC",
                 this.toString(), details, types, true, timer.getDuration());
     }
 
