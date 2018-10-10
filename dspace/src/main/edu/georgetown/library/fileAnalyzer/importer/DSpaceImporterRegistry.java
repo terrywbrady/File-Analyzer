@@ -20,6 +20,7 @@ public class DSpaceImporterRegistry extends ImporterRegistry {
                 add(new ItemUpdateFolderCreateDeleteBitstream(dt));
                 add(new CSVBatcher(dt));
                 add(new DSpaceMetadata2Marc(dt));
+                add(new EAD2DC(dt));
                 add(new ReadMetadataRegistry(dt));
         }
         
