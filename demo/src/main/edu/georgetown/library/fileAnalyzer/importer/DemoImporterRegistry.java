@@ -28,6 +28,7 @@ public class DemoImporterRegistry extends DSpaceImporterRegistry {
 		add(new MarcInventory(dt));
         add(new MarcItemInventory(dt));
 		add(new MarcSerializer(dt));
+        add(new OAIImporter(dt));
 	}
 	
 

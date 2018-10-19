@@ -29,7 +29,7 @@
         <xsl:text>dc.subject[en]</xsl:text>
         <xsl:text>&#10;</xsl:text>
         
-        <xsl:apply-templates select="/ead:c|//ead:c01|//ead:c02|//ead:c03"/>
+        <xsl:apply-templates select="//ead:c|//ead:c01|//ead:c02|//ead:c03"/>
     </xsl:template>
     
     <xsl:template match="ead:c|ead:c01|ead:c02|ead:c03">
