@@ -95,6 +95,7 @@ public class EAD2DC extends DefaultImporter {
     }
 
     public ActionResult importFile(File selectedFile) throws IOException {
+        details = StatsItemConfig.create(EAD2DCStatsItems.class);
         HashMap<String, Object> params = new HashMap<>();
         params.put("collection", this.getProperty(P_COLL));
         params.put("rights", this.getProperty(P_RIGHTS));
@@ -116,7 +117,7 @@ public class EAD2DC extends DefaultImporter {
                 Stats stats = Generator.INSTANCE.create(key);
                 types.put(key, stats);
                 for(int i=0; i<header.size(); i++) {
-                    String s = row.get(i);
+                    String s = row.size() > i ? row.get(i) : "";
                     String col = header.get(i);
                     if (col.equals("dc.date.created[en]")) {
                         s = normalizeDate(s);
