@@ -35,7 +35,7 @@ import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
  * @author TBrady
  * 
  */
-public class EAD2DC extends DefaultImporter {
+public class EAD2DAO extends DefaultImporter {
 
     public static enum EAD2DCStatsItems implements StatsItemEnum {
         Record(StatsItem.makeStringStatsItem("Record", 100).setExport(false));
@@ -60,44 +60,33 @@ public class EAD2DC extends DefaultImporter {
 
     public static StatsItemConfig details = StatsItemConfig
             .create(EAD2DCStatsItems.class);
-    public static String P_COLL = "Collection";
-    public static String P_RIGHTS = "RIGHTS";
     
 
-    public EAD2DC(FTDriver dt) {
+    public EAD2DAO(FTDriver dt) {
         super(dt);
-        this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),
-                P_COLL, P_COLL,
-                "DSpace Collection Handle",""));
-        this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),
-                P_RIGHTS, P_RIGHTS,
-                "dc.rights statement",""));
     }
 
     public String toString() {
-        return "EAD to DSpace Dublin Core";
+        return "EAD to DAO Template";
     }
-
     public String getDescription() {
-        return "This rule will take an exported EAD file and convert archival objects to dublin core metadata.";
+        return "This rule will create a template file for the ArchivesSpace DAO Import Plugin from Harvard.";
     }
 
     public String getShortName() {
-        return "EAD2DC";
+        return "EAD2DAO";
     }
 
     public ActionResult importFile(File selectedFile) throws IOException {
         details = StatsItemConfig.create(EAD2DCStatsItems.class);
         HashMap<String, Object> params = new HashMap<>();
-        params.put("collection", this.getProperty(P_COLL));
-        params.put("rights", this.getProperty(P_RIGHTS));
         Timer timer = new Timer();
         TreeMap<String, Stats> types = new TreeMap<String, Stats>();
         
         try {
             Document d = XMLUtil.db_ns.parse(selectedFile);
             File csv = new File(selectedFile.getParent(), selectedFile.getName()+".csv");
-            XMLUtil.doTransform(d, csv, "edu/georgetown/library/fileAnalyzer/ead.xsl", params);
+            XMLUtil.doTransform(d, csv, "edu/georgetown/library/fileAnalyzer/ead-dao.xsl", params);
             DelimitedFileReader dfr = new DelimitedFileReader(csv, ",");
             Vector<String> header = dfr.getRow();
             for(String col: header) {
@@ -111,9 +100,6 @@ public class EAD2DC extends DefaultImporter {
                 for(int i=0; i<header.size(); i++) {
                     String s = row.size() > i ? row.get(i) : "";
                     String col = header.get(i);
-                    if (col.equals("dc.date.created[en]")) {
-                        s = normalizeDate(s);
-                    }
                     stats.appendKeyVal(details.getByKey(col), s);
                 }
             }
@@ -122,26 +108,8 @@ public class EAD2DC extends DefaultImporter {
         } catch (TransformerException e) {
             e.printStackTrace();
         }
-        return new ActionResult(selectedFile, "EAD2DC",
+        return new ActionResult(selectedFile, "EAD2DAO",
                 this.toString(), details, types, true, timer.getDuration());
     }
 
-    public String normalizeDate(String s) {
-        if (Pattern.matches("^\\d\\d\\d\\d(-\\d\\d(-\\d\\d)?)?", s)) {
-            return s;
-        }
-        try {
-            Date d = new SimpleDateFormat("DD MMM yyyy").parse(s);
-            return new SimpleDateFormat("yyyy-MM-DD").format(d);
-        } catch (ParseException e1) {
-            // no action
-        }
-        try {
-            Date d = new SimpleDateFormat("MMM yyyy").parse(s);
-            return new SimpleDateFormat("yyyy-MM").format(d);
-        } catch (ParseException e1) {
-            // no action
-        }
-        return s;
-    }
 }
