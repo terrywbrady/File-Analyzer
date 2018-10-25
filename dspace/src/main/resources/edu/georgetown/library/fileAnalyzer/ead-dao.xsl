@@ -34,6 +34,14 @@
         <xsl:value-of select="/ead:ead/ead:eadheader/ead:eadid"/>
 
         <xsl:text>&quot;,&quot;</xsl:text>
+        <xsl:choose>
+            <xsl:when test="starts-with(@id, 'aspace_')">
+                <xsl:value-of select="substring(@id, 8)"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="@id"/>
+            </xsl:otherwise>
+        </xsl:choose>
         <xsl:value-of select="@id"/>
 
         <xsl:text>&quot;,&quot;</xsl:text>
