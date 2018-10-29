@@ -10,6 +10,8 @@
         <xsl:text>,</xsl:text>
         <xsl:text>collection</xsl:text>
         <xsl:text>,</xsl:text>
+        <xsl:text>gu.archivesspace.id</xsl:text>
+        <xsl:text>,</xsl:text>
         <xsl:text>dc.title[en]</xsl:text>
         <xsl:text>,</xsl:text>
         <xsl:text>dc.coverage.temporal[en]</xsl:text>
@@ -39,6 +41,16 @@
 
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="$collection"/>
+
+        <xsl:text>&quot;,&quot;</xsl:text>
+        <xsl:choose>
+            <xsl:when test="starts-with(@id, 'aspace_')">
+                <xsl:value-of select="substring(@id, 8)"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:value-of select="@id"/>
+            </xsl:otherwise>
+        </xsl:choose>
 
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select=".//ead:unittitle"/>

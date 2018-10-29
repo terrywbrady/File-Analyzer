@@ -42,7 +42,6 @@
                 <xsl:value-of select="@id"/>
             </xsl:otherwise>
         </xsl:choose>
-        <xsl:value-of select="@id"/>
 
         <xsl:text>&quot;,&quot;</xsl:text>
         <!-- empty -->
