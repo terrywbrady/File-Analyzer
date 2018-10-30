@@ -62,6 +62,7 @@ public class EAD2DC extends DefaultImporter {
             .create(EAD2DCStatsItems.class);
     public static String P_COLL = "Collection";
     public static String P_RIGHTS = "RIGHTS";
+    public static String P_REFCOL = "refid-column-name";
     
 
     public EAD2DC(FTDriver dt) {
@@ -72,6 +73,9 @@ public class EAD2DC extends DefaultImporter {
         this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),
                 P_RIGHTS, P_RIGHTS,
                 "dc.rights statement",""));
+        this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),
+                P_REFCOL, P_REFCOL,
+                "Metadata registry field name to store the archival object refid","gu.archivesspace.id"));
     }
 
     public String toString() {
@@ -91,6 +95,7 @@ public class EAD2DC extends DefaultImporter {
         HashMap<String, Object> params = new HashMap<>();
         params.put("collection", this.getProperty(P_COLL));
         params.put("rights", this.getProperty(P_RIGHTS));
+        params.put("refcol", this.getProperty(P_REFCOL));
         Timer timer = new Timer();
         TreeMap<String, Stats> types = new TreeMap<String, Stats>();
         

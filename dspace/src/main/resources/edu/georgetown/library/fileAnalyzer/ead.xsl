@@ -5,12 +5,13 @@
     <xsl:output method="text"/>
     <xsl:param name="collection"></xsl:param>
     <xsl:param name="rights">All Rights Reserved by Georgetown University Library.</xsl:param>
+    <xsl:param name="refcol">gu.archivesspace.id</xsl:param>
     <xsl:template match="/">
         <xsl:text>id</xsl:text>
         <xsl:text>,</xsl:text>
         <xsl:text>collection</xsl:text>
         <xsl:text>,</xsl:text>
-        <xsl:text>gu.archivesspace.id</xsl:text>
+        <xsl:value-of select="$refcol"/>
         <xsl:text>,</xsl:text>
         <xsl:text>dc.title[en]</xsl:text>
         <xsl:text>,</xsl:text>
