@@ -30,6 +30,8 @@
         <xsl:text>dc.contributor[en]</xsl:text>
         <xsl:text>,</xsl:text>
         <xsl:text>dc.subject[en]</xsl:text>
+        <xsl:text>,</xsl:text>
+        <xsl:text>dc.creator[en]</xsl:text>
         <xsl:text>&#10;</xsl:text>
         
         <xsl:apply-templates select="//ead:c|//ead:c01|//ead:c02|//ead:c03"/>
@@ -97,6 +99,16 @@
           </xsl:if>
           <xsl:value-of select="."/>
         </xsl:for-each>
+
+        <xsl:text>&quot;,&quot;</xsl:text>
+        <xsl:choose>
+          <xsl:when test="ead:did/ead:origination[@label='creator']/ead:persname">
+            <xsl:value-of select="ead:did/ead:origination[@label='creator']/ead:persname"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="ancestor::*/ead:did/ead:origination[@label='creator']/ead:persname"/>
+          </xsl:otherwise>
+        </xsl:choose>
 
         <xsl:text>&quot;</xsl:text>
         <xsl:text>&#10;</xsl:text>
