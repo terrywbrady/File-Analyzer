@@ -20,8 +20,8 @@ This code has been derived from the NARA File Analyzer and Metadata Harvester wh
 https://github.com/usnationalarchives/File-Analyzer.
 
 ## PREREQUISITES
-- JDK 1.7 or higher (for build)
-- JRE 1.7 or higher (for runtime)
+- JDK 1.8 or higher (for build)
+- JRE 1.8 or higher (for runtime)
 - (If you need to run with Java 6, see Releases for an older version)
 - Maven (or you will need to compile the modules manually)
 
