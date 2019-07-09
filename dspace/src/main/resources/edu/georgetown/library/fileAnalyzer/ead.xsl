@@ -63,6 +63,7 @@
 
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="normalize-space(translate(.//ead:physdesc,'&quot;',''))"/>
+        <xsl:value-of select="normalize-space(translate(.//ead:scopecontent/ead:p,'&quot;',''))"/>
 
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:choose>
