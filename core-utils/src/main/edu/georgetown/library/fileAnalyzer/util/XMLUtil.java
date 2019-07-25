@@ -1,6 +1,8 @@
 package edu.georgetown.library.fileAnalyzer.util;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -188,5 +190,20 @@ public class XMLUtil {
                 return def;
         }
 
+        /*
+         * Find xsl resources on file system or in class path
+         */
+        public static InputStream getResourceStream(Object obj, String path) throws IOException {
+            String rpath = "resources/" + path;
+            InputStream in = obj.getClass().getClassLoader()
+            		.getResourceAsStream(rpath);
+            if (in == null) {
+                in = obj.getClass().getClassLoader()
+                		.getResourceAsStream(path);
+            	
+            }
+            return in;
+        }
+        
         
 }
