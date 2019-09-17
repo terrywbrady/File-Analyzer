@@ -67,6 +67,12 @@
 
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:choose>
+            <xsl:when test="contains(.//ead:unitdate/@normal,'/')">
+                <xsl:value-of select="substring-before(.//ead:unitdate/@normal,'/')"/>
+            </xsl:when>
+            <xsl:when test=".//ead:unitdate/@normal">
+                <xsl:value-of select=".//ead:unitdate/@normal"/>
+            </xsl:when>
             <xsl:when test="contains(.//ead:unitdate,'-')">
                 <xsl:value-of select="substring-before(.//ead:unitdate,'-')"/>
             </xsl:when>
