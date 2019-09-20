@@ -39,12 +39,15 @@
     
     <xsl:template match="ead:c|ead:c01|ead:c02|ead:c03">
 
+        <!-- id -->
         <xsl:text>&quot;</xsl:text>
         <xsl:text>+</xsl:text>
 
+        <!-- collection -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="$collection"/>
 
+        <!-- refcol -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:choose>
             <xsl:when test="starts-with(@id, 'aspace_')">
@@ -55,22 +58,28 @@
             </xsl:otherwise>
         </xsl:choose>
 
+        <!-- dc.title -->
         <xsl:text>&quot;,&quot;</xsl:text>
-        <xsl:value-of select=".//ead:unittitle"/>
+        <xsl:value-of select="translate(.//ead:unittitle,'&quot;','')"/>
 
+        <!-- dc.coverage.temporal -->
         <xsl:text>&quot;,&quot;</xsl:text>
-        <xsl:value-of select=".//ead:unitdate"/>
+        <xsl:value-of select="normalize-space(.//ead:unitdate)"/>
 
+        <!-- dc.description -->
         <xsl:text>&quot;,&quot;</xsl:text>
-        <xsl:value-of select="normalize-space(translate(.//ead:physdesc,'&quot;',''))"/>
-        <xsl:value-of select="normalize-space(translate(.//ead:scopecontent/ead:p,'&quot;',''))"/>
+        <xsl:for-each select=".//ead:physdesc|.//ead:scopecontent/ead:p|.//ead:relatedmaterial/ead:p|.//ead:odd/ead:p">
+            <xsl:if test="position() > 1">||</xsl:if>
+            <xsl:value-of select="normalize-space(translate(.,'&quot;',''))"/>
+        </xsl:for-each>
 
+        <!-- dc.date.created -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:choose>
-            <xsl:when test="contains(.//ead:unitdate/@normal,'/')">
+            <xsl:when test="contains(.//ead:unitdate[not(@normal='0/0')]/@normal,'/')">
                 <xsl:value-of select="substring-before(.//ead:unitdate/@normal,'/')"/>
             </xsl:when>
-            <xsl:when test=".//ead:unitdate/@normal">
+            <xsl:when test=".//ead:unitdate[not(@normal='0')]/@normal">
                 <xsl:value-of select=".//ead:unitdate/@normal"/>
             </xsl:when>
             <xsl:when test="contains(.//ead:unitdate,'-')">
@@ -84,21 +93,26 @@
             </xsl:otherwise>
         </xsl:choose>
 
+        <!-- dc.relation.isPartOf -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="concat(//ead:archdesc//ead:unittitle, ' (',//ead:archdesc//ead:unitid,'')"/>
         <xsl:for-each select=".//ead:container">
             <xsl:value-of select="concat('||',@type, ' ', text())"/>
         </xsl:for-each>
 
+        <!-- dc.rights -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="$rights"/>
 
+        <!-- dc.language -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="//ead:archdesc//ead:language"/>
 
+        <!-- dc.contributor -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:value-of select="//ead:archdesc//ead:repository/ead:corpname"/>
 
+        <!-- dc.subject -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:for-each select="//ead:archdesc//ead:controlaccess/ead:subject">
           <xsl:if test="position()>1">
@@ -107,13 +121,24 @@
           <xsl:value-of select="."/>
         </xsl:for-each>
 
+        <!-- dc.creator -->
         <xsl:text>&quot;,&quot;</xsl:text>
         <xsl:choose>
-          <xsl:when test="ead:did/ead:origination[@label='creator']/ead:persname">
-            <xsl:value-of select="ead:did/ead:origination[@label='creator']/ead:persname"/>
+          <xsl:when test="ead:did/ead:origination[@label='creator']/ead:persname|ead:did/ead:origination[@label='creator']/ead:corpname">
+            <xsl:for-each select="ead:did/ead:origination[@label='creator']/ead:persname|ead:did/ead:origination[@label='creator']/ead:corpname">
+              <xsl:if test="position()>1">
+                <xsl:text>||</xsl:text>
+              </xsl:if>
+              <xsl:value-of select="normalize-space(.)"/>
+            </xsl:for-each>
           </xsl:when>
           <xsl:otherwise>
-            <xsl:value-of select="ancestor::*/ead:did/ead:origination[@label='creator']/ead:persname"/>
+            <xsl:for-each select="ancestor::*/ead:did/ead:origination[@label='creator']/ead:persname|ancestor::*/ead:did/ead:origination[@label='creator']/ead:corpname">
+              <xsl:if test="position()>1">
+                <xsl:text>||</xsl:text>
+              </xsl:if>
+              <xsl:value-of select="normalize-space(.)"/>
+            </xsl:for-each>
           </xsl:otherwise>
         </xsl:choose>
 
