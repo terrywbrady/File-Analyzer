@@ -56,6 +56,7 @@
             </marc:controlfield>
             <marc:datafield tag="040" ind1=" " ind2=" ">
                 <marc:subfield code="a">DGU</marc:subfield>
+                <marc:subfield code="b">eng</marc:subfield>
                 <marc:subfield code="e">rda</marc:subfield>
                 <marc:subfield code="c">DGU</marc:subfield>
             </marc:datafield>
