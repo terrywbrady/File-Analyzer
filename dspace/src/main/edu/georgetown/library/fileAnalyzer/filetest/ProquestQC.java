@@ -29,7 +29,7 @@ import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
-import gov.nara.nwts.ftapp.util.XMLUtil;
+import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 
 public class ProquestQC extends DefaultFileTest {
 	public static NumberFormat nf = NumberFormat.getNumberInstance();
@@ -241,9 +241,6 @@ public class ProquestQC extends DefaultFileTest {
 	}
 	
 	
-	public void init() {
-	}
-
 	public String getDescription() {
 		return "QC Files created by the Proquest Ingest Process";
 	}

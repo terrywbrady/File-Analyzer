@@ -20,7 +20,7 @@
             </resource>
         </resources>
 		<pluginManagement>
-			<plugins>
+			<plugins>  
 				<plugin>
 					<artifactId>maven-assembly-plugin</artifactId>
 					<version>2.4</version>
@@ -30,8 +30,10 @@
 	</build>
 
 	<modules>
+        <module>core-utils</module>
 		<module>core</module>
 		<module>dspace</module>
+        <module>bag-utils</module>
 		<module>demo</module>
 	</modules>
 </project>

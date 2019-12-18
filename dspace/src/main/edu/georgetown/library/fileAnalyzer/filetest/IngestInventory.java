@@ -15,6 +15,7 @@ import gov.nara.nwts.ftapp.filter.PdfFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
@@ -58,7 +59,7 @@ public class IngestInventory extends DefaultFileTest {
 	}
 	static StatsItemConfig details = StatsItemConfig.create(InventoryStatsItems.class);
 
-	public static final String[] META = { "NA", "dc.contributor",
+	public static final String[] META = { "NA", "collections","dc.contributor",
 			"dc.coverage.spatial", "dc.coverage.temporal", "dc.creator",
 			"dc.date", "dc.date.accessioned", "dc.date.available",
 			"dc.date.copyright", "dc.date.created", "dc.date.issued",
@@ -132,13 +133,14 @@ public class IngestInventory extends DefaultFileTest {
     }
 
     
-    public void init() {
+    @Override public InitializationStatus init() {
     	details = StatsItemConfig.create(InventoryStatsItems.class);
     	for(FTProp prop: ftprops) {
     		if (prop.getValue().equals("NA")) continue;
     		details.addStatsItem(prop.getValue(), StatsItem.makeStringStatsItem(prop.getValue().toString()));
     	}
     	count = 0;
+    	return super.init();
     }
     
     public boolean isTestable(File f) {

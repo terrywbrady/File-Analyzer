@@ -1,5 +1,6 @@
 package gov.nara.nwts.ftapp.gui;
 
+import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.gui.MergePanel.FilterOptions.FilterOptionTest;
 
 import java.awt.BorderLayout;
@@ -10,7 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
-import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.Vector;
 
@@ -42,15 +42,15 @@ class MergePanel extends MyBorderPanel {
 	JPanel tp;
 	DefaultTableModel tm;
 	JTable jt;
-	Vector<JComboBox> mergeOptions;
-	JComboBox filterOptions;
+	Vector<JComboBox<String>> mergeOptions;
+	JComboBox<FilterOptionTest> filterOptions;
 	Box box;
 	JButton b;
 	TableRowSorter<TableModel> sorter;
 	DirectoryTable parent;
 	MergePanel(DirectoryTable dt) {
 		parent = dt;
-		mergeOptions = new Vector<JComboBox>();
+		mergeOptions = new Vector<JComboBox<String>>();
 		String[] cols = {"Key","Run 1", "Run 2"};
 		tm = new DefaultTableModel(cols,5);
 		jt = new MergeTable(tm);
@@ -59,7 +59,7 @@ class MergePanel extends MyBorderPanel {
 		jt.setPreferredScrollableViewportSize(new Dimension(600,200));
 		sorter = new TableRowSorter<TableModel>(tm);
 		jt.setRowSorter(sorter);
-		filterOptions = new JComboBox();
+		filterOptions = new JComboBox<FilterOptionTest>();
 		tp = addBorderPanel("Merged Counts");
 		tp.add(new JScrollPane(jt), BorderLayout.CENTER);
 		JPanel p = addPanel("", BorderLayout.SOUTH);
@@ -94,14 +94,15 @@ class MergePanel extends MyBorderPanel {
 				int compcount = 1;
 				int col = 0;
 				for(int i=DirectoryTable.TAB_MERGE + 1; i < parent.tabs.getTabCount(); i++){
-					JComboBox opt = MergePanel.this.mergeOptions.get(i-DirectoryTable.TAB_MERGE-1);						
+					JComboBox<String> opt = MergePanel.this.mergeOptions.get(i-DirectoryTable.TAB_MERGE-1);						
 					if (opt.getSelectedItem().equals(STR_IGNORE)) continue;
 					compcount++;
 				}
 				String[] colnames = new String[compcount];
 				colnames[0] = "Key";
+				
 				for(int i=DirectoryTable.TAB_MERGE + 1; i < parent.tabs.getTabCount(); i++){
-					JComboBox opt = MergePanel.this.mergeOptions.get(i-DirectoryTable.TAB_MERGE-1);
+					JComboBox<String> opt = MergePanel.this.mergeOptions.get(i-DirectoryTable.TAB_MERGE-1);
 					if (opt.getSelectedItem().equals(STR_IGNORE)) continue;
 					col++;
 					colnames[col] = parent.tabs.getTitleAt(i);
@@ -118,7 +119,7 @@ class MergePanel extends MyBorderPanel {
 							merge.put(key, v);
 						}
 						if (opt.getSelectedItem().equals(STR_YES)) {
-							v[col] = "YES";
+							v[col] = STR_YES;
 						} else {
 							Object obj = tm.getValueAt(r, opt.getSelectedIndex()-1);
 							v[col] = (obj == null) ? "" : obj.toString();
@@ -134,11 +135,20 @@ class MergePanel extends MyBorderPanel {
 				
 				DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
 				tcr.setBackground(Color.PINK);
-				for(Iterator<String>i=merge.keySet().iterator(); i.hasNext();){
-					String key = i.next();
-					Object[] v = merge.get(key);
-					tm.addRow(v);
+				Vector<Vector<Object>> vec = new Vector<Vector<Object>>();
+				for(Object[]ar: merge.values()) {
+				    Vector<Object>v=new Vector<Object>();
+				    for(Object a: ar) {
+				        v.add(a);
+				    }
+				    vec.add(v);
+				    tallyCounts(filterOptions, v);
 				}
+				Vector<String>vcol = new Vector<String>();
+				for(String coln: colnames) {
+				    vcol.add(coln);
+				}
+				tm.setDataVector(vec, vcol);
 				jt.repaint();
 			}});
 		p1.add(b);
@@ -153,6 +163,36 @@ class MergePanel extends MyBorderPanel {
 		p.add(new JScrollPane(p1), BorderLayout.CENTER);
 		box = new Box(BoxLayout.Y_AXIS);
 		p1.add(box);
+	}
+	
+	void tallyCounts(JComboBox<FilterOptionTest> cb, Vector<Object> v) {
+	    for(int i=0; i<cb.getItemCount(); i++) {
+	        FilterOptionTest fot = cb.getItemAt(i);
+	        if (fot.eOpt == FilterOptions.All_Items) {
+	            fot.count++;
+	        } else if (fot.eOpt == FilterOptions.ColEmpty) {
+	            if ("".equals(v.get(fot.col))) {
+	                fot.count++;
+	            }
+	        } else if (fot.eOpt == FilterOptions.ColHasValue) {
+	            if (!"".equals(v.get(fot.col))) {
+	                fot.count++;
+	            }
+	        } else {
+                boolean match = true;
+                for(int j=2; j<v.size(); j++) {
+                    if (!v.get(1).equals(v.get(j))) {
+                        match = false;
+                        break;
+                    }
+                }
+	            if (fot.eOpt == FilterOptions.Matches && match) {
+	                fot.count++;
+	            } else if (fot.eOpt == FilterOptions.Mismatches && !match){
+                    fot.count++;
+	            }
+	        }
+	    }
 	}
 	
 	void filter() {
@@ -212,7 +252,7 @@ class MergePanel extends MyBorderPanel {
 				v.add(sp.st.details.get(c).header);
 			}
 			v.add(STR_YES);
-			JComboBox cb = new JComboBox(v);
+			JComboBox<String> cb = new JComboBox<String>(v);
 			cb.setSelectedIndex((v.size() > 2) ? 2 : (v.size() == 2) ? 1 : 0);
 			mergeOptions.add(cb);
 			p.add(cb);
@@ -262,7 +302,7 @@ class MergePanel extends MyBorderPanel {
 			this.global = global;
 		}
 		
-		public void addOptions(JComboBox cb, TableModel tm) {
+		public void addOptions(JComboBox<FilterOptionTest> cb, TableModel tm) {
 			if (global) {
 				cb.addItem(new FilterOptionTest(this, -1, tm));
 			}else {
@@ -276,6 +316,7 @@ class MergePanel extends MyBorderPanel {
 		public class FilterOptionTest {
 			FilterOptions eOpt;
 			int col;
+			int count = 0;
 			String colname;
 			
 			public FilterOptionTest(FilterOptions eOpt, int col, TableModel tm) {
@@ -286,9 +327,9 @@ class MergePanel extends MyBorderPanel {
 			
 			public String toString() {
 				if (eOpt.global) {
-					return eOpt.name;
+					return eOpt.name + " - " + FTDriver.nf.format(this.count);
 				} else {
-					return eOpt.name +": " + colname;
+					return eOpt.name +": " + colname+ " - " + FTDriver.nf.format(this.count);
 				}
 			}
 		}

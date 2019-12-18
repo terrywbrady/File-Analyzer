@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+  <xsl:import href="common.xsl"/>
   <xsl:import href="proquest.xsl"/>
   <xsl:output method="xml"/>
   <xsl:param name="university-name">University Name</xsl:param>
   <xsl:param name="university-loc">University Location</xsl:param>
+  <xsl:param name="type">thesis</xsl:param>
 
   <xsl:template match="/*">
-	<xsl:variable name="pCreator" select="//DISS_author/DISS_name"/>
-	<xsl:variable name="pCreated" select="//DISS_comp_date"/>
-	<xsl:variable name="pTitle" select="//DISS_title"/>
-	<xsl:variable name="pDegree" select="//DISS_degree"/>
+    <xsl:variable name="pCreatorOrcid" select="//DISS_author/DISS_orcid"/>
+    <xsl:variable name="pCreator" select="//DISS_author/DISS_name"/>
+    <xsl:variable name="pCreated" select="//DISS_comp_date"/>
+    <xsl:variable name="pTitle" select="//DISS_title"/>
+    <xsl:variable name="pDegree" select="//DISS_degree"/>
 
     <xsl:if test="count($pCreator) = 0" > 
         <xsl:message terminate="Y">An author is required</xsl:message>
@@ -48,6 +51,11 @@
         </xsl:with-param>
       </xsl:call-template>
 
+      <xsl:apply-templates select="$pCreatorOrcid" mode="val">
+        <xsl:with-param name="element">identifier</xsl:with-param>
+        <xsl:with-param name="qualifier">orcid</xsl:with-param>
+      </xsl:apply-templates>
+
       <xsl:call-template name="val">
         <xsl:with-param name="element">format</xsl:with-param>
         <xsl:with-param name="qualifier">extent</xsl:with-param>
@@ -83,12 +91,17 @@
         <xsl:with-param name="qualifier">issued</xsl:with-param>
       </xsl:apply-templates>
  
- 	    <!-- reformat to yyyy/mm/dd? -->
+         <!-- reformat to yyyy/mm/dd? -->
       <xsl:apply-templates select="//DISS_accept_date" mode="val">
         <xsl:with-param name="element">date</xsl:with-param>
         <xsl:with-param name="qualifier">submitted</xsl:with-param>
       </xsl:apply-templates>
  
+      <xsl:call-template name="val">
+        <xsl:with-param name="text" select="$type"/>
+        <xsl:with-param name="element">type</xsl:with-param>
+      </xsl:call-template>
+
       <xsl:call-template name="val">
         <xsl:with-param name="text" select="$university-name"/>
         <xsl:with-param name="element">publisher</xsl:with-param>
@@ -103,37 +116,40 @@
       </xsl:apply-templates>
 
       <xsl:for-each select="//DISS_advisor/DISS_name">
-      	<xsl:apply-templates select="." mode="val">
-        	<xsl:with-param name="element">contributor</xsl:with-param>
-        	<xsl:with-param name="qualifier">advisor</xsl:with-param>
-        	<xsl:with-param name="text"><xsl:apply-templates select="."/></xsl:with-param>
+          <xsl:apply-templates select="." mode="val">
+            <xsl:with-param name="element">contributor</xsl:with-param>
+            <xsl:with-param name="qualifier">advisor</xsl:with-param>
+            <xsl:with-param name="text"><xsl:apply-templates select="."/></xsl:with-param>
         </xsl:apply-templates>
       </xsl:for-each>
 
       <xsl:for-each select="//DISS_cat_code">
         <xsl:variable name="code" select="text()"/>
-        <xsl:variable name="catcode" select="document('lcsh.xml')//lcsh[@code=$code]/val"/>
-        <xsl:variable name="nc" select="count($catcode)"/>
+        <xsl:variable name="ecatcode" select="document('lcsh.xml')//lcsh[@code=$code]"/>
+        <xsl:for-each select="$ecatcode">
+            <xsl:variable name="catcode" select="val"/>
+            <xsl:variable name="nc" select="count($catcode)"/>
  
- 		<xsl:if test="$nc &gt; 0">
-          <xsl:call-template name="val">
-            <xsl:with-param name="element">subject</xsl:with-param>
-            <xsl:with-param name="qualifier">lcsh</xsl:with-param>
-            <xsl:with-param name="text">
-              <xsl:choose>
-                <xsl:when test="$nc &gt; 2">
-                  <xsl:value-of select="concat($catcode[1],'; ',$catcode[2],'; ', $catcode[3])"/>
-                </xsl:when>
-                <xsl:when test="$nc &gt; 1">
-                  <xsl:value-of select="concat($catcode[1],'; ',$catcode[2])"/>
-                </xsl:when>
-                <xsl:otherwise>
-                  <xsl:value-of select="$catcode[1]"/>
-                </xsl:otherwise>
-              </xsl:choose>
-            </xsl:with-param>
-          </xsl:call-template>  
-        </xsl:if>
+            <xsl:if test="$nc &gt; 0">
+                <xsl:call-template name="val">
+                    <xsl:with-param name="element">subject</xsl:with-param>
+                    <xsl:with-param name="qualifier">lcsh</xsl:with-param>
+                    <xsl:with-param name="text">
+                        <xsl:choose>
+                            <xsl:when test="$nc &gt; 2">
+                                <xsl:value-of select="concat($catcode[1],$lcsh-sep,$catcode[2],$lcsh-sep, $catcode[3])"/>
+                            </xsl:when>
+                            <xsl:when test="$nc &gt; 1">
+                                <xsl:value-of select="concat($catcode[1],$lcsh-sep,$catcode[2])"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:value-of select="$catcode[1]"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:with-param>
+                </xsl:call-template>  
+            </xsl:if>
+        </xsl:for-each>
       </xsl:for-each>
 
       <xsl:for-each select="//DISS_cat_desc">

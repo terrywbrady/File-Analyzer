@@ -21,13 +21,22 @@
 	</properties>
 
 	<dependencies>
-
+        <dependency>
+            <groupId>edu.georgetown.library</groupId>
+            <artifactId>FileAnalyzerCoreUtils</artifactId>
+            <version>2.0</version>
+        </dependency>
 		<dependency>
 			<groupId>edu.georgetown.library</groupId>
 			<artifactId>CoreFileAnalyzer</artifactId>
 			<version>2.0</version>
 		</dependency>
-
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.3.1</version>
+            <scope>compile</scope>
+        </dependency>
 	</dependencies>
 	<build>
         <resources>
@@ -41,8 +50,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>2.3.2</version>
 				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
+					<source>1.8</source>
+					<target>1.8</target>
 				</configuration>
 			</plugin>
 			<plugin>

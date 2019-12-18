@@ -48,7 +48,7 @@ public class FTPropString extends DefaultFTProp {
 		return tf;
 	}
 
-	public Object getValue() {
+	public String getValue() {
 		return tf.getText();
 	}
 
@@ -57,6 +57,9 @@ public class FTPropString extends DefaultFTProp {
 	}
 	public Object validate(String s) {
 		if (s == null) s = "";
+		if (tf.getParent() == null) {
+		        return s;
+		}
 		return getValue();
 	}
 

@@ -24,6 +24,7 @@ import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.YN;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
 import gov.nara.nwts.ftapp.stats.Stats;
@@ -31,7 +32,7 @@ import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
-import gov.nara.nwts.ftapp.util.XMLUtil;
+import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
 
 /**
  * Importer for tab delimited files
@@ -62,6 +63,7 @@ public class DSpaceMetadata2Marc extends DefaultImporter {
 		AccessionDate(StatsItem.makeStringStatsItem("Accession", 100)),
 		CompDate(StatsItem.makeStringStatsItem("Comp Date", 100)),
 		Author(StatsItem.makeStringStatsItem("Author", 250)), 
+        Orcid(StatsItem.makeStringStatsItem("ORCID", 140)), 
 		Title(StatsItem.makeStringStatsItem("Title", 250)), 
 		EmbargoTerms(StatsItem.makeStringStatsItem("Embargo Terms", 100)), 
 		EmbargoLift(StatsItem.makeStringStatsItem("Embargo Lift", 100)), ;
@@ -88,6 +90,11 @@ public class DSpaceMetadata2Marc extends DefaultImporter {
 			.create(DSpace2MarcStatsItems.class);
 	public static String P_DC = "Generate DC";
 	public static String P_START = "Accession Start";
+	
+	MarcUtil marcUtil;
+    public MarcUtil getMarcUtil() {
+        return new MarcUtil();
+    }
 
 	public DSpaceMetadata2Marc(FTDriver dt) {
 		super(dt);
@@ -98,20 +105,8 @@ public class DSpaceMetadata2Marc extends DefaultImporter {
 		this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),
 				P_START, P_START,
 				"Accession Start Date in YYYY-MM-DD format", "2013-03-01"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_UNIV_NAME, MarcUtil.P_UNIV_NAME,
-				"University Name", "My University"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_UNIV_LOC, MarcUtil.P_UNIV_LOC,
-				"University Location", "My University Location"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_EMBARGO_SCHEMA, MarcUtil.P_EMBARGO_SCHEMA,
-				"Embargo Schema Prefix", "local"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_EMBARGO_ELEMENT, MarcUtil.P_EMBARGO_ELEMENT,
-				"Embargo Element", "embargo"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_EMBARGO_TERMS, MarcUtil.P_EMBARGO_TERMS,
-				"Embargo Policy Qualifier", "terms"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_EMBARGO_CUSTOM, MarcUtil.P_EMBARGO_CUSTOM,
-				"Embargo Custom Date Qualifier", "custom-date"));
-		ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  MarcUtil.P_EMBARGO_LIFT, MarcUtil.P_EMBARGO_LIFT,
-				"Embargo Lift Date Qualifier", "lift-date"));
+		marcUtil = getMarcUtil();
+		marcUtil.addProps(dt, ftprops);
 	}
 
 	public String toString() {
@@ -179,17 +174,19 @@ public class DSpaceMetadata2Marc extends DefaultImporter {
 		Vector<Integer>accCol = new Vector<Integer>();
 		Vector<Integer>compCol = new Vector<Integer>();
 		
-		String embargo_element = this.getProperty(MarcUtil.P_EMBARGO_SCHEMA) + "." + this.getProperty(MarcUtil.P_EMBARGO_ELEMENT) + ".";
+		String embargo_element = marcUtil.getLocalSchema() + "." + marcUtil.getEmbargoElement() + ".";
 		
 		for (int i = 0; i < headers.size(); i++) {
 			String head = headers.get(i);
 			if (head.startsWith("dc.creator"))
 				colMap.put(i, DSpace2MarcStatsItems.Author);
+            else if (head.startsWith("dc.identifier.orcid"))
+                colMap.put(i, DSpace2MarcStatsItems.Orcid);
 			else if (head.startsWith("dc.title"))
 				colMap.put(i, DSpace2MarcStatsItems.Title);
-			else if (head.startsWith(embargo_element + this.getProperty(MarcUtil.P_EMBARGO_TERMS)))
+			else if (head.startsWith(embargo_element + marcUtil.getEmbargoTerms()))
 				colMap.put(i, DSpace2MarcStatsItems.EmbargoTerms);
-			else if (head.startsWith(embargo_element + this.getProperty(MarcUtil.P_EMBARGO_LIFT)))
+			else if (head.startsWith(embargo_element + marcUtil.getEmbargoLift()))
 				colMap.put(i, DSpace2MarcStatsItems.EmbargoLift);
 			else if (head.startsWith("dc.identifier.uri")) {
 				colMap.put(i, DSpace2MarcStatsItems.Url);
@@ -245,7 +242,7 @@ public class DSpaceMetadata2Marc extends DefaultImporter {
 					+ key.replace("/", "_") + ".xml");
 			try {
 				XMLUtil.doTransform(d, f, GUProquestURIResolver.INSTANCE,
-						"dc2marc.xsl", MarcUtil.getXslParm(this.ftprops));
+						"dc2marc.xsl", marcUtil.getXslParm());
 				Document md = XMLUtil.db.parse(f);
 				collDocRoot.appendChild(collDoc.importNode(md.getDocumentElement(), true));
 			} catch (TransformerException e) {
@@ -264,5 +261,10 @@ public class DSpaceMetadata2Marc extends DefaultImporter {
 		XMLUtil.serialize(collDoc, collFile);
 		return new ActionResult(selectedFile, selectedFile.getName(),
 				this.toString(), details, types, true, timer.getDuration());
+	}
+	
+	@Override public InitializationStatus initValidate(File refFile) {
+        marcUtil.setProps(ftprops);
+        return super.initValidate(refFile);
 	}
 }

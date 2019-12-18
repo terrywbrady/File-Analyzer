@@ -14,6 +14,7 @@ import gov.nara.nwts.ftapp.filter.ImageFileTestFilter;
 import gov.nara.nwts.ftapp.filter.JpegFileTestFilter;
 import gov.nara.nwts.ftapp.filter.TiffFileTestFilter;
 import gov.nara.nwts.ftapp.ftprop.FTProp;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.CountStats;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
@@ -83,14 +84,14 @@ public abstract class DefaultFileTest implements FileTest {
 	public String getRelPath(File f) {
 		return f.getAbsolutePath().substring(getRoot().getAbsolutePath().length());
 	}
+	public String getRelPathToParent(File f) {
+		if (getRoot().getParentFile() == null) {
+			return f.getName();
+		}
+		return f.getAbsolutePath().substring(getRoot().getParentFile().getAbsolutePath().length());
+	}
 	public String getShortNameNormalized() {
 		return getShortName().replaceAll("[\\s&]","");
-	}
-	public String getShortNameFormatted() {
-		StringBuffer buf = new StringBuffer();
-		buf.append(getShortNameNormalized());
-		buf.append("                     ");
-		return buf.substring(0,20);
 	}
 	public Stats getStats(File f) {
 		return getStats(getKey(f));
@@ -120,6 +121,9 @@ public abstract class DefaultFileTest implements FileTest {
     public boolean isTestDirectory() {
     	return false;
     }
+    public boolean isTestDirectory(File f) {
+    	return isTestDirectory();
+    }
     public boolean processRoot() {
     	return false;
     }
@@ -129,7 +133,12 @@ public abstract class DefaultFileTest implements FileTest {
     public Pattern getDirectoryPattern() {
     	return null;
     }
-    public void init() {
+    public InitializationStatus init() { 
+        InitializationStatus iStat = new InitializationStatus();
+        for(FTProp prop: ftprops) {
+            iStat.addMessage(prop.initValidation(getRoot()));
+        }
+        return iStat;
     }
     public void refineResults() {
     }
@@ -178,4 +187,12 @@ public abstract class DefaultFileTest implements FileTest {
 		}
 	}
 	
+	public boolean hasDescendant(File start, String search) {
+		if (!start.isDirectory()) return false;
+		if (new File(start, search).exists()) return true;
+		for(File f: start.listFiles()) {
+			if (hasDescendant(f, search)) return true;
+		}
+		return false;
+	}
 }

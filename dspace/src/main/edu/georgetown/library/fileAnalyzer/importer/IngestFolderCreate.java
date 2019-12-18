@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -30,6 +31,7 @@ import gov.nara.nwts.ftapp.Timer;
 import gov.nara.nwts.ftapp.YN;
 import gov.nara.nwts.ftapp.ftprop.FTPropEnum;
 import gov.nara.nwts.ftapp.ftprop.FTPropString;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.importer.DelimitedFileReader;
 import gov.nara.nwts.ftapp.stats.Stats;
@@ -37,15 +39,15 @@ import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
-import gov.nara.nwts.ftapp.util.FileUtil;
-import gov.nara.nwts.ftapp.util.XMLUtil;
+import edu.georgetown.library.fileAnalyzer.util.XMLUtil;
+import edu.georgetown.library.fileAnalyzer.util.ZipUtil;
 
 /**
  * @author TBrady
  *
  */
 public class IngestFolderCreate extends DefaultImporter {
-	private static enum IngestStatsItems implements StatsItemEnum {
+	static enum IngestStatsItems implements StatsItemEnum {
 		LineNo(StatsItem.makeStringStatsItem("Line No").setExport(false).setWidth(60)),
 		Folder(StatsItem.makeStringStatsItem("Folder")),
 		Status(StatsItem.makeEnumStatsItem(status.class, "Status").setWidth(60)),
@@ -55,6 +57,7 @@ public class IngestFolderCreate extends DefaultImporter {
 		LicenseFileStats(StatsItem.makeEnumStatsItem(FileStats.class, "License File Status").setWidth(120)),
 		ContentsFileStats(StatsItem.makeEnumStatsItem(MetaStats.class, "Contents File Status").setWidth(120)),
 		DublinCoreFileStats(StatsItem.makeEnumStatsItem(MetaStats.class, "Dublin Core File Status").setWidth(120)),
+        CollectionsFileStats(StatsItem.makeEnumStatsItem(MetaStats.class, "Collections File Status").setWidth(120)),
 		OtherSchemas(StatsItem.makeStringStatsItem("Other Schemas")),
 		OtherMetadataFileStats(StatsItem.makeEnumStatsItem(MetaStats.class, "Other Metadata File Status").setWidth(120)),
 		Message(StatsItem.makeStringStatsItem("Message", 300).setExport(false))
@@ -103,9 +106,9 @@ public class IngestFolderCreate extends DefaultImporter {
 		
 	}
 	
-	private static enum FileStats {NA, NOT_FOUND, ERROR, ALREADY_EXISTS, MOVED_TO_INGEST, COPIED_TO_INGEST;}
-	private static enum MetaStats {NA, ERROR, CREATED, OVERWRITTEN;}
-	private static enum InputMetaStats {NA, MISSING, FORMAT_ERROR, DUPLICATE, OK;}
+	static enum FileStats {NA, NOT_FOUND, ERROR, ALREADY_EXISTS, MOVED_TO_INGEST, COPIED_TO_INGEST;}
+	static enum MetaStats {NA, ERROR, CREATED, OVERWRITTEN;}
+	static enum InputMetaStats {NA, MISSING, FORMAT_ERROR, DUPLICATE, OK;}
 	class CreateException extends Exception {
 		private static final long serialVersionUID = 5042987495219000857L;
 
@@ -125,12 +128,18 @@ public class IngestFolderCreate extends DefaultImporter {
 	private enum status {INIT,PASS,WARN,FAIL}
 	
 	NumberFormat nf;
+	MetadataRegPropFile metadataPropFile;
 	
-	public static final String REUSABLE_THUMBNAIL = "Reusable Thumbnail";
+    public static final String COLLECTIONS = "collections";
+    public static final String CONTENTS = "contents";
+    public static final String DUBLINCORE = "dublin_core.xml";
+
+    public static final String REUSABLE_THUMBNAIL = "Reusable Thumbnail";
 	public static final String REUSABLE_LICENSE = "Reusable License";
 	public static final String P_AUTONAME = "Add User and Date to Ingest Folder";
+	public static final String P_ZIP = "Create Zip File of Ingest Folders";
 	public static enum FIXED {
-		FOLDER(0), ITEM(1), THUMB(2), LICENSE(3);
+		FOLDER(0), ITEM(1), THUMB(2), LICENSE(3), COLLECTIONS(4);
 		int index;
 		FIXED(int i) {index = i;}
 	}
@@ -141,12 +150,16 @@ public class IngestFolderCreate extends DefaultImporter {
 		nf.setMinimumIntegerDigits(8);
 		nf.setGroupingUsed(false);
 
+		metadataPropFile = new MetadataRegPropFile(dt);
+		this.ftprops.add(metadataPropFile);
 		this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(), REUSABLE_THUMBNAIL, "thumb",
 				"Relative path to thumbnail file to be used for all items w/o thumbnail (optional)", ""));
 		this.ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(), REUSABLE_LICENSE, "license",
 				"Relative path to license file to be used for all items w/o license (optional)", ""));
 		this.ftprops.add(new FTPropEnum(dt, this.getClass().getSimpleName(), P_AUTONAME, "autoname",
 				"Append user name, date and time to ingest folder name", YN.values(), YN.Y));
+		this.ftprops.add(new FTPropEnum(dt, this.getClass().getSimpleName(), P_ZIP, "ingest-zip",
+				"Create Zip File of Ingest Folders", YN.values(), YN.N));
 
 	}
 
@@ -156,20 +169,21 @@ public class IngestFolderCreate extends DefaultImporter {
 	public String getDescription() {
 		return "This will create DSpace Ingest Folders.  Note: this action will MOVE files into the ingest folder structure.  Please save a backup of your initial directory before running this action the first time.\n"+
 				"The File Test 'Ingest Inventory' can be used to create an initial spreadsheet if one does not exist.\n"+
-				"File Structure\n"+
+				"File Structure (tab-separated file)\n"+
 				"\t1) Folder Name - A unique folder will be created for each item to be ingested.  Names must be unique\n"+
 				"\t2) Item file name - required, a file with that name must exist relative to the imported spreadsheet\n"+
 				"\t3) Thumbnail file name - optional, file must exist if present\n"+
 				"\t4) License file name - optional, file must exist if present\n"+
-				"\tAddition columns should have a dublin core field name in their header.  Columns without a 'dc.' header will be ignored\n" +
-				"A title (dc.title) and a properly formatted creation date (dc.date.created) must be present somewhere in the set of additional columns.";
+                "\t5*) Collections (*if column header is \"collections\") - optional, if non blank, a collections file will be written.\n"+
+				"Addition columns should have a dublin core field name in their header.  Columns without a 'dc.' header will be ignored\n" +
+				validateRowDescription();
 	}
 	public String getShortName() {
 		return "Ingest Folder";
 	}
 	
 	public void createMetadataFile(File dir, Stats stats, Vector<String> cols, String schema) {
-		String filename = "dublin_core.xml";
+		String filename = DUBLINCORE;
 		IngestStatsItems index = IngestStatsItems.DublinCoreFileStats;
 		
 		if (!schema.equals("dc")) {
@@ -232,7 +246,27 @@ public class IngestFolderCreate extends DefaultImporter {
 			createMetadataFile(dir, stats, cols, schema);
 		}
 		
-		File f = new File(dir, "contents");
+        if (hasCollections) {
+            String collections = cols.get(FIXED.COLLECTIONS.index);
+            if (!collections.isEmpty()) {
+                File cf = new File(dir, COLLECTIONS);
+                if (cf.exists()) {
+                    stats.setVal(IngestStatsItems.CollectionsFileStats, MetaStats.OVERWRITTEN);
+                } else {
+                    stats.setVal(IngestStatsItems.CollectionsFileStats, MetaStats.CREATED);
+                }
+                
+                try(BufferedWriter bw = new BufferedWriter(new FileWriter(cf));) {
+                    bw.write(collections);
+                } catch (IOException e) {
+                    stats.setVal(IngestStatsItems.Status, status.FAIL);
+                    stats.setVal(IngestStatsItems.CollectionsFileStats, MetaStats.ERROR);
+                    stats.setVal(IngestStatsItems.Message, e.getMessage());
+                }
+            }
+        }
+
+        File f = new File(dir, CONTENTS);
 		if (f.exists()) {
 			stats.setVal(IngestStatsItems.ContentsFileStats, MetaStats.OVERWRITTEN);
 		} else {
@@ -271,6 +305,7 @@ public class IngestFolderCreate extends DefaultImporter {
 			stats.setVal(IngestStatsItems.ContentsFileStats, MetaStats.ERROR);
 			stats.setVal(IngestStatsItems.Message, e1.getMessage());
 		}
+		
 	}
 	
 	
@@ -309,6 +344,7 @@ public class IngestFolderCreate extends DefaultImporter {
 		if (this.getProperty(P_AUTONAME) == YN.N) return defdir;
 		File[] list = parent.listFiles(new FilenameFilter(){
 			public boolean accept(File dir, String name) {
+			    if (!new File(dir, name).isDirectory()) return false;
 				if (name.startsWith("ingest_")) return true;
 				return false;
 			}
@@ -322,7 +358,7 @@ public class IngestFolderCreate extends DefaultImporter {
 		return new File(parent, name);
 	}
 	
-	
+    public boolean hasCollections = false;
 	public ActionResult importFile(File selectedFile) throws IOException {
 		currentIngestDir = getCurrentIngestDir(selectedFile);
 		Timer timer = new Timer();
@@ -340,6 +376,14 @@ public class IngestFolderCreate extends DefaultImporter {
 		addColumn(new column(FIXED.ITEM.index, InventoryStatsItems.File.si().header, true));
 		addColumn(new column(FIXED.THUMB.index, InventoryStatsItems.ThumbFile.si().header, true));
 		addColumn(new column(FIXED.LICENSE.index, InventoryStatsItems.LicenseFile.si().header, true));
+		
+		if (colheads.size() > FIXED.COLLECTIONS.index) {
+		    hasCollections = false;
+		    if (colheads.get(FIXED.COLLECTIONS.index).equals(COLLECTIONS)) {
+		        addColumn(new column(FIXED.COLLECTIONS.index, COLLECTIONS, true));
+		        hasCollections = true;
+		    }
+		}
 		
 		for(int i=colHeaderDefs.size(); i< colheads.size(); i++) {
 			String colh = colheads.get(i);
@@ -362,9 +406,23 @@ public class IngestFolderCreate extends DefaultImporter {
 			types.put(key, stats);
 		}
 		
+		if (getProperty(P_ZIP) == YN.Y) {
+			ZipUtil.zipFolder(getCurrentIngestDir(selectedFile));
+		}
+		
 		return new ActionResult(selectedFile, selectedFile.getName(), this.toString(), getDetails(), types, true, timer.getDuration());
 	}
-
+	
+	public String validateRowDescription() {
+	    return "A title (dc.title) must be present .";
+	}
+    public void validateRow(Vector<String> cols,Stats stats) throws CreateException {
+        if (!hasColumnValue(cols, "dc.title")) {
+            stats.setVal(IngestStatsItems.InputMetadata, InputMetaStats.MISSING);
+            throw new CreateException("Item must have element [dc.title]");
+        } 
+    }
+	
 	public void importRow(File selectedFile, Vector<String> cols,Stats stats, String globalThumb, String globalLicense) {
 		StringBuffer buf = new StringBuffer();
 		try {
@@ -425,23 +483,7 @@ public class IngestFolderCreate extends DefaultImporter {
 				}
 			}				
 				
-			if (!hasColumnValue(cols, "dc.title")) {
-				stats.setVal(IngestStatsItems.InputMetadata, InputMetaStats.MISSING);
-				throw new CreateException("Item must have element [dc.title]");
-			} else if (!hasColumnValue(cols, "dc.date.created")) {
-				stats.setVal(IngestStatsItems.InputMetadata, InputMetaStats.MISSING);
-				throw new CreateException("Item must have element [dc.date.created]");
-			} else {
-				for(column col: colHeaderDefs) {
-					if (col.valid && col.element.equals("date")) {
-						String val = getColumnValue(cols, col.name, "");
-						if (!testDate(val)) {
-							stats.setVal(IngestStatsItems.InputMetadata, InputMetaStats.FORMAT_ERROR);
-							throw new CreateException(col.name +" [" + val + "] must start with either YYYY-MM-DD, YYYY-MM, YYYY or 'No Date'.");
-						}
-					}
-				}
-			} 
+			validateRow(cols, stats);
 			stats.setVal(IngestStatsItems.InputMetadata, InputMetaStats.OK);				
 
 			testFile(stats, IngestStatsItems.ItemFileStats, selectedFile, folder, file);
@@ -540,7 +582,7 @@ public class IngestFolderCreate extends DefaultImporter {
 				source.renameTo(dest);
 				stats.setVal(sienum, FileStats.MOVED_TO_INGEST);
 			} else if (mode == MODE.COPY) {
-				FileUtil.copyFile(source, dest);
+				Files.copy(source.toPath(), dest.toPath());
 				stats.setVal(sienum, FileStats.COPIED_TO_INGEST);
 			}
 
@@ -566,5 +608,29 @@ public class IngestFolderCreate extends DefaultImporter {
 			stats.setVal(IngestStatsItems.Status, status.FAIL);
 		}
 	}
+
+    public InitializationStatus initValidate(File refFile) { 
+        InitializationStatus iStat = super.initValidate(refFile);
+        Vector<Vector<String>> data;
+        try {
+            data = DelimitedFileReader.parseFile(refFile, "\t");
+            if (data.size() > 0) {
+                Vector<String> cols = data.get(0);
+                for(int i=FIXED.COLLECTIONS.index; i<cols.size(); i++) {
+                    String col = cols.get(i);
+                    if (col.equals(COLLECTIONS)) continue;
+                    if (!metadataPropFile.isFieldInRegistry(col)) {
+                        iStat.addFailMessage(col + " is not defined in the metadata registry");
+                    }
+                }
+            } else {
+                iStat.addFailMessage("Empty inventory file.");
+            }
+        } catch (IOException e) {
+            iStat.addMessage(e);
+        }
+
+        return iStat;
+    }
 
 }

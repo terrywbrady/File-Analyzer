@@ -3,6 +3,7 @@
     xmlns:marc="http://www.loc.gov/MARC21/slim"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
+    <xsl:import href="common.xsl"/>
     <xsl:import href="marc.xsl"/>
     <xsl:output method="xml" indent="yes"/>
     <xsl:param name="recdate">20130225090000.10</xsl:param>
@@ -16,6 +17,9 @@
         	<xsl:with-param name="pCreator">
         	    <xsl:apply-templates select="//dcvalue[@element='creator']" mode="lfm"/>
         	</xsl:with-param>
+            <xsl:with-param name="pCreatorOrcid">
+                <xsl:apply-templates select="//dcvalue[@element='identifier'][@qualifier='orcid']"/>
+            </xsl:with-param>
         	<xsl:with-param name="pCreatorSuff">
         	    <xsl:apply-templates select="//dcvalue[@element='creator']" mode="suff"/>
         	</xsl:with-param>

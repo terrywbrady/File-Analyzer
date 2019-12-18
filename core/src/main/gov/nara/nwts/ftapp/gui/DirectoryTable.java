@@ -7,8 +7,12 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.PrintStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
@@ -149,12 +153,33 @@ public class DirectoryTable extends FTDriver {
 			public void actionPerformed(ActionEvent arg0) {
 				JOptionPane.showMessageDialog(DirectoryTable.this.frame,
 				message +
-				"\n\nThis application has been derived from code created by \n" +
+				"\n\nSee https://github.com/Georgetown-University-Libraries/File-Analyzer/wiki" +
+				"\nfor details about the application and for a user documentation. " +
+				"\n--------------------------------- " +
+				"\nThis application has been derived from code created by \n" +
 				"the National Archives and Records Administration (NARA).\n" +
 				"Please see the accompanying README file for more information." +
 				"\n\nContact: OpenGov@nara.gov" +
 				"\n\nhttps://github.com/usnationalarchives/File-Analyzer", 
 				"About File Analyzer", JOptionPane.INFORMATION_MESSAGE);
+			}});
+		jmi = new JMenuItem("Log errors to a file");
+		menu.add(jmi);
+		jmi.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				String proptmpdir = System.getProperty("java.io.tmpdir");
+				File tmpdir = new File(proptmpdir);
+				File tmpfile = new File(tmpdir, "FileAnalyzer.log");
+				try {
+					PrintStream ps = new PrintStream(tmpfile);
+					String message = String.format("Redirecting output to %s", tmpfile.getAbsolutePath());
+					System.err.println(message);
+					JOptionPane.showMessageDialog(frame, message, "Looging to File", JOptionPane.INFORMATION_MESSAGE);
+					System.setErr(ps);
+					System.setOut(ps);
+					System.out.println(String.format("FileAnalyzer Output: %s\n", SimpleDateFormat.getDateTimeInstance().format(Calendar.getInstance().getTime())));
+				} catch (FileNotFoundException e) {
+				}
 			}});
 		jmi = new JMenuItem("Enable Batch Processing");
 		menu.add(jmi);
@@ -174,6 +199,10 @@ public class DirectoryTable extends FTDriver {
 		
 	}
 
+	public boolean followLinks() {
+		return this.criteriaPanel.followLinks.isSelected();
+	}
+	
 	/**
 	 * Reset the filter and property tabs based on the selected FileTest.
 	 */
