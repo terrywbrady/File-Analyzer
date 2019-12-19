@@ -1,7 +1,11 @@
 #ignore compiled source
 *.class
 .project
+*/.project
 .settings/*
+*/.settings
+*/.classpath
+*/.gitignore
 .idea/*
 bin/*
 export/*
