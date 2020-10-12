@@ -1,0 +1,175 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug (Launch) - Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-BatchAnalyzer<CoreFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.BatchAnalyzer",
+            "projectName": "CoreFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-BatchImporter<CoreFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.BatchImporter",
+            "projectName": "CoreFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-FileAnalyzer<CoreFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.FileAnalyzer",
+            "projectName": "CoreFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-FileAnalyzerMod<CoreFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.FileAnalyzerMod",
+            "projectName": "CoreFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-Cell<CoreFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.counter.Cell",
+            "projectName": "CoreFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-Money<CoreFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.stats.Money",
+            "projectName": "CoreFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DSpaceBatchAnalyzer<DSpaceFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DSpaceBatchAnalyzer",
+            "projectName": "DSpaceFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DSpaceBatchImporter<DSpaceFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DSpaceBatchImporter",
+            "projectName": "DSpaceFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DSpaceFileAnalyzer<DSpaceFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DSpaceFileAnalyzer",
+            "projectName": "DSpaceFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DemoBatchAnalyzer<DemoFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DemoBatchAnalyzer",
+            "projectName": "DemoFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DemoBatchImporter<DemoFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DemoBatchImporter",
+            "projectName": "DemoFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DemoFileAnalyzer<DemoFileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DemoFileAnalyzer",
+            "projectName": "DemoFileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-AIPToAPTCmd<FileAnalyzerBagUtils>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.cmd.AIPToAPTCmd",
+            "projectName": "FileAnalyzerBagUtils"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DSpaceBatchAnalyzer<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DSpaceBatchAnalyzer",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DSpaceBatchImporter<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DSpaceBatchImporter",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DSpaceFileAnalyzer<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DSpaceFileAnalyzer",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DemoBatchAnalyzer<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DemoBatchAnalyzer",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DemoBatchImporter<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DemoBatchImporter",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-DemoFileAnalyzer<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.DemoFileAnalyzer",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-AIPToAPTCmd<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "edu.georgetown.library.fileAnalyzer.cmd.AIPToAPTCmd",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-BatchAnalyzer<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.BatchAnalyzer",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-BatchImporter<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.BatchImporter",
+            "projectName": "FileAnalyzer"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Launch)-FileAnalyzer<FileAnalyzer>",
+            "request": "launch",
+            "mainClass": "gov.nara.nwts.ftapp.FileAnalyzer",
+            "projectName": "FileAnalyzer"
+        }
+    ]
+}

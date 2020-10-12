@@ -1,11 +1,7 @@
 #ignore compiled source
 *.class
 .project
-*/.project
 .settings/*
-*/.settings
-*/.classpath
-*/.gitignore
 .idea/*
 bin/*
 export/*
@@ -19,3 +15,5 @@ gulibrary/target/*
 image/target/*
 image/lib/*
 /bin
+.classpath
+org.eclipse.*.prefs
