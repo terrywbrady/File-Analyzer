@@ -15,3 +15,5 @@ gulibrary/target/*
 image/target/*
 image/lib/*
 /bin
+.classpath
+org.eclipse.*.prefs
