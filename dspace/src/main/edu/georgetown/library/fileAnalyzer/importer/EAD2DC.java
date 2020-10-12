@@ -2,6 +2,7 @@ package edu.georgetown.library.fileAnalyzer.importer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -102,7 +103,8 @@ public class EAD2DC extends DefaultImporter {
         try {
             Document d = XMLUtil.db_ns.parse(selectedFile);
             File csv = new File(selectedFile.getParent(), selectedFile.getName()+".csv");
-            XMLUtil.doTransform(d, csv, "edu/georgetown/library/fileAnalyzer/ead.xsl", params);
+            InputStream in = XMLUtil.getResourceStream(this, "edu/georgetown/library/fileAnalyzer/ead.xsl");
+            XMLUtil.doTransform(d, csv, in, params);
             DelimitedFileReader dfr = new DelimitedFileReader(csv, ",");
             Vector<String> header = dfr.getRow();
             for(String col: header) {
