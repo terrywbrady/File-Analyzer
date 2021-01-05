@@ -21,6 +21,7 @@ WORKDIR /tmp
 
 COPY --from=build /tmp/appdir/*.jar /tmp/
 
+# display contents back to the the docker host machine
 ENV DISPLAY=host.docker.internal:0
 
 # The following extras seem to be needed to run as an X11 app
@@ -34,6 +35,9 @@ RUN apt-get update -y \
 # Prerequisites
 #  - in XQuartz, enable network connections (restart)
 #  - xhost + localhost
+#
+# Note "xhost +" allows connections from any host
+#   "xhost -" will undo that access
 
 # The maven build bundles all dependency names into the manifest of the generated jar file.
 # Run "ls /tmp" to see the set of runtime jars that are included.
