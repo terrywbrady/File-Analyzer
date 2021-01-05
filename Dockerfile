@@ -1,10 +1,10 @@
 # Build and install dependencies with maven.
 FROM maven:3-jdk-8 as build
 
-WORKDIR /tmp
+WORKDIR /app
 
 # Now add the java code
-ADD . /tmp/
+ADD . /app/
 
 # The maven install rule (in pom.xml) copies all dependent jar files into the target directory.
 # Mvn clean will delete all temporary .class files from the build directory.  This makes the final image smaller.
@@ -17,9 +17,9 @@ RUN mkdir appdir && \
 # Copy generated jar files into a working directory and run with a java jre.
 FROM openjdk:8
 
-WORKDIR /tmp
+WORKDIR /app
 
-COPY --from=build /tmp/appdir/*.jar /tmp/
+COPY --from=build /app/appdir/*.jar /app/
 
 # display contents back to the the docker host machine
 ENV DISPLAY=host.docker.internal:0
@@ -31,6 +31,10 @@ RUN apt-get update -y \
    && apt-get install -y libxext6 \
    && apt-get install -y libxrender-dev libxtst6 libfreetype6  \
    && apt-get install -y bash
+
+RUN mkdir /data \
+    && cd /data \
+    && git clone https://github.com/terrywbrady/File-Analyzer-Test-Data
 
 # Prerequisites
 #  - in XQuartz, enable network connections (restart)
