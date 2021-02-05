@@ -35,5 +35,6 @@
 		<module>dspace</module>
         <module>bag-utils</module>
 		<module>demo</module>
+		<module>uc3</module>
 	</modules>
 </project>

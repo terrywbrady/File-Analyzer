@@ -11,9 +11,11 @@ core-utils/target/*
 bag-utils/target/*
 dspace/target/*
 demo/target/*
+uc3/target/*
 gulibrary/target/*
 image/target/*
 image/lib/*
 /bin
 .classpath
 org.eclipse.*.prefs
+.DS_Store
