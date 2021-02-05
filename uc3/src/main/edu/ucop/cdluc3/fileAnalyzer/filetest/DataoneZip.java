@@ -3,6 +3,7 @@ package edu.ucop.cdluc3.fileAnalyzer.filetest;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.filetest.DefaultFileTest;
 import gov.nara.nwts.ftapp.filter.ZipFilter;
+import gov.nara.nwts.ftapp.ftprop.InitializationStatus;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
@@ -12,8 +13,6 @@ import gov.nara.nwts.ftapp.stats.StatsItemEnum;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -74,9 +73,6 @@ class DataoneZip extends DefaultFileTest {
     }
 
     @Override public boolean isTestable(File f) {
-    	if (f.getName().startsWith("output.")) {
-    		return false;
-    	}
     	return f.getName().toLowerCase().endsWith(".zip");
     }
 
@@ -84,66 +80,12 @@ class DataoneZip extends DefaultFileTest {
 		filters.add(new ZipFilter());
 	}
 	
-	public static Pattern zipEntryParser() {
-		return Pattern.compile("^([^\\/]+)/(\\d+)/(producer|system)/(.*)");
-	}
-	public static Pattern zipEntryParserManifest() {
-		return Pattern.compile("^([^\\/]+)/(manifest.xml)");
-	}
-
-	public Matcher manifestMatch(String ze) {
-		return DataoneZip.zipEntryParserManifest().matcher(ze);
-	}
-
-	public Matcher match(String ze) {
-		return DataoneZip.zipEntryParser().matcher(ze);
-	}
+	private File outdir;
 	
-	public boolean includeInOutput(String ze) {
-		Matcher m = match(ze);
-		if (m.matches()) {
-			if (m.group(3).equals("producer")) {
-				return true;
-			}
-			if (m.group(4).equals("mrt-dataone-map.rdf")) {
-				return true;
-			}
-		}
-		return manifestMatch(ze).matches();
-	}
-	
-	public String outputPath(String ze) {
-		Matcher m = match(ze);
-		if (m.matches()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(m.group(1).replaceAll("[\\+=]+", "_"));
-			sb.append("/");
-			sb.append(m.group(2));
-			sb.append("/");
-			sb.append(m.group(4));
-			return sb.toString();
-		}
-		m = manifestMatch(ze);
-		if (m.matches()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append(m.group(1).replaceAll("[\\+=]+", "_"));
-			sb.append("/");
-			sb.append(m.group(2));
-			return sb.toString();
-		}
-		return "na";
-	}
-
-	public int ver(String ze) {
-		Matcher m = match(ze);
-		if (m.matches()) {
-			return Integer.parseInt(m.group(2));
-		}
-		return 0;
-	}
-
-	public String status(String ze) {
-		return String.format("%s\t%s\t%b", ze, outputPath(ze), includeInOutput(ze));
+	public InitializationStatus init() {
+		outdir = new File(dt.getRoot().getParentFile(), dt.getRoot().getName() + "_output");
+		outdir.mkdirs();
+		return super.init();
 	}
 	
 
@@ -155,9 +97,8 @@ class DataoneZip extends DefaultFileTest {
 		byte[] buf = new byte[4096];
 		//long bytes = 0;
 		
-		String outname = "output." + f.getName();
-		stats.setVal(DataoneStatsItems.Output, outname);
-		File outf = new File(f.getParentFile(), outname);
+		File outf = new File(outdir, f.getName());
+		stats.setVal(DataoneStatsItems.Output, outf.getPath());
 		int vcount = 0;
 		
 		try(
@@ -168,12 +109,12 @@ class DataoneZip extends DefaultFileTest {
 			for(ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()){
 				if (ze.isDirectory()) continue;
 				stats.sumVal(DataoneStatsItems.InFiles, 1);
-				String zn = ze.getName();
-				if (!includeInOutput(zn)) continue;
+				MerrittZipEntry mze = new MerrittZipEntry(ze.getName());
+				if (!mze.includeInOutput()) continue;
 				stats.sumVal(DataoneStatsItems.OutFiles, 1);
-				vcount = Math.max(vcount, ver(zn));
+				vcount = Math.max(vcount, mze.getVersion());
 				
-				zos.putNextEntry(new ZipEntry(outputPath(zn)));
+				zos.putNextEntry(new ZipEntry(mze.getOutputPath()));
 				int length;
 	            while ((length = zis.read(buf)) > 0) {
 	                zos.write(buf, 0, length);

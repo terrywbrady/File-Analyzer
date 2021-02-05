@@ -8,12 +8,14 @@ import gov.nara.nwts.ftapp.stats.StatsGenerator;
 import gov.nara.nwts.ftapp.stats.StatsItem;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 import gov.nara.nwts.ftapp.stats.StatsItemEnum;
+import gov.nara.nwts.ftapp.YN;
+
+
+import edu.ucop.cdluc3.fileAnalyzer.filetest.MerrittZipEntry.FileType;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
-import java.util.Arrays;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -24,9 +26,12 @@ import java.util.zip.ZipInputStream;
  */
 class ZipInventory extends DefaultFileTest { 
 	private static enum ZipStatsItems implements StatsItemEnum {
-		Key(StatsItem.makeStringStatsItem("Key", 200)),
-		File(StatsItem.makeStringStatsItem("File", 200)),
-		ZipEntry(StatsItem.makeStringStatsItem("Zip Entry", 200)),
+		Key(StatsItem.makeStringStatsItem("Key", 300)),
+		Type(StatsItem.makeEnumStatsItem(FileType.class, "Type")),
+		Include(StatsItem.makeEnumStatsItem(YN.class, "Include")),
+		Ark(StatsItem.makeStringStatsItem("Ark", 200)),
+		Version(StatsItem.makeIntStatsItem("Ver").setWidth(30)),
+		Filename(StatsItem.makeStringStatsItem("File", 200)),
 		Checksum(StatsItem.makeStringStatsItem("Checksum", 200))
 		;
 		
@@ -46,9 +51,6 @@ class ZipInventory extends DefaultFileTest {
         super(dt);
     }
 
-	public String getKey(File f) {
-		return f.getName().replaceAll("\\.zip$", "");
-	}
     public String toString() {
         return "Zip Inventory";
     }
@@ -61,9 +63,11 @@ class ZipInventory extends DefaultFileTest {
     @Override public boolean isTestDirectory() {
     	return false;
     }
+
     @Override public boolean processRoot() {
         return false;
     }
+    
 
     @Override public boolean isTestFiles() {
         return true; 
@@ -77,28 +81,47 @@ class ZipInventory extends DefaultFileTest {
 		filters.add(new ZipFilter());
 	}
 	
+	private static String DEFKEY = "";
+	public String getKey(File f) {
+		return DEFKEY;
+	}
+	
+	@Override
+    public void refineResults() {
+        this.dt.types.remove(DEFKEY);
+    }
+	
 	@Override
 	public Object fileTest(File f) {
+		//String relpath = this.getRelPath(f);
 		try(
 			ZipInputStream zis = new ZipInputStream(new FileInputStream(f));
 		) {
 			
 			for(ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()){
 				if (ze.isDirectory()) continue;
-				String key = String.format("%s:%s", f.getName(), ze.getName());
+				MerrittZipEntry mze = new MerrittZipEntry(ze.getName());
+				String key = mze.getOutputPath();
 				Stats stats = Generator.INSTANCE.create(key);
 				dt.types.put(key, stats);
-				stats.setVal(ZipStatsItems.File, f.getName());
-				stats.setVal(ZipStatsItems.ZipEntry, ze.getName());
+				stats.setVal(ZipStatsItems.Type, mze.getFileType());
+				stats.setVal(ZipStatsItems.Ark, mze.getArk());
+				stats.setVal(ZipStatsItems.Version, mze.getVersion());
+				stats.setVal(ZipStatsItems.Filename, mze.getFilename());
+				stats.setVal(ZipStatsItems.Include, mze.includeInOutput() ? YN.Y : YN.N);
 				
 	            MessageDigest md = MessageDigest.getInstance("MD5");
-	            DigestInputStream dis = new DigestInputStream(zis, md);
-	            byte[] buffer = new byte[1024];
-	            int read = dis.read(buffer);
-	            while (read > -1) {
-	                read = dis.read(buffer);
-	            }
-				stats.setVal(ZipStatsItems.Checksum, Arrays.toString(dis.getMessageDigest().digest()));
+				byte[] dataBytes = new byte[1204];
+				int nread = 0;
+				while((nread = zis.read(dataBytes)) != -1){
+					md.update(dataBytes, 0, nread);
+				}
+				byte[] mdbytes = md.digest();
+				StringBuffer sb = new StringBuffer();
+				for(int i=0; i<mdbytes.length; i++){
+					sb.append(Integer.toString((mdbytes[i] & 0xFF) + 0x100, 16).substring(1));
+				}
+				stats.setVal(ZipStatsItems.Checksum, sb.toString());
 			}
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
