@@ -92,9 +92,9 @@ class MerrittZipEntry {
 	
 	public String getOutputPath() {
 		return String.format(
-			"%s/%d/%s", 
+			"%s/%s%s", 
 			ark.replaceAll("[:/]+", "_"), 
-			ver, 
+			ver == 0 ? "" : ver + "/", 
 			includeInOutput() ? normFilename : filename
 		);
 	}
