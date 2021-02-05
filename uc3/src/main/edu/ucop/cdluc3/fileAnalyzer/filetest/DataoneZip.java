@@ -21,8 +21,6 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import edu.georgetown.library.fileAnalyzer.filetest.IngestInventory.Generator;
-
 /**
  * Extract all metadata fields from a TIF or JPG using categorized tag defintions.
  * @author TBrady
@@ -33,7 +31,10 @@ class DataoneZip extends DefaultFileTest {
 		Key(StatsItem.makeStringStatsItem("Input", 200)),
 		Output(StatsItem.makeStringStatsItem("Output", 200)),
         VerCount(StatsItem.makeIntStatsItem("Ver Count")),
-		FileCount(StatsItem.makeIntStatsItem("File Count"))
+		InFiles(StatsItem.makeIntStatsItem("Input Files")),
+		OutFiles(StatsItem.makeIntStatsItem("Output Files")),
+		InSize(StatsItem.makeLongStatsItem("Input Bytes")),
+		OutSize(StatsItem.makeLongStatsItem("Output Bytes"))
 		;
 		
 		StatsItem si;
@@ -154,15 +155,12 @@ class DataoneZip extends DefaultFileTest {
 		String key = getKey(f);
 		Stats stats = getStats(key);
 
-		File zout = new File("/tmp", key);
-		zout.mkdir();
 		byte[] buf = new byte[4096];
 		//long bytes = 0;
 		
 		String outname = "output." + f.getName();
 		stats.setVal(DataoneStatsItems.Output, outname);
 		File outf = new File(f.getParentFile(), outname);
-		int fcount = 0;
 		int vcount = 0;
 		
 		try(
@@ -172,9 +170,10 @@ class DataoneZip extends DefaultFileTest {
 			
 			for(ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()){
 				if (ze.isDirectory()) continue;
+				stats.sumVal(DataoneStatsItems.InFiles, 1);
 				String zn = ze.getName();
 				if (!includeInOutput(zn)) continue;
-				fcount++;
+				stats.sumVal(DataoneStatsItems.OutFiles, 1);
 				vcount = Math.max(vcount, ver(zn));
 				
 				zos.putNextEntry(new ZipEntry(outputPath(zn)));
@@ -188,7 +187,8 @@ class DataoneZip extends DefaultFileTest {
 			System.err.println(e.getMessage());
 		}
 		stats.setVal(DataoneStatsItems.VerCount, vcount);
-		stats.setVal(DataoneStatsItems.FileCount, fcount);
+		stats.setVal(DataoneStatsItems.OutSize, outf.length());
+		stats.setVal(DataoneStatsItems.InSize, f.length());
 
 		return null;
 	}
