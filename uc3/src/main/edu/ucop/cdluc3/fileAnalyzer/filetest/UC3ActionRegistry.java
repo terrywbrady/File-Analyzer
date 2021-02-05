@@ -14,6 +14,8 @@ public class UC3ActionRegistry extends ActionRegistry {
 
         public UC3ActionRegistry(FTDriver dt, boolean modifyAllowed) {
                 super(dt, modifyAllowed);
+                removeFT(CounterValidation.class);
+                add(new DataoneZip(dt));
         }
 
 }
