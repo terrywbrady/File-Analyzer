@@ -16,6 +16,7 @@ public class UC3ActionRegistry extends ActionRegistry {
                 super(dt, modifyAllowed);
                 removeFT(CounterValidation.class);
                 add(new DataoneZip(dt));
+                add(new ZipInventory(dt));
         }
 
 }
