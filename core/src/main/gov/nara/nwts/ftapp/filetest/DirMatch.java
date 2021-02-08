@@ -6,13 +6,14 @@ import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsItemConfig;
 
 import java.io.File;
+import java.text.Normalizer;
 
 /**
  * Create FileAnalyzer statistics by directory.
  * @author TBrady
  *
  */
-class DirMatch extends DefaultFileTest {
+public class DirMatch extends DefaultFileTest {
 
 	public DirMatch(FTDriver dt) {
 		super(dt);
@@ -30,7 +31,7 @@ class DirMatch extends DefaultFileTest {
 		if (parentdir instanceof File) {
 			key = f.getPath().substring(((File)parentdir).getPath().length());
 		}
-		return key;		
+		return Normalizer.normalize(key, Normalizer.Form.NFD);;		
 	}
 	
     public String getShortName(){return "Path";}
