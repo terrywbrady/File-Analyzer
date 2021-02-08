@@ -31,7 +31,7 @@ public class DirMatch extends DefaultFileTest {
 		if (parentdir instanceof File) {
 			key = f.getPath().substring(((File)parentdir).getPath().length());
 		}
-		return Normalizer.normalize(key, Normalizer.Form.NFD);;		
+		return Normalizer.normalize(key, Normalizer.Form.NFD);		
 	}
 	
     public String getShortName(){return "Path";}
