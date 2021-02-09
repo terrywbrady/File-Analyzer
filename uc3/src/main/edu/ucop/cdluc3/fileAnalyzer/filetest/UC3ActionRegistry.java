@@ -19,6 +19,7 @@ public class UC3ActionRegistry extends ActionRegistry {
                 add(new DataoneZip(dt));
                 add(new ZipInventory(dt));
                 add(new MarcItemInventory(dt));
+                add(new MarcAsciiCheck(dt));
         }
 
 }
