@@ -6,8 +6,11 @@ package gov.nara.nwts.ftapp.filter;
  *
  */
 public class MrcFilter extends DefaultFileTestFilter {
-	public String getSuffix() { 
-		return ".mrc";
+	public String getSuffix() {
+		return ".*\\.(mrc|unx)$";
+	}
+	public boolean isReSuffix() {
+		return true;
 	}
     public String getName(){return "MRC";}
 
