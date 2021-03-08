@@ -3,18 +3,17 @@ package edu.ucop.cdluc3.fileAnalyzer.importer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.tika.parser.txt.CharsetDetector;
-
 import gov.nara.nwts.ftapp.ActionResult;
 import gov.nara.nwts.ftapp.FTDriver;
 import gov.nara.nwts.ftapp.Timer;
+import gov.nara.nwts.ftapp.ftprop.FTPropString;
 import gov.nara.nwts.ftapp.importer.DefaultImporter;
 import gov.nara.nwts.ftapp.stats.Stats;
 import gov.nara.nwts.ftapp.stats.StatsGenerator;
@@ -39,15 +38,14 @@ public class ZipAnalyzer extends DefaultImporter
 	{
 		return "Zip";
 	}
-
+    public static final String Charsets = "charsets";
 	
 	public ZipAnalyzer(FTDriver dt)
 	{
 		super(dt);
+        ftprops.add(new FTPropString(dt, this.getClass().getSimpleName(),  Charsets, Charsets,
+                "Charsets to attempt to match", "UTF-8,ISO-8859-1"));
 	}
-	
-	// resulting information to display
-	public static enum EntryProp {A, B;}
 	
 	private static enum ZipStatsItem implements StatsItemEnum
 	{
@@ -56,8 +54,7 @@ public class ZipAnalyzer extends DefaultImporter
 		Date(StatsItem.makeStringStatsItem("Date")),
 		Comment(StatsItem.makeStringStatsItem("Comment")),
 		Charset(StatsItem.makeStringStatsItem("Charset")),
-		Extra(StatsItem.makeStringStatsItem("Extra")),
-		Property(StatsItem.makeEnumStatsItem(EntryProp.class, "Prop").setWidth(100));
+		Extra(StatsItem.makeStringStatsItem("Extra"));
 		
 		StatsItem si;
 		
@@ -92,10 +89,10 @@ public class ZipAnalyzer extends DefaultImporter
 		TreeMap<String, Stats> types = new TreeMap<String, Stats>();
 		DateFormat df = DateFormat.getDateTimeInstance();
 		
-		try(
-				ZipInputStream zis = new ZipInputStream(new FileInputStream(selectedFile));
-			) {
-				
+		for(String cs: getProperty(Charsets, "UTF-8").toString().split(",")) {
+			try(
+				ZipInputStream zis = new ZipInputStream(new FileInputStream(selectedFile), Charset.forName(cs));
+			) {					
 				for(ZipEntry ze = zis.getNextEntry(); ze != null; ze = zis.getNextEntry()){
 					if (ze.isDirectory()) continue;
 					String key = ze.getName();
@@ -105,14 +102,16 @@ public class ZipAnalyzer extends DefaultImporter
 					stats.setVal(ZipStatsItem.Extra, ze.getExtra());
 					Date d = new Date(ze.getTime());
 					stats.setVal(ZipStatsItem.Date, df.format(d));
-					CharsetDetector detector = new CharsetDetector();
-					detector.setText(key.getBytes());
-					stats.setVal(ZipStatsItem.Charset, detector.detect().toString());
+					stats.setVal(ZipStatsItem.Charset, cs);
 					types.put(key, stats);
 				}
+				
+				break;
 			} catch (Exception e) {
 				System.err.println(e.getMessage());
 			}
+			
+		}
 
 		return new ActionResult(selectedFile, selectedFile.getName(), this.toString(), details, types, true, timer.getDuration());
 	}  // end of ActionResult
